@@ -282,7 +282,7 @@ export default function ChecklistPage() {
         <div className="relative w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search checklist..."
+            placeholder="Search item..."
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -292,7 +292,7 @@ export default function ChecklistPage() {
 
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium">Sort by:</span>
+          <span className="text-sm font-medium">Sort by</span>
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Sort by" />

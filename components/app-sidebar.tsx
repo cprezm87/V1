@@ -54,7 +54,7 @@ const menuItems = [
     href: "/wishlist",
   },
   {
-    title: "Custom's",
+    title: "Customs",
     icon: Pencil,
     href: "/customs",
   },
@@ -137,18 +137,17 @@ export function AppSidebar() {
               <Image src="/user.jpg" alt="User profile" fill className="object-cover" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">{user?.email || "Usuario"}</span>
-              <span className="text-xs text-muted-foreground">{user?.displayName || "Coleccionista"}</span>
+              <span className="text-sm font-medium">{user?.email || "User"}</span>
+              <span className="text-xs text-neon-green">Online</span>
             </div>
           </div>
           <Button
-            variant="outline"
+            className="flex items-center justify-center gap-2 w-full bg-neon-green text-black hover:bg-neon-green/90"
             size="sm"
-            className="flex items-center justify-center gap-2 w-full"
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />
-            <span>Cerrar sesión</span>
+            <span>Sign Out</span>
           </Button>
         </div>
       </SidebarFooter>

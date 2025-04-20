@@ -920,6 +920,7 @@ const translations: Record<Language, Record<string, string>> = {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("dark")
+  // Cambiar el idioma predeterminado a inglés
   const [language, setLanguageState] = useState<Language>("en")
 
   useEffect(() => {

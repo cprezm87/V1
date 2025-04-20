@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,6 +15,9 @@ import { Star, StarIcon, CheckCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useTheme } from "@/contexts/theme-context"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+
+// Importar el nuevo componente
+import { ImageUploadField } from "@/components/image-upload-field"
 
 // Display options based on shelf selection
 const displayOptions = {
@@ -268,20 +270,20 @@ export default function AddPage() {
   return (
     <div className="w-full py-6 px-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">{t("nav.add")}</h1>
+        <h1 className="text-3xl font-bold">Add</h1>
       </div>
 
       <Tabs defaultValue="figures" className="w-full" value={activeTab} onValueChange={setActiveTab}>
         <div className="flex justify-center mb-6">
           <TabsList>
             <TabsTrigger value="figures" className="px-8">
-              {t("add.figures")}
+              Figures
             </TabsTrigger>
             <TabsTrigger value="wishlist" className="px-8">
-              {t("add.wishlist")}
+              Wishlist
             </TabsTrigger>
             <TabsTrigger value="customs" className="px-8">
-              {t("add.customs")}
+              Customs
             </TabsTrigger>
           </TabsList>
         </div>
@@ -390,46 +392,13 @@ export default function AddPage() {
                     <Input id="upc" name="upc" type="number" placeholder="UPC number" />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="logo">Logo</Label>
-                    <Input
-                      id="logo"
-                      name="logo"
-                      placeholder="Logo URL"
-                      onChange={(e) => setLogoPreview(e.target.value)}
-                    />
-                    {logoPreview && (
-                      <div className="mt-2 relative h-20 w-full">
-                        <Image
-                          src={logoPreview || "/placeholder.svg"}
-                          alt="Logo preview"
-                          fill
-                          className="object-contain"
-                          onError={() => setLogoPreview("")}
-                        />
-                      </div>
-                    )}
+                  {/* Reemplazar los campos de Logo y Photo en el formulario de figuras */}
+                  <div className="space-y-2 md:col-span-2">
+                    <ImageUploadField id="logo" label="Logo" value={logoPreview} onChange={setLogoPreview} />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="photo">Photo</Label>
-                    <Input
-                      id="photo"
-                      name="photo"
-                      placeholder="Photo URL"
-                      onChange={(e) => setPhotoPreview(e.target.value)}
-                    />
-                    {photoPreview && (
-                      <div className="mt-2 relative h-40 w-full">
-                        <Image
-                          src={photoPreview || "/placeholder.svg"}
-                          alt="Photo preview"
-                          fill
-                          className="object-contain"
-                          onError={() => setPhotoPreview("")}
-                        />
-                      </div>
-                    )}
+                  <div className="space-y-2 md:col-span-2">
+                    <ImageUploadField id="photo" label="Photo" value={photoPreview} onChange={setPhotoPreview} />
                   </div>
 
                   <div className="space-y-2">
@@ -499,10 +468,10 @@ export default function AddPage() {
 
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline">
-                    {t("add.cancel")}
+                    Cancel
                   </Button>
                   <Button type="submit" className="bg-neon-green text-black hover:bg-neon-green/90">
-                    {t("add.addToChecklist")}
+                    Add to Checklist
                   </Button>
                 </div>
               </form>
@@ -583,46 +552,23 @@ export default function AddPage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="wishlist-logo">{t("add.logo")}</Label>
-                    <Input
+                  {/* Reemplazar los campos de Logo y Photo en el formulario de wishlist */}
+                  <div className="space-y-2 md:col-span-2">
+                    <ImageUploadField
                       id="wishlist-logo"
-                      name="wishlist-logo"
-                      placeholder="Logo URL"
-                      onChange={(e) => setWishlistLogoPreview(e.target.value)}
+                      label="Logo"
+                      value={wishlistLogoPreview}
+                      onChange={setWishlistLogoPreview}
                     />
-                    {wishlistLogoPreview && (
-                      <div className="mt-2 relative h-20 w-full">
-                        <Image
-                          src={wishlistLogoPreview || "/placeholder.svg"}
-                          alt="Logo preview"
-                          fill
-                          className="object-contain"
-                          onError={() => setWishlistLogoPreview("")}
-                        />
-                      </div>
-                    )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="wishlist-photo">{t("add.photo")}</Label>
-                    <Input
+                  <div className="space-y-2 md:col-span-2">
+                    <ImageUploadField
                       id="wishlist-photo"
-                      name="wishlist-photo"
-                      placeholder="Photo URL"
-                      onChange={(e) => setWishlistPhotoPreview(e.target.value)}
+                      label="Photo"
+                      value={wishlistPhotoPreview}
+                      onChange={setWishlistPhotoPreview}
                     />
-                    {wishlistPhotoPreview && (
-                      <div className="mt-2 relative h-40 w-full">
-                        <Image
-                          src={wishlistPhotoPreview || "/placeholder.svg"}
-                          alt="Photo preview"
-                          fill
-                          className="object-contain"
-                          onError={() => setWishlistPhotoPreview("")}
-                        />
-                      </div>
-                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -659,10 +605,10 @@ export default function AddPage() {
 
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline">
-                    {t("add.cancel")}
+                    Cancel
                   </Button>
                   <Button type="submit" className="bg-neon-green text-black hover:bg-neon-green/90">
-                    {t("add.addToWishlist")}
+                    Add to Wishlist
                   </Button>
                 </div>
               </form>
@@ -719,25 +665,14 @@ export default function AddPage() {
                     <Input id="custom-body" name="custom-body" placeholder="Body details" required />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="custom-logo">{t("add.logo")}</Label>
-                    <Input
+                  {/* Reemplazar el campo de Logo en el formulario de customs */}
+                  <div className="space-y-2 md:col-span-2">
+                    <ImageUploadField
                       id="custom-logo"
-                      name="custom-logo"
-                      placeholder="Logo URL"
-                      onChange={(e) => setCustomLogoPreview(e.target.value)}
+                      label="Logo"
+                      value={customLogoPreview}
+                      onChange={setCustomLogoPreview}
                     />
-                    {customLogoPreview && (
-                      <div className="mt-2 relative h-20 w-full">
-                        <Image
-                          src={customLogoPreview || "/placeholder.svg"}
-                          alt="Logo preview"
-                          fill
-                          className="object-contain"
-                          onError={() => setCustomLogoPreview("")}
-                        />
-                      </div>
-                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -753,10 +688,10 @@ export default function AddPage() {
 
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline">
-                    {t("add.cancel")}
+                    Cancel
                   </Button>
                   <Button type="submit" className="bg-neon-green text-black hover:bg-neon-green/90">
-                    {t("add.addToCustoms")}
+                    Add to Customs
                   </Button>
                 </div>
               </form>
