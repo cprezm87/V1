@@ -1,15 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Edit, Trash2, ArrowUpDown, MoreHorizontal, Star } from "lucide-react"
+import { Search, Edit, Trash2, ArrowUpDown, MoreHorizontal, Star, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTrigger, DialogFooter, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 interface FigureItem {
   id: string
@@ -41,6 +43,7 @@ export default function ChecklistPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedItem, setSelectedItem] = useState<FigureItem | null>(null)
   const [editItem, setEditItem] = useState<FigureItem | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   // Load items from localStorage on component mount
   useEffect(() => {
@@ -76,10 +79,29 @@ export default function ChecklistPage() {
   }
 
   // Handle item deletion
+  const syncDeleteWithSheets = async (id: string) => {
+    try {
+      const response = await fetch("/api/sheets/figures", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      })
+
+      if (!response.ok) {
+        console.error("Failed to sync deletion with Google Sheets")
+      }
+    } catch (error) {
+      console.error("Error syncing deletion with Google Sheets:", error)
+    }
+  }
+
   const handleDeleteItem = (id: string) => {
     const updatedItems = items.filter((item) => item.id !== id)
     setItems(updatedItems)
     localStorage.setItem("figureItems", JSON.stringify(updatedItems))
+    syncDeleteWithSheets(id)
     toast({
       title: "Deleted!",
       description: "Item has been removed from your checklist.",
@@ -88,12 +110,23 @@ export default function ChecklistPage() {
 
   // Handle item edit
   const handleEditItem = (item: FigureItem) => {
-    // In a real application, you would open an edit form
-    // For now, we'll just show a toast
-    toast({
-      title: "Edit Item",
-      description: `Editing ${item.name}`,
-    })
+    setEditItem({ ...item })
+    setIsEditDialogOpen(true)
+  }
+
+  // Save edited item
+  const saveEditedItem = () => {
+    if (editItem) {
+      const updatedItems = items.map((item) => (item.id === editItem.id ? editItem : item))
+      setItems(updatedItems)
+      localStorage.setItem("figureItems", JSON.stringify(updatedItems))
+      setIsEditDialogOpen(false)
+      setEditItem(null)
+      toast({
+        title: "Updated!",
+        description: "Item has been updated successfully.",
+      })
+    }
   }
 
   // Toggle sort order
@@ -146,7 +179,7 @@ export default function ChecklistPage() {
       {item.photo && (
         <div className="w-full">
           <div className="relative h-80 w-full overflow-hidden">
-            <img src={item.photo || "/placeholder.svg"} alt={item.name} className="object-contain w-full h-full" />
+            <img src={item.photo || "/placeholder.svg"} alt={item.name} className="object-none" />
           </div>
         </div>
       )}
@@ -503,6 +536,119 @@ export default function ChecklistPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Item</DialogTitle>
+          </DialogHeader>
+          {editItem && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Name</Label>
+                  <Input
+                    id="edit-name"
+                    value={editItem.name}
+                    onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-franchise">Franchise</Label>
+                  <Input
+                    id="edit-franchise"
+                    value={editItem.franchise}
+                    onChange={(e) => setEditItem({ ...editItem, franchise: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-brand">Brand</Label>
+                  <Input
+                    id="edit-brand"
+                    value={editItem.brand}
+                    onChange={(e) => setEditItem({ ...editItem, brand: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-serie">Serie</Label>
+                  <Input
+                    id="edit-serie"
+                    value={editItem.serie}
+                    onChange={(e) => setEditItem({ ...editItem, serie: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-price">Price</Label>
+                  <Input
+                    id="edit-price"
+                    value={editItem.price}
+                    onChange={(e) => setEditItem({ ...editItem, price: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-condition">Condition</Label>
+                  <Input
+                    id="edit-condition"
+                    value={editItem.condition}
+                    onChange={(e) => setEditItem({ ...editItem, condition: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-logo">Logo URL</Label>
+                  <Input
+                    id="edit-logo"
+                    value={editItem.logo}
+                    onChange={(e) => setEditItem({ ...editItem, logo: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-photo">Photo URL</Label>
+                  <Input
+                    id="edit-photo"
+                    value={editItem.photo}
+                    onChange={(e) => setEditItem({ ...editItem, photo: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-tagline">Tagline</Label>
+                  <Input
+                    id="edit-tagline"
+                    value={editItem.tagline}
+                    onChange={(e) => setEditItem({ ...editItem, tagline: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-review">Review URL</Label>
+                  <Input
+                    id="edit-review"
+                    value={editItem.review}
+                    onChange={(e) => setEditItem({ ...editItem, review: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-comments">Comments</Label>
+                <Textarea
+                  id="edit-comments"
+                  value={editItem.comments}
+                  onChange={(e) => setEditItem({ ...editItem, comments: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <X className="mr-2 h-4 w-4" />
+              Cancel
+            </Button>
+            <Button onClick={saveEditedItem} className="bg-neon-green text-black hover:bg-neon-green/90">
+              <Edit className="mr-2 h-4 w-4" />
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

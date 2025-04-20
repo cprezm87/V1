@@ -12,8 +12,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Star, StarIcon } from "lucide-react"
+import { Star, StarIcon, CheckCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { useTheme } from "@/contexts/theme-context"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 // Display options based on shelf selection
 const displayOptions = {
@@ -92,6 +94,7 @@ interface CustomItem {
 
 export default function AddPage() {
   const { toast } = useToast()
+  const { t } = useTheme()
   const [selectedShelf, setSelectedShelf] = useState<keyof typeof displayOptions | "">("")
   const [logoPreview, setLogoPreview] = useState("")
   const [photoPreview, setPhotoPreview] = useState("")
@@ -100,6 +103,10 @@ export default function AddPage() {
   const [customLogoPreview, setCustomLogoPreview] = useState("")
   const [rating, setRating] = useState(0)
   const [nextId, setNextId] = useState(1)
+  const [activeTab, setActiveTab] = useState("figures")
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false)
+  const [showWishlistSuccessAlert, setShowWishlistSuccessAlert] = useState(false)
+  const [showCustomSuccessAlert, setShowCustomSuccessAlert] = useState(false)
 
   // State for storing items
   const [figureItems, setFigureItems] = useState<FigureItem[]>([])
@@ -165,6 +172,7 @@ export default function AddPage() {
 
     setFigureItems([...figureItems, newFigure])
     setNextId(nextId + 1)
+    syncFigureWithSheets(newFigure)
 
     // Reset form
     form.reset()
@@ -173,9 +181,13 @@ export default function AddPage() {
     setRating(0)
     setSelectedShelf("")
 
+    // Show success alert
+    setShowSuccessAlert(true)
+    setTimeout(() => setShowSuccessAlert(false), 3000)
+
     toast({
-      title: "Added!",
-      description: "Figure has been added to your checklist.",
+      title: t("add.added"),
+      description: t("add.itemAdded"),
     })
   }
 
@@ -204,15 +216,20 @@ export default function AddPage() {
 
     setWishlistItems([...wishlistItems, newWishlistItem])
     setNextId(nextId + 1)
+    syncWishlistWithSheets(newWishlistItem)
 
     // Reset form
     form.reset()
     setWishlistLogoPreview("")
     setWishlistPhotoPreview("")
 
+    // Show success alert
+    setShowWishlistSuccessAlert(true)
+    setTimeout(() => setShowWishlistSuccessAlert(false), 3000)
+
     toast({
-      title: "Added!",
-      description: "Item has been added to your wishlist.",
+      title: t("add.added"),
+      description: t("add.itemAdded"),
     })
   }
 
@@ -235,34 +252,106 @@ export default function AddPage() {
 
     setCustomItems([...customItems, newCustomItem])
     setNextId(nextId + 1)
+    syncCustomWithSheets(newCustomItem)
 
     // Reset form
     form.reset()
     setCustomLogoPreview("")
 
+    // Show success alert
+    setShowCustomSuccessAlert(true)
+    setTimeout(() => setShowCustomSuccessAlert(false), 3000)
+
     toast({
-      title: "Added!",
-      description: "Custom has been added to your collection.",
+      title: t("add.added"),
+      description: t("add.itemAdded"),
     })
+  }
+
+  // Add these functions to handle Google Sheets sync after form submissions
+  // Add them right after the handleCustomSubmit function
+
+  // Add this function to sync a new figure with Google Sheets
+  const syncFigureWithSheets = async (figure: FigureItem) => {
+    try {
+      const response = await fetch("/api/sheets/figures", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(figure),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to sync with Google Sheets")
+      }
+
+      console.log("Figure synced with Google Sheets")
+    } catch (error) {
+      console.error("Error syncing with Google Sheets:", error)
+      // Don't show toast here, as we don't want to confuse the user if sheets sync fails
+    }
+  }
+
+  // Add this function to sync a new wishlist item with Google Sheets
+  const syncWishlistWithSheets = async (item: WishlistItem) => {
+    try {
+      const response = await fetch("/api/sheets/wishlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(item),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to sync with Google Sheets")
+      }
+
+      console.log("Wishlist item synced with Google Sheets")
+    } catch (error) {
+      console.error("Error syncing with Google Sheets:", error)
+    }
+  }
+
+  // Add this function to sync a new custom item with Google Sheets
+  const syncCustomWithSheets = async (item: CustomItem) => {
+    try {
+      const response = await fetch("/api/sheets/customs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(item),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to sync with Google Sheets")
+      }
+
+      console.log("Custom item synced with Google Sheets")
+    } catch (error) {
+      console.error("Error syncing with Google Sheets:", error)
+    }
   }
 
   return (
     <div className="w-full py-6 px-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Add</h1>
+        <h1 className="text-3xl font-bold">{t("nav.add")}</h1>
       </div>
 
-      <Tabs defaultValue="figures" className="w-full">
+      <Tabs defaultValue="figures" className="w-full" value={activeTab} onValueChange={setActiveTab}>
         <div className="flex justify-center mb-6">
           <TabsList>
             <TabsTrigger value="figures" className="px-8">
-              Figures
+              {t("add.figures")}
             </TabsTrigger>
             <TabsTrigger value="wishlist" className="px-8">
-              Wishlist
+              {t("add.wishlist")}
             </TabsTrigger>
             <TabsTrigger value="customs" className="px-8">
-              Custom's
+              {t("add.customs")}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -271,8 +360,17 @@ export default function AddPage() {
         <TabsContent value="figures">
           <Card className="w-full">
             <CardContent className="p-6">
+              {showSuccessAlert && (
+                <Alert className="mb-6 bg-neon-green/20 border-neon-green">
+                  <CheckCircle className="h-4 w-4 text-neon-green" />
+                  <AlertDescription className="text-neon-green font-medium">
+                    Added! Item has been successfully added to your collection.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <form onSubmit={handleFigureSubmit} className="space-y-6">
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-2">
                     <Label htmlFor="id">ID</Label>
                     <Input id="id" name="id" value={formattedId} readOnly className="opacity-70 cursor-not-allowed" />
@@ -471,10 +569,10 @@ export default function AddPage() {
 
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline">
-                    Cancel
+                    {t("add.cancel")}
                   </Button>
                   <Button type="submit" className="bg-neon-green text-black hover:bg-neon-green/90">
-                    Add to Checklist
+                    {t("add.addToChecklist")}
                   </Button>
                 </div>
               </form>
@@ -486,15 +584,24 @@ export default function AddPage() {
         <TabsContent value="wishlist">
           <Card className="w-full">
             <CardContent className="p-6">
+              {showWishlistSuccessAlert && (
+                <Alert className="mb-6 bg-neon-green/20 border-neon-green">
+                  <CheckCircle className="h-4 w-4 text-neon-green" />
+                  <AlertDescription className="text-neon-green font-medium">
+                    Added! Item has been successfully added to your wishlist.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <form onSubmit={handleWishlistSubmit} className="space-y-6">
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-name">Figure Name</Label>
+                    <Label htmlFor="wishlist-name">{t("add.name")}</Label>
                     <Input id="wishlist-name" name="wishlist-name" placeholder="Figure name" required />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-type">Type</Label>
+                    <Label htmlFor="wishlist-type">{t("add.type")}</Label>
                     <Select name="wishlist-type" required>
                       <SelectTrigger id="wishlist-type">
                         <SelectValue placeholder="Select type" />
@@ -508,22 +615,22 @@ export default function AddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-franchise">Franchise</Label>
+                    <Label htmlFor="wishlist-franchise">{t("add.franchise")}</Label>
                     <Input id="wishlist-franchise" name="wishlist-franchise" placeholder="Franchise name" required />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-brand">Brand</Label>
+                    <Label htmlFor="wishlist-brand">{t("add.brand")}</Label>
                     <Input id="wishlist-brand" name="wishlist-brand" placeholder="Brand name" required />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-serie">Serie</Label>
+                    <Label htmlFor="wishlist-serie">{t("add.serie")}</Label>
                     <Input id="wishlist-serie" name="wishlist-serie" placeholder="Serie name" />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-yearReleased">Year Released</Label>
+                    <Label htmlFor="wishlist-yearReleased">{t("add.yearReleased")}</Label>
                     <Input
                       id="wishlist-yearReleased"
                       name="wishlist-yearReleased"
@@ -536,7 +643,7 @@ export default function AddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-price">Price (COP)</Label>
+                    <Label htmlFor="wishlist-price">{t("add.price")}</Label>
                     <Input
                       id="wishlist-price"
                       name="wishlist-price"
@@ -547,7 +654,7 @@ export default function AddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-logo">Logo</Label>
+                    <Label htmlFor="wishlist-logo">{t("add.logo")}</Label>
                     <Input
                       id="wishlist-logo"
                       name="wishlist-logo"
@@ -568,7 +675,7 @@ export default function AddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-photo">Photo</Label>
+                    <Label htmlFor="wishlist-photo">{t("add.photo")}</Label>
                     <Input
                       id="wishlist-photo"
                       name="wishlist-photo"
@@ -589,12 +696,12 @@ export default function AddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-tagline">Tagline</Label>
+                    <Label htmlFor="wishlist-tagline">{t("add.tagline")}</Label>
                     <Input id="wishlist-tagline" name="wishlist-tagline" placeholder="Tagline" />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-review">Review</Label>
+                    <Label htmlFor="wishlist-review">{t("add.review")}</Label>
                     <Input id="wishlist-review" name="wishlist-review" placeholder="YouTube review URL" />
                   </div>
 
@@ -611,7 +718,7 @@ export default function AddPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wishlist-comments">Comments</Label>
+                  <Label htmlFor="wishlist-comments">{t("add.comments")}</Label>
                   <Textarea
                     id="wishlist-comments"
                     name="wishlist-comments"
@@ -622,10 +729,10 @@ export default function AddPage() {
 
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline">
-                    Cancel
+                    {t("add.cancel")}
                   </Button>
                   <Button type="submit" className="bg-neon-green text-black hover:bg-neon-green/90">
-                    Add to Wishlist
+                    {t("add.addToWishlist")}
                   </Button>
                 </div>
               </form>
@@ -637,15 +744,24 @@ export default function AddPage() {
         <TabsContent value="customs">
           <Card className="w-full">
             <CardContent className="p-6">
+              {showCustomSuccessAlert && (
+                <Alert className="mb-6 bg-neon-green/20 border-neon-green">
+                  <CheckCircle className="h-4 w-4 text-neon-green" />
+                  <AlertDescription className="text-neon-green font-medium">
+                    Added! Custom item has been successfully added to your customs collection.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <form onSubmit={handleCustomSubmit} className="space-y-6">
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-2">
-                    <Label htmlFor="custom-name">Name</Label>
+                    <Label htmlFor="custom-name">{t("add.name")}</Label>
                     <Input id="custom-name" name="custom-name" placeholder="Custom name" required />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="custom-type">Type</Label>
+                    <Label htmlFor="custom-type">{t("add.type")}</Label>
                     <Select name="custom-type" required>
                       <SelectTrigger id="custom-type">
                         <SelectValue placeholder="Select type" />
@@ -659,7 +775,7 @@ export default function AddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="custom-franchise">Franchise</Label>
+                    <Label htmlFor="custom-franchise">{t("add.franchise")}</Label>
                     <Input id="custom-franchise" name="custom-franchise" placeholder="Franchise name" required />
                   </div>
 
@@ -674,7 +790,7 @@ export default function AddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="custom-logo">Logo</Label>
+                    <Label htmlFor="custom-logo">{t("add.logo")}</Label>
                     <Input
                       id="custom-logo"
                       name="custom-logo"
@@ -695,22 +811,22 @@ export default function AddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="custom-tagline">Tagline</Label>
+                    <Label htmlFor="custom-tagline">{t("add.tagline")}</Label>
                     <Input id="custom-tagline" name="custom-tagline" placeholder="Tagline" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="custom-comments">Comments</Label>
+                  <Label htmlFor="custom-comments">{t("add.comments")}</Label>
                   <Textarea id="custom-comments" name="custom-comments" placeholder="Add your comments..." rows={4} />
                 </div>
 
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline">
-                    Cancel
+                    {t("add.cancel")}
                   </Button>
                   <Button type="submit" className="bg-neon-green text-black hover:bg-neon-green/90">
-                    Add to Custom's
+                    {t("add.addToCustoms")}
                   </Button>
                 </div>
               </form>

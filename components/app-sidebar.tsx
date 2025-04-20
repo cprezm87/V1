@@ -1,6 +1,7 @@
 "use client"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import {
   Home,
   Plus,
@@ -26,6 +27,8 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/components/ui/use-toast"
 
 // Menu items definition
 const menuItems = [
@@ -33,7 +36,7 @@ const menuItems = [
     title: "Home",
     icon: Home,
     href: "/",
-    isActive: true,
+    isActive: false,
   },
   {
     title: "Add",
@@ -83,9 +86,27 @@ const menuItems = [
 ]
 
 export function AppSidebar() {
-  const handleLogout = () => {
-    // Aquí iría la lógica de cierre de sesión
-    console.log("Logging out...")
+  const { logout, user } = useAuth()
+  const { toast } = useToast()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente.",
+      })
+      // Redirigir al usuario a la página de login
+      router.push("/login")
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error)
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al cerrar sesión.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
@@ -116,8 +137,8 @@ export function AppSidebar() {
               <Image src="/user.jpg" alt="User profile" fill className="object-cover" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">Opaco Pérez</span>
-              <span className="text-xs text-muted-foreground">c.prezm87@gmail.com</span>
+              <span className="text-sm font-medium">{user?.email || "Usuario"}</span>
+              <span className="text-xs text-muted-foreground">{user?.displayName || "Coleccionista"}</span>
             </div>
           </div>
           <Button
@@ -127,7 +148,7 @@ export function AppSidebar() {
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />
-            <span>Sign Out</span>
+            <span>Cerrar sesión</span>
           </Button>
         </div>
       </SidebarFooter>

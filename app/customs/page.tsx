@@ -1,15 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Edit, Trash2, ArrowUpDown, MoreHorizontal } from "lucide-react"
+import { Search, Edit, Trash2, ArrowUpDown, MoreHorizontal, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTrigger, DialogFooter, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 interface CustomItem {
   id: string
@@ -29,6 +31,8 @@ export default function CustomsPage() {
   const [sortBy, setSortBy] = useState("name")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [searchTerm, setSearchTerm] = useState("")
+  const [editItem, setEditItem] = useState<CustomItem | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   // Load items from localStorage on component mount
   useEffect(() => {
@@ -59,10 +63,29 @@ export default function CustomsPage() {
   }
 
   // Handle item deletion
+  const syncDeleteWithSheets = async (id: string) => {
+    try {
+      const response = await fetch("/api/sheets/customs", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      })
+
+      if (!response.ok) {
+        console.error("Failed to sync deletion with Google Sheets")
+      }
+    } catch (error) {
+      console.error("Error syncing deletion with Google Sheets:", error)
+    }
+  }
+
   const handleDeleteItem = (id: string) => {
     const updatedItems = items.filter((item) => item.id !== id)
     setItems(updatedItems)
     localStorage.setItem("customItems", JSON.stringify(updatedItems))
+    syncDeleteWithSheets(id)
     toast({
       title: "Deleted!",
       description: "Item has been removed from your custom's collection.",
@@ -71,12 +94,23 @@ export default function CustomsPage() {
 
   // Handle item edit
   const handleEditItem = (item: CustomItem) => {
-    // In a real application, you would open an edit form
-    // For now, we'll just show a toast
-    toast({
-      title: "Edit Item",
-      description: `Editing ${item.name}`,
-    })
+    setEditItem({ ...item })
+    setIsEditDialogOpen(true)
+  }
+
+  // Save edited item
+  const saveEditedItem = () => {
+    if (editItem) {
+      const updatedItems = items.map((item) => (item.id === editItem.id ? editItem : item))
+      setItems(updatedItems)
+      localStorage.setItem("customItems", JSON.stringify(updatedItems))
+      setIsEditDialogOpen(false)
+      setEditItem(null)
+      toast({
+        title: "Updated!",
+        description: "Item has been updated successfully.",
+      })
+    }
   }
 
   // Render custom item dialog content
@@ -386,6 +420,87 @@ export default function CustomsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Custom Item</DialogTitle>
+          </DialogHeader>
+          {editItem && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Name</Label>
+                  <Input
+                    id="edit-name"
+                    value={editItem.name}
+                    onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-franchise">Franchise</Label>
+                  <Input
+                    id="edit-franchise"
+                    value={editItem.franchise}
+                    onChange={(e) => setEditItem({ ...editItem, franchise: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-head">Head</Label>
+                  <Input
+                    id="edit-head"
+                    value={editItem.head}
+                    onChange={(e) => setEditItem({ ...editItem, head: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-body">Body</Label>
+                  <Input
+                    id="edit-body"
+                    value={editItem.body}
+                    onChange={(e) => setEditItem({ ...editItem, body: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-logo">Logo URL</Label>
+                  <Input
+                    id="edit-logo"
+                    value={editItem.logo}
+                    onChange={(e) => setEditItem({ ...editItem, logo: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-tagline">Tagline</Label>
+                  <Input
+                    id="edit-tagline"
+                    value={editItem.tagline}
+                    onChange={(e) => setEditItem({ ...editItem, tagline: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-comments">Comments</Label>
+                <Textarea
+                  id="edit-comments"
+                  value={editItem.comments}
+                  onChange={(e) => setEditItem({ ...editItem, comments: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <X className="mr-2 h-4 w-4" />
+              Cancel
+            </Button>
+            <Button onClick={saveEditedItem} className="bg-neon-green text-black hover:bg-neon-green/90">
+              <Edit className="mr-2 h-4 w-4" />
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

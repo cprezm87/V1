@@ -117,10 +117,12 @@ export default function InsightsPage() {
       const typeCounts: Record<string, number> = {}
 
       figureItems.forEach((item) => {
-        if (typeCounts[item.type]) {
-          typeCounts[item.type]++
+        // Capitalize first letter of type
+        const typeKey = item.type.charAt(0).toUpperCase() + item.type.slice(1)
+        if (typeCounts[typeKey]) {
+          typeCounts[typeKey]++
         } else {
-          typeCounts[item.type] = 1
+          typeCounts[typeKey] = 1
         }
       })
 
@@ -150,38 +152,30 @@ export default function InsightsPage() {
         <h1 className="text-3xl font-bold">Insights</h1>
       </div>
 
-      <div className="mb-8">
+      {/* Collection Overview, Total Collection Value, and Total Items in a row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader>
             <CardTitle className="text-xl text-neon-green">Collection Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="mb-4">Summary of your horror figure collection:</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <p className="text-sm text-muted-foreground">Checklist Items</p>
-                  <p className="text-3xl font-bold text-neon-green">{figureItems.length}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <p className="text-sm text-muted-foreground">Wishlist Items</p>
-                  <p className="text-3xl font-bold text-neon-green">{wishlistItems.length}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <p className="text-sm text-muted-foreground">Custom Items</p>
-                  <p className="text-3xl font-bold text-neon-green">{customItems.length}</p>
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="flex justify-between items-center">
+                <p className="text-sm">Checklist Items</p>
+                <p className="text-xl font-bold text-neon-green">{figureItems.length}</p>
+              </div>
+              <div className="flex justify-between items-center">
+                <p className="text-sm">Wishlist Items</p>
+                <p className="text-xl font-bold text-neon-green">{wishlistItems.length}</p>
+              </div>
+              <div className="flex justify-between items-center">
+                <p className="text-sm">Custom Items</p>
+                <p className="text-xl font-bold text-neon-green">{customItems.length}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardHeader>
             <CardTitle className="text-xl text-neon-green">Total Collection Value</CardTitle>
@@ -234,7 +228,7 @@ export default function InsightsPage() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="count" name="Count" fill="#83FF00" />
+                      <Bar dataKey="count" name="Items" fill="#83FF00" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -270,26 +264,15 @@ export default function InsightsPage() {
       </div>
 
       <div className="mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl text-neon-green">Brand Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4">Count of items by individual brand:</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {brandData.map((brand) => (
-                <Card key={brand.name}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-center">
-                      <p className="font-medium">{brand.name}</p>
-                      <p className="text-neon-green font-bold">{brand.count}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+        <h2 className="text-xl font-bold text-neon-green mb-4">Brand Breakdown</h2>
+        <div className="space-y-2">
+          {brandData.map((brand) => (
+            <div key={brand.name} className="flex justify-between items-center p-3 border border-border rounded-md">
+              <p className="font-medium">{brand.name}</p>
+              <p className="text-neon-green font-bold">{brand.count}</p>
             </div>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
       </div>
     </div>
   )

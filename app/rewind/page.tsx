@@ -89,7 +89,48 @@ export default function RewindPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 mb-10">
-        {/* Movies Anniversaries */}
+        {/* Efemérides Today - Ahora primero */}
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl text-neon-green">Efemérides Today</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {todayAnniversaries.length > 0 ? (
+                <div className="space-y-6">
+                  {todayAnniversaries.map((movie) => (
+                    <div key={movie.id} className="text-center">
+                      <h3 className="text-lg font-medium mb-2">{movie.title}</h3>
+                      <Link href={movie.trailer} target="_blank" className="block relative">
+                        <div className="relative aspect-[2/3] w-full max-w-[200px] mx-auto mb-2 rounded-md overflow-hidden">
+                          <Image
+                            src={movie.poster || "/placeholder.svg?height=300&width=200"}
+                            alt={movie.title}
+                            fill
+                            className="object-cover"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity">
+                            <Play className="h-12 w-12 text-white" />
+                          </div>
+                        </div>
+                      </Link>
+                      <p className="text-neon-green font-bold text-xl">{getYearsSince(movie.releaseDate)} years</p>
+                      <p className="text-sm text-muted-foreground">
+                        Released: {format(movie.releaseDate, "MMMM d, yyyy")}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  No anniversaries today. Select a date with anniversaries or add new ones!
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Movies Anniversaries - Ahora segundo */}
         <section>
           <Card>
             <CardHeader>
@@ -242,47 +283,6 @@ export default function RewindPage() {
             </CardContent>
           </Card>
         </section>
-
-        {/* Efemérides Today */}
-        <section>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl text-neon-green">Efemérides Today</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {todayAnniversaries.length > 0 ? (
-                <div className="space-y-6">
-                  {todayAnniversaries.map((movie) => (
-                    <div key={movie.id} className="text-center">
-                      <h3 className="text-lg font-medium mb-2">{movie.title}</h3>
-                      <Link href={movie.trailer} target="_blank" className="block relative">
-                        <div className="relative aspect-[2/3] w-full max-w-[200px] mx-auto mb-2 rounded-md overflow-hidden">
-                          <Image
-                            src={movie.poster || "/placeholder.svg?height=300&width=200"}
-                            alt={movie.title}
-                            fill
-                            className="object-cover"
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity">
-                            <Play className="h-12 w-12 text-white" />
-                          </div>
-                        </div>
-                      </Link>
-                      <p className="text-neon-green font-bold text-xl">{getYearsSince(movie.releaseDate)} years</p>
-                      <p className="text-sm text-muted-foreground">
-                        Released: {format(movie.releaseDate, "MMMM d, yyyy")}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  No anniversaries today. Select a date with anniversaries or add new ones!
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </section>
       </div>
 
       {/* Movies News Section */}
@@ -319,15 +319,19 @@ export default function RewindPage() {
                     bloody-disgusting.com
                   </Link>
                 </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {[1, 2].map((i) => (
-                    <Card key={`bloody-${i}`} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <h4 className="font-medium">Horror News {i}</h4>
-                        <p className="text-sm text-muted-foreground">Latest horror movie news and reviews</p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="mt-4">
+                  <div className="relative h-[600px] w-full">
+                    <iframe
+                      src="https://bloody-disgusting.com"
+                      width="100%"
+                      height="600"
+                      style={{ border: "none" }}
+                      title="Bloody Disgusting"
+                      sandbox="allow-scripts allow-same-origin"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -345,15 +349,19 @@ export default function RewindPage() {
                     www.abandomoviez.net
                   </Link>
                 </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {[1, 2].map((i) => (
-                    <Card key={`abando-${i}`} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <h4 className="font-medium">Horror News {i}</h4>
-                        <p className="text-sm text-muted-foreground">Spanish horror movie news and reviews</p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="mt-4">
+                  <div className="relative h-[600px] w-full">
+                    <iframe
+                      src="https://www.abandomoviez.net/"
+                      width="100%"
+                      height="600"
+                      style={{ border: "none" }}
+                      title="Abandomoviez"
+                      sandbox="allow-scripts allow-same-origin"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -367,15 +375,19 @@ export default function RewindPage() {
                     www.aullidos.com
                   </Link>
                 </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {[1, 2].map((i) => (
-                    <Card key={`aullidos-${i}`} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <h4 className="font-medium">Horror News {i}</h4>
-                        <p className="text-sm text-muted-foreground">Spanish horror portal</p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="mt-4">
+                  <div className="relative h-[600px] w-full">
+                    <iframe
+                      src="https://www.aullidos.com/"
+                      width="100%"
+                      height="600"
+                      style={{ border: "none" }}
+                      title="Aullidos"
+                      sandbox="allow-scripts allow-same-origin"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -389,15 +401,19 @@ export default function RewindPage() {
                     brokehorrorfan.com
                   </Link>
                 </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {[1, 2].map((i) => (
-                    <Card key={`broke-${i}`} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <h4 className="font-medium">Horror News {i}</h4>
-                        <p className="text-sm text-muted-foreground">Independent horror news and reviews</p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="mt-4">
+                  <div className="relative h-[600px] w-full">
+                    <iframe
+                      src="https://brokehorrorfan.com/"
+                      width="100%"
+                      height="600"
+                      style={{ border: "none" }}
+                      title="Broke Horror Fan"
+                      sandbox="allow-scripts allow-same-origin"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -415,15 +431,19 @@ export default function RewindPage() {
                     shoutfactory.com/collections/scream-factory
                   </Link>
                 </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {[1, 2].map((i) => (
-                    <Card key={`scream-${i}`} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <h4 className="font-medium">New Release {i}</h4>
-                        <p className="text-sm text-muted-foreground">Collector's edition horror releases</p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="mt-4">
+                  <div className="relative h-[600px] w-full">
+                    <iframe
+                      src="https://shoutfactory.com/collections/scream-factory"
+                      width="100%"
+                      height="600"
+                      style={{ border: "none" }}
+                      title="Scream Factory"
+                      sandbox="allow-scripts allow-same-origin"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
