@@ -363,35 +363,124 @@ export default function SettingsPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      try {
-        const importData = JSON.parse(event.target?.result as string)
+    const fileExtension = file.name.split(".").pop()?.toLowerCase()
 
-        // Validate the imported data
-        if (!importData.figureItems || !importData.wishlistItems || !importData.customItems) {
-          throw new Error("Invalid backup file format")
+    if (fileExtension === "json") {
+      // Handle JSON import
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        try {
+          const importData = JSON.parse(event.target?.result as string)
+
+          // Validate the imported data
+          if (!importData.figureItems || !importData.wishlistItems || !importData.customItems) {
+            throw new Error("Invalid backup file format")
+          }
+
+          // Save to localStorage
+          localStorage.setItem("figureItems", JSON.stringify(importData.figureItems))
+          localStorage.setItem("wishlistItems", JSON.stringify(importData.wishlistItems))
+          localStorage.setItem("customItems", JSON.stringify(importData.customItems))
+
+          toast({
+            title: "Data Imported",
+            description: "Your data has been imported successfully. Please refresh the page.",
+          })
+        } catch (error) {
+          toast({
+            title: "Import Failed",
+            description: "There was an error importing your JSON data. Please check the file format.",
+            variant: "destructive",
+          })
         }
-
-        // Save to localStorage
-        localStorage.setItem("figureItems", JSON.stringify(importData.figureItems))
-        localStorage.setItem("wishlistItems", JSON.stringify(importData.wishlistItems))
-        localStorage.setItem("customItems", JSON.stringify(importData.customItems))
-
-        toast({
-          title: "Data Imported",
-          description: "Your data has been imported successfully. Please refresh the page.",
-        })
-      } catch (error) {
-        toast({
-          title: "Import Failed",
-          description: "There was an error importing your data. Please check the file format.",
-          variant: "destructive",
-        })
       }
+      reader.readAsText(file)
+    } else if (fileExtension === "csv") {
+      // Handle CSV import
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        try {
+          const csvText = event.target?.result as string
+
+          // Parse CSV
+          const lines = csvText.split("\n")
+          const headers = lines[0].split(",")
+
+          // Check if this is a valid CSV export
+          const isValidCsv = headers.includes("id") && headers.includes("name")
+
+          if (!isValidCsv) {
+            throw new Error("Invalid CSV format")
+          }
+
+          // Parse the CSV data into objects
+          const items = []
+          for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue
+
+            const values = lines[i].split(",")
+            const item: any = {}
+
+            headers.forEach((header, index) => {
+              // Handle quoted values
+              let value = values[index] || ""
+              if (value.startsWith('"') && value.endsWith('"')) {
+                value = value.substring(1, value.length - 1).replace(/""/g, '"')
+              }
+
+              // Convert numeric values
+              if (header === "price" || header === "ranking") {
+                item[header] = Number(value) || 0
+              } else if (header === "released" || header === "buy") {
+                item[header] = value.toLowerCase() === "true"
+              } else {
+                item[header] = value
+              }
+            })
+
+            items.push(item)
+          }
+
+          // Determine the type of data based on the headers
+          if (headers.includes("shelf") && headers.includes("display")) {
+            localStorage.setItem("figureItems", JSON.stringify(items))
+            toast({
+              title: "Figures Imported",
+              description: `Successfully imported ${items.length} figures from CSV.`,
+            })
+          } else if (headers.includes("released") && headers.includes("buy")) {
+            localStorage.setItem("wishlistItems", JSON.stringify(items))
+            toast({
+              title: "Wishlist Imported",
+              description: `Successfully imported ${items.length} wishlist items from CSV.`,
+            })
+          } else if (headers.includes("head") && headers.includes("body")) {
+            localStorage.setItem("customItems", JSON.stringify(items))
+            toast({
+              title: "Custom Items Imported",
+              description: `Successfully imported ${items.length} custom items from CSV.`,
+            })
+          } else {
+            throw new Error("Could not determine data type from CSV")
+          }
+        } catch (error) {
+          console.error("CSV import error:", error)
+          toast({
+            title: "Import Failed",
+            description: "There was an error importing your CSV data. Please check the file format.",
+            variant: "destructive",
+          })
+        }
+      }
+      reader.readAsText(file)
+    } else {
+      toast({
+        title: "Import Failed",
+        description: "Unsupported file format. Please use JSON or CSV files.",
+        variant: "destructive",
+      })
     }
 
-    reader.readAsText(file)
     e.target.value = ""
   }
 
@@ -848,7 +937,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Export your collection data to different formats for backup or analysis purposes.
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Button
                     className="w-full bg-neon-green text-black hover:bg-neon-green/90"
                     onClick={() => handleExportData("json")}
@@ -863,30 +952,23 @@ export default function SettingsPage() {
                     <Download className="mr-2 h-4 w-4" />
                     Export to CSV
                   </Button>
-                  <Button
-                    className="w-full bg-neon-green text-black hover:bg-neon-green/90"
-                    onClick={() => handleExportData("excel")}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Export to Excel
-                  </Button>
                 </div>
               </div>
 
               <div>
                 <h3 className="text-lg font-medium mb-2">Import Data</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Import your collection data from a previously exported JSON file.
+                  Import your collection data from a previously exported JSON or CSV file.
                 </p>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="import-file" className="cursor-pointer">
                     <div className="flex items-center justify-center w-full p-4 border-2 border-dashed border-border rounded-md hover:border-neon-green">
                       <Upload className="mr-2 h-4 w-4" />
-                      <span>Select backup file</span>
+                      <span>Select JSON or CSV backup file</span>
                       <Input
                         id="import-file"
                         type="file"
-                        accept=".json"
+                        accept=".json,.csv"
                         className="hidden"
                         onChange={handleImportData}
                       />
