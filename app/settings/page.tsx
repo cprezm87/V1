@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -27,6 +27,51 @@ import {
 } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 
+// Primero, vamos a añadir las importaciones necesarias para las fuentes
+// Añadir estas importaciones al inicio del archivo, después de las importaciones existentes
+import { Inter, Roboto, Montserrat, Open_Sans, Poppins } from "next/font/google"
+
+// Definir las fuentes
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
+const roboto = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-roboto" })
+const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" })
+const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-opensans" })
+const poppins = Poppins({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-poppins" })
+
+// Definir los temas de colores
+const themeColors = {
+  neon: {
+    primary: "#83FF00",
+    secondary: "#111111",
+    accent: "#83FF00",
+    background: "#0A0A0A",
+  },
+  purple: {
+    primary: "#9D00FF",
+    secondary: "#111111",
+    accent: "#9D00FF",
+    background: "#0A0A0A",
+  },
+  blue: {
+    primary: "#00A3FF",
+    secondary: "#111111",
+    accent: "#00A3FF",
+    background: "#0A0A0A",
+  },
+  red: {
+    primary: "#FF0044",
+    secondary: "#111111",
+    accent: "#FF0044",
+    background: "#0A0A0A",
+  },
+  orange: {
+    primary: "#FF6B00",
+    secondary: "#111111",
+    accent: "#FF6B00",
+    background: "#0A0A0A",
+  },
+}
+
 export default function SettingsPage() {
   const { toast } = useToast()
   const { theme, toggleTheme, language, setLanguage, t } = useTheme()
@@ -46,6 +91,47 @@ export default function SettingsPage() {
   const [userPhotoPreview, setUserPhotoPreview] = useState("/user.jpg")
   const logoInputRef = useRef<HTMLInputElement>(null)
   const userPhotoInputRef = useRef<HTMLInputElement>(null)
+
+  // Añadir este useEffect después de la definición de los estados
+  useEffect(() => {
+    // Cargar configuraciones guardadas
+    const savedTheme = localStorage.getItem("theme") as "dark" | "light"
+    const savedThemeColor = localStorage.getItem("themeColor")
+    const savedFont = localStorage.getItem("font")
+
+    // Aplicar tema guardado
+    if (savedTheme) {
+      document.documentElement.classList.toggle("dark", savedTheme === "dark")
+      document.documentElement.classList.toggle("light", savedTheme === "light")
+    }
+
+    // Aplicar color de tema guardado
+    if (savedThemeColor && themeColors[savedThemeColor as keyof typeof themeColors]) {
+      setThemeColor(savedThemeColor)
+      const colors = themeColors[savedThemeColor as keyof typeof themeColors]
+      document.documentElement.style.setProperty("--primary", colors.primary)
+      document.documentElement.style.setProperty("--accent", colors.accent)
+      document.documentElement.style.setProperty("--neon-green", colors.primary)
+    }
+
+    // Aplicar fuente guardada
+    if (savedFont) {
+      setFont(savedFont)
+      const fontClass =
+        savedFont === "inter"
+          ? inter.className
+          : savedFont === "roboto"
+            ? roboto.className
+            : savedFont === "montserrat"
+              ? montserrat.className
+              : savedFont === "opensans"
+                ? openSans.className
+                : savedFont === "poppins"
+                  ? poppins.className
+                  : inter.className
+      document.body.className = fontClass
+    }
+  }, [])
 
   // Handle profile save
   const handleProfileSave = () => {
@@ -113,16 +199,6 @@ export default function SettingsPage() {
 
   // Handle appearance save
   const handleAppearanceSave = () => {
-    // Aplicar el tema seleccionado
-    document.documentElement.classList.toggle("dark", theme === "dark")
-    document.documentElement.classList.toggle("light", theme === "light")
-
-    // Guardar el tema en localStorage
-    localStorage.setItem("theme", theme)
-
-    // Guardar el color del tema
-    localStorage.setItem("themeColor", themeColor)
-
     toast({
       title: t("settings.saveAppearance"),
       description: "Your appearance settings have been updated successfully.",
@@ -317,6 +393,8 @@ export default function SettingsPage() {
 
             csv += row + "\n"
           })
+
+          return csv
         }
 
         // Create separate Excel files for each collection
@@ -655,78 +733,152 @@ export default function SettingsPage() {
 
         {/* Appearance Tab */}
         <TabsContent value="appearance" className="mt-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardContent className="p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-medium">{t("settings.darkMode")}</h3>
-                    <p className="text-sm text-muted-foreground">Toggle dark mode on or off</p>
-                  </div>
-                  <Switch
-                    checked={theme === "dark"}
-                    onCheckedChange={toggleTheme}
-                    className="data-[state=checked]:bg-neon-green"
-                  />
+          <Card>
+            <CardContent className="p-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">{t("settings.darkMode")}</h3>
+                  <p className="text-sm text-muted-foreground">Toggle dark mode on or off</p>
                 </div>
+                <Switch
+                  checked={theme === "dark"}
+                  onCheckedChange={toggleTheme}
+                  className="data-[state=checked]:bg-neon-green"
+                />
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="theme">{t("settings.theme")}</Label>
-                  <Select value={themeColor} onValueChange={setThemeColor}>
-                    <SelectTrigger id="theme">
-                      <SelectValue placeholder="Select theme" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="neon">Neon Green</SelectItem>
-                      <SelectItem value="purple">Neon Purple</SelectItem>
-                      <SelectItem value="blue">Neon Blue</SelectItem>
-                      <SelectItem value="red">Neon Red</SelectItem>
-                      <SelectItem value="orange">Neon Orange</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="theme">{t("settings.theme")}</Label>
+                <Select
+                  value={themeColor}
+                  onValueChange={(value) => {
+                    setThemeColor(value)
+                    // Aplicar colores del tema seleccionado
+                    const colors = themeColors[value as keyof typeof themeColors]
+                    document.documentElement.style.setProperty("--primary", colors.primary)
+                    document.documentElement.style.setProperty("--accent", colors.accent)
 
-                <div className="space-y-2">
-                  <Label htmlFor="font">{t("settings.font")}</Label>
-                  <Select value={font} onValueChange={setFont}>
-                    <SelectTrigger id="font">
-                      <SelectValue placeholder="Select font" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="inter">Inter</SelectItem>
-                      <SelectItem value="roboto">Roboto</SelectItem>
-                      <SelectItem value="montserrat">Montserrat</SelectItem>
-                      <SelectItem value="opensans">Open Sans</SelectItem>
-                      <SelectItem value="poppins">Poppins</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button
-                  className="w-full bg-neon-green text-black hover:bg-neon-green/90"
-                  onClick={handleAppearanceSave}
+                    // Actualizar las variables CSS para los colores del tema
+                    document.documentElement.style.setProperty("--neon-green", colors.primary)
+                  }}
                 >
-                  {t("settings.saveAppearance")}
-                </Button>
-              </CardContent>
-            </Card>
+                  <SelectTrigger id="theme">
+                    <SelectValue placeholder="Select theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="neon" className="flex items-center">
+                      <div className="w-4 h-4 rounded-full bg-[#83FF00] mr-2"></div>
+                      Neon Green
+                    </SelectItem>
+                    <SelectItem value="purple" className="flex items-center">
+                      <div className="w-4 h-4 rounded-full bg-[#9D00FF] mr-2"></div>
+                      Neon Purple
+                    </SelectItem>
+                    <SelectItem value="blue" className="flex items-center">
+                      <div className="w-4 h-4 rounded-full bg-[#00A3FF] mr-2"></div>
+                      Neon Blue
+                    </SelectItem>
+                    <SelectItem value="red" className="flex items-center">
+                      <div className="w-4 h-4 rounded-full bg-[#FF0044] mr-2"></div>
+                      Neon Red
+                    </SelectItem>
+                    <SelectItem value="orange" className="flex items-center">
+                      <div className="w-4 h-4 rounded-full bg-[#FF6B00] mr-2"></div>
+                      Neon Orange
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-4">{t("settings.preview")}</h3>
-                <div className={`rounded-lg border p-4 ${theme === "dark" ? "bg-background" : "bg-white text-black"}`}>
-                  <h4 className="font-medium">{t("settings.themePreview")}</h4>
-                  <p className="text-sm">This is how your theme will look.</p>
-                  <div className="mt-4 flex gap-2">
-                    <Button className="bg-neon-green text-black hover:bg-neon-green/90">{t("settings.primary")}</Button>
-                    <Button variant="outline" className="border-neon-green text-neon-green hover:bg-neon-green/10">
-                      {t("settings.secondary")}
-                    </Button>
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="font">{t("settings.font")}</Label>
+                <Select
+                  value={font}
+                  onValueChange={(value) => {
+                    setFont(value)
+                    // Aplicar la fuente seleccionada
+                    const fontClass =
+                      value === "inter"
+                        ? inter.className
+                        : value === "roboto"
+                          ? roboto.className
+                          : value === "montserrat"
+                            ? montserrat.className
+                            : value === "opensans"
+                              ? openSans.className
+                              : value === "poppins"
+                                ? poppins.className
+                                : inter.className
+
+                    // Aplicar la clase de fuente al elemento body
+                    document.body.className = fontClass
+                  }}
+                >
+                  <SelectTrigger id="font">
+                    <SelectValue placeholder="Select font" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="inter" className={inter.className}>
+                      Inter
+                    </SelectItem>
+                    <SelectItem value="roboto" className={roboto.className}>
+                      Roboto
+                    </SelectItem>
+                    <SelectItem value="montserrat" className={montserrat.className}>
+                      Montserrat
+                    </SelectItem>
+                    <SelectItem value="opensans" className={openSans.className}>
+                      Open Sans
+                    </SelectItem>
+                    <SelectItem value="poppins" className={poppins.className}>
+                      Poppins
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                className="w-full bg-neon-green text-black hover:bg-neon-green/90"
+                onClick={() => {
+                  // Guardar configuraciones en localStorage
+                  localStorage.setItem("theme", theme)
+                  localStorage.setItem("themeColor", themeColor)
+                  localStorage.setItem("font", font)
+
+                  // Aplicar cambios
+                  const colors = themeColors[themeColor as keyof typeof themeColors]
+                  document.documentElement.style.setProperty("--primary", colors.primary)
+                  document.documentElement.style.setProperty("--accent", colors.accent)
+                  document.documentElement.style.setProperty("--neon-green", colors.primary)
+
+                  // Aplicar tema
+                  document.documentElement.classList.toggle("dark", theme === "dark")
+                  document.documentElement.classList.toggle("light", theme === "light")
+
+                  // Notificar al usuario
+                  handleAppearanceSave()
+                }}
+              >
+                {t("settings.saveAppearance")}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-medium mb-4">{t("settings.preview")}</h3>
+              <div className={`rounded-lg border p-4 ${theme === "dark" ? "bg-background" : "bg-white text-black"}`}>
+                <h4 className="font-medium">{t("settings.themePreview")}</h4>
+                <p className="text-sm">This is how your theme will look.</p>
+                <div className="mt-4 flex gap-2">
+                  <Button className="bg-neon-green text-black hover:bg-neon-green/90">{t("settings.primary")}</Button>
+                  <Button variant="outline" className="border-neon-green text-neon-green hover:bg-neon-green/10">
+                    {t("settings.secondary")}
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Language Tab */}
