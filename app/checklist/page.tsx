@@ -160,7 +160,7 @@ export default function ChecklistPage() {
       {item.photo && (
         <div className="w-full">
           <div className="relative h-80 w-full overflow-hidden">
-            <img src={item.photo || "/placeholder.svg"} alt={item.name} className="object-none" />
+            <img src={item.photo || "/placeholder.svg"} alt={item.name} className="object-contain" />
           </div>
         </div>
       )}
@@ -234,16 +234,23 @@ export default function ChecklistPage() {
       {item.review && (
         <div>
           <p className="text-sm font-medium text-neon-green mb-2">Review:</p>
-          <div className="aspect-video w-full overflow-hidden">
-            <iframe
-              width="100%"
-              height="100%"
-              src={item.review.replace("watch?v=", "embed/")}
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
+          <div className="aspect-video w-full overflow-hidden relative">
+            <a href={item.review} target="_blank" rel="noopener noreferrer" className="block relative">
+              <div className="aspect-video w-full bg-black/20 rounded-md flex items-center justify-center">
+                <img
+                  src={`https://img.youtube.com/vi/${item.review.includes("youtube.com") ? item.review.split("v=")[1]?.split("&")[0] : "default"}/0.jpg`}
+                  alt="YouTube thumbnail"
+                  className="w-full h-full object-cover absolute inset-0"
+                />
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-8 h-8">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </a>
           </div>
         </div>
       )}
