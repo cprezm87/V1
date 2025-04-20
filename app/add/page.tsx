@@ -172,7 +172,6 @@ export default function AddPage() {
 
     setFigureItems([...figureItems, newFigure])
     setNextId(nextId + 1)
-    syncFigureWithSheets(newFigure)
 
     // Reset form
     form.reset()
@@ -216,7 +215,6 @@ export default function AddPage() {
 
     setWishlistItems([...wishlistItems, newWishlistItem])
     setNextId(nextId + 1)
-    syncWishlistWithSheets(newWishlistItem)
 
     // Reset form
     form.reset()
@@ -252,7 +250,6 @@ export default function AddPage() {
 
     setCustomItems([...customItems, newCustomItem])
     setNextId(nextId + 1)
-    syncCustomWithSheets(newCustomItem)
 
     // Reset form
     form.reset()
@@ -266,73 +263,6 @@ export default function AddPage() {
       title: t("add.added"),
       description: t("add.itemAdded"),
     })
-  }
-
-  // Add these functions to handle Google Sheets sync after form submissions
-  // Add them right after the handleCustomSubmit function
-
-  // Add this function to sync a new figure with Google Sheets
-  const syncFigureWithSheets = async (figure: FigureItem) => {
-    try {
-      const response = await fetch("/api/sheets/figures", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(figure),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to sync with Google Sheets")
-      }
-
-      console.log("Figure synced with Google Sheets")
-    } catch (error) {
-      console.error("Error syncing with Google Sheets:", error)
-      // Don't show toast here, as we don't want to confuse the user if sheets sync fails
-    }
-  }
-
-  // Add this function to sync a new wishlist item with Google Sheets
-  const syncWishlistWithSheets = async (item: WishlistItem) => {
-    try {
-      const response = await fetch("/api/sheets/wishlist", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(item),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to sync with Google Sheets")
-      }
-
-      console.log("Wishlist item synced with Google Sheets")
-    } catch (error) {
-      console.error("Error syncing with Google Sheets:", error)
-    }
-  }
-
-  // Add this function to sync a new custom item with Google Sheets
-  const syncCustomWithSheets = async (item: CustomItem) => {
-    try {
-      const response = await fetch("/api/sheets/customs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(item),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to sync with Google Sheets")
-      }
-
-      console.log("Custom item synced with Google Sheets")
-    } catch (error) {
-      console.error("Error syncing with Google Sheets:", error)
-    }
   }
 
   return (

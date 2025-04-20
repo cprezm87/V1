@@ -102,29 +102,10 @@ export default function WishlistPage() {
   }
 
   // Handle item deletion
-  const syncDeleteWithSheets = async (id: string) => {
-    try {
-      const response = await fetch("/api/sheets/wishlist", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      })
-
-      if (!response.ok) {
-        console.error("Failed to sync deletion with Google Sheets")
-      }
-    } catch (error) {
-      console.error("Error syncing deletion with Google Sheets:", error)
-    }
-  }
-
   const handleDeleteItem = (id: string) => {
     const updatedItems = items.filter((item) => item.id !== id)
     setItems(updatedItems)
     localStorage.setItem("wishlistItems", JSON.stringify(updatedItems))
-    syncDeleteWithSheets(id)
     toast({
       title: "Deleted!",
       description: "Item has been removed from your wishlist.",

@@ -58,12 +58,9 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "zod": "^3.24.1",
-    "google-auth-library": "latest",
     "firebase": "latest",
     "@dhaiwat10/react-link-preview": "latest",
-    "@vercel/blob": "latest",
-    "google-spreadsheet": "latest",
-    "@radix-ui/react-icons": "latest"
+    "@vercel/blob": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
