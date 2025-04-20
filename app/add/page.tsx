@@ -2,7 +2,6 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import BulkImport from "./bulk-import"
-import GoogleSheetsImport from "./google-sheets-import"
 
 // Importar el componente original de la página Add
 import OriginalAddPage from "./original-add-page"
@@ -22,9 +21,6 @@ export default function AddPage() {
           <TabsTrigger value="bulk" className="flex-1">
             Bulk Import
           </TabsTrigger>
-          <TabsTrigger value="sheets" className="flex-1">
-            Google Sheets Import
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="single">
@@ -33,10 +29,6 @@ export default function AddPage() {
 
         <TabsContent value="bulk">
           <BulkImport />
-        </TabsContent>
-
-        <TabsContent value="sheets">
-          <GoogleSheetsImport />
         </TabsContent>
       </Tabs>
     </div>

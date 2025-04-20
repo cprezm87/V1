@@ -1,12 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
-import { Loader2 } from "lucide-react"
 
 interface FigureItem {
   id: string
@@ -141,69 +136,5 @@ export default function GoogleSheetsImport() {
     }
   }
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Import from Google Sheets</CardTitle>
-        <CardDescription>Import your collection data directly from Google Sheets</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="sheet-id">Google Sheet ID</Label>
-          <Input
-            id="sheet-id"
-            placeholder="Enter the ID from your Google Sheet URL"
-            value={sheetId}
-            onChange={(e) => setSheetId(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            Example: For https://docs.google.com/spreadsheets/d/1h0YdIQjGNH5UVin4r0NRDOAMPJHYvBN2UbHxZmmtuS8/edit, the
-            ID is 1h0YdIQjGNH5UVin4r0NRDOAMPJHYvBN2UbHxZmmtuS8
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="sheet-name">Sheet Name</Label>
-          <Input
-            id="sheet-name"
-            placeholder="Sheet1"
-            value={sheetName}
-            onChange={(e) => setSheetName(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">The name of the sheet tab (default is "Sheet1")</p>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Important: Your Google Sheet must be publicly accessible (set to "Anyone with the link can view")
-          </p>
-          <p className="text-sm text-muted-foreground">
-            The sheet should have columns matching: name, type, franchise, brand, serie, yearReleased, condition, price,
-            etc.
-          </p>
-        </div>
-
-        <Button
-          className="w-full bg-neon-green text-black hover:bg-neon-green/90"
-          onClick={handleImport}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Importing...
-            </>
-          ) : (
-            "Import from Google Sheets"
-          )}
-        </Button>
-
-        {importedCount > 0 && (
-          <p className="text-sm text-center text-neon-green">
-            Successfully imported {importedCount} items. Go to the Checklist page to see them.
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  )
+  return null
 }

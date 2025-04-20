@@ -14,6 +14,8 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { FirebaseError } from "firebase/app"
 import { useTheme } from "@/contexts/theme-context"
+import { GoogleAuthProvider, GithubAuthProvider, signInWithPopup } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 export default function LoginPage() {
   const { toast } = useToast()
@@ -171,6 +173,98 @@ export default function LoginPage() {
             break
           case "auth/user-not-found":
             errorMessage = "No account exists with this email."
+            break
+          default:
+            errorMessage = `Error: ${error.message}`
+        }
+      }
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true)
+
+    try {
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(auth, provider)
+
+      toast({
+        title: "Success",
+        description: "You have been logged in with Google successfully",
+      })
+    } catch (error) {
+      console.error("Google login error:", error)
+
+      let errorMessage = "Error logging in with Google. Please try again."
+
+      if (error instanceof FirebaseError) {
+        switch (error.code) {
+          case "auth/unauthorized-domain":
+            errorMessage =
+              "This domain is not authorized for authentication. Please add it to your Firebase console under Authentication > Settings > Authorized domains."
+            break
+          case "auth/popup-closed-by-user":
+            errorMessage = "Login popup was closed. Please try again."
+            break
+          case "auth/cancelled-popup-request":
+            errorMessage = "Login request was cancelled. Please try again."
+            break
+          case "auth/popup-blocked":
+            errorMessage = "Login popup was blocked by your browser. Please allow popups for this site."
+            break
+          default:
+            errorMessage = `Error: ${error.message}`
+        }
+      }
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGithubSignIn = async () => {
+    setIsLoading(true)
+
+    try {
+      const provider = new GithubAuthProvider()
+      await signInWithPopup(auth, provider)
+
+      toast({
+        title: "Success",
+        description: "You have been logged in with GitHub successfully",
+      })
+    } catch (error) {
+      console.error("GitHub login error:", error)
+
+      let errorMessage = "Error logging in with GitHub. Please try again."
+
+      if (error instanceof FirebaseError) {
+        switch (error.code) {
+          case "auth/unauthorized-domain":
+            errorMessage =
+              "This domain is not authorized for authentication. Please add it to your Firebase console under Authentication > Settings > Authorized domains."
+            break
+          case "auth/popup-closed-by-user":
+            errorMessage = "Login popup was closed. Please try again."
+            break
+          case "auth/cancelled-popup-request":
+            errorMessage = "Login request was cancelled. Please try again."
+            break
+          case "auth/popup-blocked":
+            errorMessage = "Login popup was blocked by your browser. Please allow popups for this site."
             break
           default:
             errorMessage = `Error: ${error.message}`
@@ -369,13 +463,13 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
                 <Image src="/google.png" alt="Google" width={20} height={20} className="mr-2" />
-                Google
+                {isLoading ? "Connecting..." : "Google"}
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={handleGithubSignIn} disabled={isLoading}>
                 <Image src="/github.png" alt="GitHub" width={20} height={20} className="mr-2" />
-                GitHub
+                {isLoading ? "Connecting..." : "GitHub"}
               </Button>
             </div>
           </CardFooter>
