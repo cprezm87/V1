@@ -9,13 +9,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
+import { MovieNewsFeed } from "@/components/movie-news-feed"
 
 interface MovieAnniversary {
   id: string
@@ -287,168 +287,7 @@ export default function RewindPage() {
 
       {/* Movies News Section */}
       <section className="mb-10">
-        <h3 className="mb-4 text-xl font-semibold text-neon-green">Movies News</h3>
-        <Tabs defaultValue="bloody">
-          <TabsList className="w-full justify-start overflow-x-auto">
-            <TabsTrigger value="bloody" className="whitespace-nowrap">
-              Bloody Disgusting
-            </TabsTrigger>
-            <TabsTrigger value="abando" className="whitespace-nowrap">
-              Abandomoviez
-            </TabsTrigger>
-            <TabsTrigger value="aullidos" className="whitespace-nowrap">
-              Aullidos
-            </TabsTrigger>
-            <TabsTrigger value="broke" className="whitespace-nowrap">
-              Broke Horror Fan
-            </TabsTrigger>
-            <TabsTrigger value="scream" className="whitespace-nowrap">
-              Scream Factory
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="bloody" className="mt-4">
-            <Card>
-              <CardContent className="p-4">
-                <p>
-                  Latest news from{" "}
-                  <Link
-                    href="https://bloody-disgusting.com/"
-                    target="_blank"
-                    className="text-neon-green hover:underline"
-                  >
-                    bloody-disgusting.com
-                  </Link>
-                </p>
-                <div className="mt-4">
-                  <div className="relative h-[600px] w-full">
-                    <iframe
-                      src="https://bloody-disgusting.com"
-                      width="100%"
-                      height="600"
-                      style={{ border: "none" }}
-                      title="Bloody Disgusting"
-                      sandbox="allow-scripts allow-same-origin"
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="abando" className="mt-4">
-            <Card>
-              <CardContent className="p-4">
-                <p>
-                  Latest news from{" "}
-                  <Link
-                    href="https://www.abandomoviez.net/"
-                    target="_blank"
-                    className="text-neon-green hover:underline"
-                  >
-                    www.abandomoviez.net
-                  </Link>
-                </p>
-                <div className="mt-4">
-                  <div className="relative h-[600px] w-full">
-                    <iframe
-                      src="https://www.abandomoviez.net/"
-                      width="100%"
-                      height="600"
-                      style={{ border: "none" }}
-                      title="Abandomoviez"
-                      sandbox="allow-scripts allow-same-origin"
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="aullidos" className="mt-4">
-            <Card>
-              <CardContent className="p-4">
-                <p>
-                  Latest news from{" "}
-                  <Link href="https://www.aullidos.com/" target="_blank" className="text-neon-green hover:underline">
-                    www.aullidos.com
-                  </Link>
-                </p>
-                <div className="mt-4">
-                  <div className="relative h-[600px] w-full">
-                    <iframe
-                      src="https://www.aullidos.com/"
-                      width="100%"
-                      height="600"
-                      style={{ border: "none" }}
-                      title="Aullidos"
-                      sandbox="allow-scripts allow-same-origin"
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="broke" className="mt-4">
-            <Card>
-              <CardContent className="p-4">
-                <p>
-                  Latest news from{" "}
-                  <Link href="https://brokehorrorfan.com/" target="_blank" className="text-neon-green hover:underline">
-                    brokehorrorfan.com
-                  </Link>
-                </p>
-                <div className="mt-4">
-                  <div className="relative h-[600px] w-full">
-                    <iframe
-                      src="https://brokehorrorfan.com/"
-                      width="100%"
-                      height="600"
-                      style={{ border: "none" }}
-                      title="Broke Horror Fan"
-                      sandbox="allow-scripts allow-same-origin"
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="scream" className="mt-4">
-            <Card>
-              <CardContent className="p-4">
-                <p>
-                  Latest news from{" "}
-                  <Link
-                    href="https://shoutfactory.com/collections/scream-factory"
-                    target="_blank"
-                    className="text-neon-green hover:underline"
-                  >
-                    shoutfactory.com/collections/scream-factory
-                  </Link>
-                </p>
-                <div className="mt-4">
-                  <div className="relative h-[600px] w-full">
-                    <iframe
-                      src="https://shoutfactory.com/collections/scream-factory"
-                      width="100%"
-                      height="600"
-                      style={{ border: "none" }}
-                      title="Scream Factory"
-                      sandbox="allow-scripts allow-same-origin"
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <MovieNewsFeed />
       </section>
     </div>
   )

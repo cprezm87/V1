@@ -14,6 +14,7 @@ import {
   Settings,
   Info,
   LogOut,
+  Newspaper,
 } from "lucide-react"
 
 import {
@@ -37,6 +38,11 @@ const menuItems = [
     icon: Home,
     href: "/",
     isActive: false,
+  },
+  {
+    title: "News",
+    icon: Newspaper,
+    href: "/news",
   },
   {
     title: "Add",
