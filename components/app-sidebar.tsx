@@ -1,7 +1,6 @@
 "use client"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
 import {
   Home,
   Plus,
@@ -14,6 +13,7 @@ import {
   Settings,
   Info,
   LogOut,
+  Newspaper,
 } from "lucide-react"
 
 import {
@@ -28,6 +28,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
 
 // Menu items definition
 const menuItems = [
@@ -36,6 +37,11 @@ const menuItems = [
     icon: Home,
     href: "/",
     isActive: false,
+  },
+  {
+    title: "News",
+    icon: Newspaper,
+    href: "/news",
   },
   {
     title: "Add",
@@ -93,16 +99,14 @@ export function AppSidebar() {
     try {
       await logout()
       toast({
-        title: "Sesión cerrada",
-        description: "Has cerrado sesión correctamente.",
+        title: "Sesión actualizada",
+        description: "Se ha actualizado la sesión correctamente.",
       })
-      // Redirigir al usuario a la página de login
-      router.push("/login")
     } catch (error) {
-      console.error("Error al cerrar sesión:", error)
+      console.error("Error al actualizar sesión:", error)
       toast({
         title: "Error",
-        description: "Ocurrió un error al cerrar sesión.",
+        description: "Ocurrió un error al actualizar la sesión.",
         variant: "destructive",
       })
     }
@@ -119,15 +123,15 @@ export function AppSidebar() {
         <SidebarMenu>
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <div
+              <Link
+                href={item.href}
                 className={`flex items-center gap-3 w-full rounded-md p-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
                   item.isActive ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : ""
                 }`}
-                onClick={() => router.push(item.href)}
               >
                 <item.icon className="h-5 w-5" />
                 <span>{item.title}</span>
-              </div>
+              </Link>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
@@ -149,7 +153,7 @@ export function AppSidebar() {
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />
-            <span>Sign Out</span>
+            <span>Refresh Session</span>
           </Button>
         </div>
       </SidebarFooter>

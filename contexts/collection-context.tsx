@@ -4,7 +4,6 @@ import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { useAuth } from "./auth-context"
 import type { CollectionItem } from "../types/collection"
-import { addItem, updateItem, deleteItem, getItem, getUserItems, getCollectionStats } from "../lib/firestore"
 
 interface CollectionContextType {
   items: CollectionItem[]
@@ -39,18 +38,40 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     }
   }, [user])
 
-  // Modificar la función refreshItems para cargar datos de Firestore en lugar de localStorage
   const refreshItems = async (filter?: any) => {
     if (!user) return
 
     setLoading(true)
     try {
-      const userItems = await getUserItems(user.uid, filter)
+      // Obtener items del localStorage
+      const storedItems = localStorage.getItem(`items_${user.uid}`)
+      let userItems: CollectionItem[] = storedItems ? JSON.parse(storedItems) : []
+
+      // Aplicar filtros si existen
+      if (filter) {
+        if (filter.inCollection !== undefined) {
+          userItems = userItems.filter((item) => item.inCollection === filter.inCollection)
+        }
+        if (filter.inWishlist !== undefined) {
+          userItems = userItems.filter((item) => item.inWishlist === filter.inWishlist)
+        }
+        if (filter.isCustom !== undefined) {
+          userItems = userItems.filter((item) => item.isCustom === filter.isCustom)
+        }
+        if (filter.category) {
+          userItems = userItems.filter((item) => item.category === filter.category)
+        }
+      }
+
+      // Ordenar por fecha de actualización
+      userItems.sort((a, b) => {
+        const dateA = new Date(a.updatedAt).getTime()
+        const dateB = new Date(b.updatedAt).getTime()
+        return dateB - dateA
+      })
+
       setItems(userItems)
       setError(null)
-
-      // Sincronizar con localStorage para compatibilidad con código existente
-      localStorage.setItem("figureItems", JSON.stringify(userItems))
     } catch (err: any) {
       console.error("Error fetching items:", err)
       setError(err?.message || "Error al cargar los items. Por favor, intenta de nuevo.")
@@ -59,7 +80,50 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
-  // Modificar la función addNewItem para guardar en Firestore
+  const refreshStats = async () => {
+    if (!user) return
+
+    try {
+      // Calcular estadísticas basadas en los items
+      const collectionCount = items.filter((item) => item.inCollection).length
+      const wishlistCount = items.filter((item) => item.inWishlist).length
+      const customCount = items.filter((item) => item.isCustom).length
+
+      const brands = [...new Set(items.map((item) => item.brand))]
+      const categories = [...new Set(items.map((item) => item.category))]
+
+      const brandCounts = brands
+        .map((brand) => ({
+          brand,
+          count: items.filter((item) => item.brand === brand && item.inCollection).length,
+        }))
+        .sort((a, b) => b.count - a.count)
+
+      const categoryCounts = categories
+        .map((category) => ({
+          category,
+          count: items.filter((item) => item.category === category && item.inCollection).length,
+        }))
+        .sort((a, b) => b.count - a.count)
+
+      // Calcular valor total de la colección
+      const totalValue = items
+        .filter((item) => item.inCollection && item.price)
+        .reduce((sum, item) => sum + (item.price || 0), 0)
+
+      setStats({
+        collectionCount,
+        wishlistCount,
+        customCount,
+        brandCounts,
+        categoryCounts,
+        totalValue,
+      })
+    } catch (err) {
+      console.error("Error fetching stats:", err)
+    }
+  }
+
   const addNewItem = async (item: CollectionItem): Promise<string> => {
     if (!user) throw new Error("Usuario no autenticado")
 
@@ -71,7 +135,18 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
         updatedAt: new Date(),
       }
 
-      const id = await addItem(itemWithUser)
+      // Generar un ID único
+      const id = Date.now().toString()
+      const itemWithId = { ...itemWithUser, id }
+
+      // Obtener items existentes
+      const storedItems = localStorage.getItem(`items_${user.uid}`)
+      const existingItems: CollectionItem[] = storedItems ? JSON.parse(storedItems) : []
+
+      // Añadir nuevo item
+      const updatedItems = [...existingItems, itemWithId]
+      localStorage.setItem(`items_${user.uid}`, JSON.stringify(updatedItems))
+
       await refreshItems()
       await refreshStats()
       return id
@@ -81,10 +156,21 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
-  // Modificar la función updateExistingItem para actualizar en Firestore
   const updateExistingItem = async (id: string, item: Partial<CollectionItem>): Promise<void> => {
     try {
-      await updateItem(id, item)
+      // Obtener items existentes
+      const storedItems = localStorage.getItem(`items_${user?.uid}`)
+      if (!storedItems) return
+
+      const existingItems: CollectionItem[] = JSON.parse(storedItems)
+
+      // Actualizar el item específico
+      const updatedItems = existingItems.map((existingItem) =>
+        existingItem.id === id ? { ...existingItem, ...item, updatedAt: new Date() } : existingItem,
+      )
+
+      localStorage.setItem(`items_${user?.uid}`, JSON.stringify(updatedItems))
+
       await refreshItems()
       await refreshStats()
     } catch (err) {
@@ -93,10 +179,19 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
-  // Modificar la función removeItem para eliminar de Firestore
   const removeItem = async (id: string): Promise<void> => {
     try {
-      await deleteItem(id)
+      // Obtener items existentes
+      const storedItems = localStorage.getItem(`items_${user?.uid}`)
+      if (!storedItems) return
+
+      const existingItems: CollectionItem[] = JSON.parse(storedItems)
+
+      // Filtrar el item a eliminar
+      const updatedItems = existingItems.filter((item) => item.id !== id)
+
+      localStorage.setItem(`items_${user?.uid}`, JSON.stringify(updatedItems))
+
       await refreshItems()
       await refreshStats()
     } catch (err) {
@@ -105,20 +200,18 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
-  const refreshStats = async () => {
-    if (!user) return
-
-    try {
-      const collectionStats = await getCollectionStats(user.uid)
-      setStats(collectionStats)
-    } catch (err) {
-      console.error("Error fetching stats:", err)
-    }
-  }
-
   const getItemById = async (id: string): Promise<CollectionItem | null> => {
     try {
-      return await getItem(id)
+      // Obtener items existentes
+      const storedItems = localStorage.getItem(`items_${user?.uid}`)
+      if (!storedItems) return null
+
+      const existingItems: CollectionItem[] = JSON.parse(storedItems)
+
+      // Encontrar el item por ID
+      const item = existingItems.find((item) => item.id === id)
+
+      return item || null
     } catch (err) {
       console.error("Error getting item:", err)
       throw err

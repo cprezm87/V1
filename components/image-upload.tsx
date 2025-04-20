@@ -63,38 +63,20 @@ export function ImageUpload({
       const formData = new FormData()
       formData.append("file", file)
 
-      // Verificar que el usuario esté autenticado
-      if (!user) {
-        throw new Error("Usuario no autenticado")
-      }
-
-      // Obtener token de autenticación
-      const token = await user.getIdToken()
-      if (!token) {
-        throw new Error("No se pudo obtener el token de autenticación")
-      }
-
       // Subir a través de nuestra API
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${await user?.getIdToken()}`,
         },
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Error al subir la imagen")
+        throw new Error("Error al subir la imagen")
       }
 
       const data = await response.json()
-
-      // Verificar que la URL se haya devuelto correctamente
-      if (!data.url) {
-        throw new Error("No se recibió URL de la imagen")
-      }
-
       onImageUploaded(data.url)
     } catch (err) {
       console.error("Error al subir imagen:", err)

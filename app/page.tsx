@@ -9,7 +9,6 @@ import { useTheme } from "@/contexts/theme-context"
 import { EnhancedNewsFeed } from "@/components/enhanced-news-feed"
 import { BrandNewsFeed } from "@/components/brand-news-feed"
 import { StoreNewsFeed } from "@/components/store-news-feed"
-import { DataMigrationHandler } from "@/components/data-migration-handler"
 
 interface FigureItem {
   id: string
@@ -53,7 +52,6 @@ export default function Home() {
 
   return (
     <div className="container py-6">
-      <DataMigrationHandler />
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">{t("nav.home")}</h1>
         <div className="relative w-64">

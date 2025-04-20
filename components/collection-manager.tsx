@@ -302,15 +302,6 @@ export function CollectionManager() {
                               fill
                               className="object-contain"
                               unoptimized={item.imageUrl.includes("drive.google.com")}
-                              onError={() => {
-                                console.error(`Error loading image for ${item.name}`)
-                                // Mostrar imagen de placeholder en caso de error
-                                const imgElement = document.getElementById(`img-${item.id}`) as HTMLImageElement
-                                if (imgElement) {
-                                  imgElement.src = "/placeholder.svg"
-                                }
-                              }}
-                              id={`img-${item.id}`}
                             />
                           </div>
                         )}
