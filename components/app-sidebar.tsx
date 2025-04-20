@@ -15,6 +15,7 @@ import {
   Info,
   LogOut,
 } from "lucide-react"
+import { CloudIcon } from "@radix-ui/react-icons"
 
 import {
   Sidebar,
@@ -77,6 +78,11 @@ const menuItems = [
     title: "Settings",
     icon: Settings,
     href: "/settings",
+  },
+  {
+    title: "Sync",
+    icon: CloudIcon,
+    href: "/settings/sync",
   },
   {
     title: "About",

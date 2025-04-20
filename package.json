@@ -62,7 +62,8 @@
     "firebase": "latest",
     "@dhaiwat10/react-link-preview": "latest",
     "@vercel/blob": "latest",
-    "google-spreadsheet": "latest"
+    "google-spreadsheet": "latest",
+    "@radix-ui/react-icons": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

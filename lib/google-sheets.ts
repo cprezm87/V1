@@ -41,142 +41,196 @@ export async function getSpreadsheet() {
  * Get a specific sheet by name, create it if it doesn't exist
  */
 export async function getSheet(sheetName: string) {
-  const doc = await getSpreadsheet()
+  try {
+    const doc = await getSpreadsheet()
 
-  // Try to find the sheet
-  let sheet = doc.sheetsByTitle[sheetName]
+    // Try to find the sheet
+    let sheet = doc.sheetsByTitle[sheetName]
 
-  // If sheet doesn't exist, create it
-  if (!sheet) {
-    sheet = await doc.addSheet({ title: sheetName })
+    // If sheet doesn't exist, create it
+    if (!sheet) {
+      sheet = await doc.addSheet({ title: sheetName })
 
-    // Set up headers based on sheet type
-    if (sheetName === SHEETS.FIGURES) {
-      await sheet.setHeaderRow([
-        "id",
-        "name",
-        "type",
-        "franchise",
-        "brand",
-        "serie",
-        "yearReleased",
-        "condition",
-        "price",
-        "yearPurchase",
-        "upc",
-        "logo",
-        "photo",
-        "tagline",
-        "review",
-        "shelf",
-        "display",
-        "ranking",
-        "comments",
-      ])
-    } else if (sheetName === SHEETS.WISHLIST) {
-      await sheet.setHeaderRow([
-        "id",
-        "name",
-        "type",
-        "franchise",
-        "brand",
-        "serie",
-        "yearReleased",
-        "price",
-        "logo",
-        "photo",
-        "tagline",
-        "review",
-        "released",
-        "buy",
-        "comments",
-      ])
-    } else if (sheetName === SHEETS.CUSTOMS) {
-      await sheet.setHeaderRow(["id", "name", "type", "franchise", "head", "body", "logo", "tagline", "comments"])
+      // Set up headers based on sheet type
+      if (sheetName === SHEETS.FIGURES) {
+        await sheet.setHeaderRow([
+          "id",
+          "name",
+          "type",
+          "franchise",
+          "brand",
+          "serie",
+          "yearReleased",
+          "condition",
+          "price",
+          "yearPurchase",
+          "upc",
+          "logo",
+          "photo",
+          "tagline",
+          "review",
+          "shelf",
+          "display",
+          "ranking",
+          "comments",
+          "dateAdded",
+        ])
+      } else if (sheetName === SHEETS.WISHLIST) {
+        await sheet.setHeaderRow([
+          "id",
+          "name",
+          "type",
+          "franchise",
+          "brand",
+          "serie",
+          "yearReleased",
+          "price",
+          "logo",
+          "photo",
+          "tagline",
+          "review",
+          "released",
+          "buy",
+          "comments",
+          "dateAdded",
+        ])
+      } else if (sheetName === SHEETS.CUSTOMS) {
+        await sheet.setHeaderRow([
+          "id",
+          "name",
+          "type",
+          "franchise",
+          "head",
+          "body",
+          "logo",
+          "tagline",
+          "comments",
+          "dateAdded",
+        ])
+      }
     }
-  }
 
-  return sheet
+    return sheet
+  } catch (error) {
+    console.error(`Error getting sheet ${sheetName}:`, error)
+    throw error
+  }
 }
 
 /**
  * Add a row to a specific sheet
  */
 export async function addRow(sheetName: string, rowData: any) {
-  const sheet = await getSheet(sheetName)
-  return await sheet.addRow(rowData)
+  try {
+    const sheet = await getSheet(sheetName)
+
+    // Add dateAdded field if it doesn't exist
+    if (!rowData.dateAdded) {
+      rowData.dateAdded = new Date().toISOString()
+    }
+
+    return await sheet.addRow(rowData)
+  } catch (error) {
+    console.error(`Error adding row to ${sheetName}:`, error)
+    throw error
+  }
 }
 
 /**
  * Get all rows from a specific sheet
  */
 export async function getRows(sheetName: string) {
-  const sheet = await getSheet(sheetName)
-  return await sheet.getRows()
+  try {
+    const sheet = await getSheet(sheetName)
+    return await sheet.getRows()
+  } catch (error) {
+    console.error(`Error getting rows from ${sheetName}:`, error)
+    throw error
+  }
 }
 
 /**
  * Update a row in a specific sheet
  */
 export async function updateRow(sheetName: string, rowIndex: number, rowData: any) {
-  const sheet = await getSheet(sheetName)
-  const rows = await sheet.getRows()
+  try {
+    const sheet = await getSheet(sheetName)
+    const rows = await sheet.getRows()
 
-  if (rowIndex >= 0 && rowIndex < rows.length) {
-    const row = rows[rowIndex]
-    Object.keys(rowData).forEach((key) => {
-      row[key] = rowData[key]
-    })
-    await row.save()
-    return row
+    if (rowIndex >= 0 && rowIndex < rows.length) {
+      const row = rows[rowIndex]
+      Object.keys(rowData).forEach((key) => {
+        row[key] = rowData[key]
+      })
+      await row.save()
+      return row
+    }
+
+    throw new Error(`Row index ${rowIndex} out of bounds`)
+  } catch (error) {
+    console.error(`Error updating row in ${sheetName}:`, error)
+    throw error
   }
-
-  throw new Error(`Row index ${rowIndex} out of bounds`)
 }
 
 /**
  * Delete a row from a specific sheet
  */
 export async function deleteRow(sheetName: string, rowIndex: number) {
-  const sheet = await getSheet(sheetName)
-  const rows = await sheet.getRows()
+  try {
+    const sheet = await getSheet(sheetName)
+    const rows = await sheet.getRows()
 
-  if (rowIndex >= 0 && rowIndex < rows.length) {
-    await rows[rowIndex].delete()
-    return true
+    if (rowIndex >= 0 && rowIndex < rows.length) {
+      await rows[rowIndex].delete()
+      return true
+    }
+
+    throw new Error(`Row index ${rowIndex} out of bounds`)
+  } catch (error) {
+    console.error(`Error deleting row from ${sheetName}:`, error)
+    throw error
   }
-
-  throw new Error(`Row index ${rowIndex} out of bounds`)
 }
 
 /**
  * Find a row by ID
  */
 export async function findRowById(sheetName: string, id: string): Promise<GoogleSpreadsheetRow | null> {
-  const sheet = await getSheet(sheetName)
-  const rows = await sheet.getRows()
+  try {
+    const sheet = await getSheet(sheetName)
+    const rows = await sheet.getRows()
 
-  for (const row of rows) {
-    if (row.id === id) {
-      return row
+    for (const row of rows) {
+      if (row.id === id) {
+        return row
+      }
     }
-  }
 
-  return null
+    return null
+  } catch (error) {
+    console.error(`Error finding row by ID in ${sheetName}:`, error)
+    throw error
+  }
 }
 
 /**
  * Delete a row by ID
  */
 export async function deleteRowById(sheetName: string, id: string): Promise<boolean> {
-  const row = await findRowById(sheetName, id)
+  try {
+    const row = await findRowById(sheetName, id)
 
-  if (row) {
-    await row.delete()
-    return true
+    if (row) {
+      await row.delete()
+      return true
+    }
+
+    return false
+  } catch (error) {
+    console.error(`Error deleting row by ID from ${sheetName}:`, error)
+    throw error
   }
-
-  return false
 }
 
 /**
@@ -197,6 +251,11 @@ export async function syncLocalDataWithSheets(sheetName: string, localData: any[
 
     // Process local data
     for (const item of localData) {
+      // Add dateAdded field if it doesn't exist
+      if (!item.dateAdded) {
+        item.dateAdded = new Date().toISOString()
+      }
+
       if (existingIds.has(item.id)) {
         // Update existing row
         const { row } = existingIds.get(item.id)
@@ -229,6 +288,51 @@ export async function syncLocalDataWithSheets(sheetName: string, localData: any[
     }
   } catch (error) {
     console.error(`Error syncing ${sheetName} data:`, error)
+    throw error
+  }
+}
+
+/**
+ * Create a test row in a sheet (for testing the connection)
+ */
+export async function createTestRow(sheetName: string): Promise<boolean> {
+  try {
+    const sheet = await getSheet(sheetName)
+
+    const testData = {
+      id: `test-${Date.now()}`,
+      name: "Test Item",
+      dateAdded: new Date().toISOString(),
+    }
+
+    // Add other required fields based on sheet type
+    if (sheetName === SHEETS.FIGURES) {
+      testData["type"] = "figures"
+      testData["franchise"] = "Test"
+      testData["brand"] = "Test Brand"
+      testData["yearReleased"] = "2023"
+      testData["condition"] = "New"
+      testData["price"] = "100"
+      testData["yearPurchase"] = "2023"
+    } else if (sheetName === SHEETS.WISHLIST) {
+      testData["type"] = "figures"
+      testData["franchise"] = "Test"
+      testData["brand"] = "Test Brand"
+      testData["yearReleased"] = "2023"
+      testData["price"] = "100"
+      testData["released"] = "false"
+      testData["buy"] = "false"
+    } else if (sheetName === SHEETS.CUSTOMS) {
+      testData["type"] = "figures"
+      testData["franchise"] = "Test"
+      testData["head"] = "Test Head"
+      testData["body"] = "Test Body"
+    }
+
+    await sheet.addRow(testData)
+    return true
+  } catch (error) {
+    console.error(`Error creating test row in ${sheetName}:`, error)
     throw error
   }
 }

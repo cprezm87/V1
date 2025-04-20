@@ -29,6 +29,7 @@ export function SheetsSync({ variant = "outline", size = "default", className = 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [syncComplete, setSyncComplete] = useState(false)
 
+  // Update the handleSync function to include better error handling
   const handleSync = async (direction: "upload" | "download") => {
     try {
       setIsSyncing(true)
@@ -40,9 +41,9 @@ export function SheetsSync({ variant = "outline", size = "default", className = 
       const progressInterval = setInterval(() => {
         setSyncProgress((prev) => {
           const newProgress = prev + 5
-          if (newProgress >= 100) {
+          if (newProgress >= 95) {
             clearInterval(progressInterval)
-            return 100
+            return 95
           }
           return newProgress
         })
@@ -118,10 +119,11 @@ export function SheetsSync({ variant = "outline", size = "default", className = 
       console.error("Sync error:", error)
       toast({
         title: "Sync Failed",
-        description: (error as Error).message || "An error occurred during synchronization",
+        description: error instanceof Error ? error.message : "An error occurred during synchronization",
         variant: "destructive",
       })
       setIsSyncing(false)
+      setSyncProgress(0)
     }
   }
 
