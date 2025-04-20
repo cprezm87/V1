@@ -31,6 +31,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 // Añadir estas importaciones al inicio del archivo, después de las importaciones existentes
 import { Inter, Roboto, Montserrat, Open_Sans, Poppins } from "next/font/google"
 
+// Añadir esta importación al inicio del archivo, junto con las demás importaciones
+import GoogleSheetsImport from "./google-sheets-import"
+
 // Definir las fuentes
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const roboto = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-roboto" })
@@ -1172,160 +1175,136 @@ export default function SettingsPage() {
         {/* Sync Tab */}
         <TabsContent value="sync" className="mt-6">
           <Card>
+            <CardHeader>
+              <CardTitle>Google Sheets Sync</CardTitle>
+              <CardDescription>
+                Sync your collection data with Google Sheets for advanced analysis and sharing
+              </CardDescription>
+            </CardHeader>
             <CardContent className="space-y-6">
               <div className="border rounded-md p-4">
                 <h3 className="text-lg font-medium mb-2">Connection Status</h3>
-                <div className={`h-3 w-3 rounded-full ${isGoogleConnected ? "bg-green-500" : "bg-red-500"}`}></div>
-                <p className="text-sm">
-                  {isGoogleConnected ? "Connected to Google Sheets" : "Not connected to Google Sheets"}
-                </p>
-              </div>
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={() => {
-                  setIsGoogleConnected(!isGoogleConnected)
-                  toast({
-                    title: isGoogleConnected ? "Disconnected" : "Connected",
-                    description: isGoogleConnected
-                      ? "Disconnected from Google Sheets"
-                      : "Successfully connected to Google Sheets",
-                  })
-                }}
-              >
-                {isGoogleConnected ? "Disconnect Google Account" : "Connect Google Account"}
-              </Button>
-            </CardContent>
-
-            <div>
-              <h3 className="text-lg font-medium mb-2">Google Sheets Configuration</h3>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="spreadsheet-id">Spreadsheet ID or URL</Label>
-                  <Input
-                    id="spreadsheet-id"
-                    placeholder="Enter Google Sheets ID or URL"
-                    value={spreadsheetId}
-                    onChange={(e) => setSpreadsheetId(e.target.value)}
-                    disabled={!isGoogleConnected}
-                  />
+                <div className={`flex items-center space-x-2 mb-4`}>
+                  <div className={`h-3 w-3 rounded-full ${isGoogleConnected ? "bg-green-500" : "bg-red-500"}`}></div>
+                  <p className="text-sm">
+                    {isGoogleConnected ? "Connected to Google Sheets" : "Not connected to Google Sheets"}
+                  </p>
                 </div>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => {
+                    setIsGoogleConnected(!isGoogleConnected)
+                    toast({
+                      title: isGoogleConnected ? "Disconnected" : "Connected",
+                      description: isGoogleConnected
+                        ? "Disconnected from Google Sheets"
+                        : "Successfully connected to Google Sheets",
+                    })
+                  }}
+                >
+                  {isGoogleConnected ? "Disconnect Google Account" : "Connect Google Account"}
+                </Button>
+              </div>
 
-                <div className="space-y-2">
-                  <Label>Data to Sync</Label>
+              <div>
+                <h3 className="text-lg font-medium mb-2">Google Sheets Configuration</h3>
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="sync-figures"
-                        checked={syncFigures}
-                        onCheckedChange={(checked) => setSyncFigures(!!checked)}
-                        disabled={!isGoogleConnected}
-                      />
-                      <Label htmlFor="sync-figures">Figures Collection</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="sync-wishlist"
-                        checked={syncWishlist}
-                        onCheckedChange={(checked) => setSyncWishlist(!!checked)}
-                        disabled={!isGoogleConnected}
-                      />
-                      <Label htmlFor="sync-wishlist">Wishlist Items</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="sync-customs"
-                        checked={syncCustoms}
-                        onCheckedChange={(checked) => setSyncCustoms(!!checked)}
-                        disabled={!isGoogleConnected}
-                      />
-                      <Label htmlFor="sync-customs">Custom Items</Label>
+                    <Label htmlFor="spreadsheet-id">Spreadsheet ID or URL</Label>
+                    <Input
+                      id="spreadsheet-id"
+                      placeholder="Enter Google Sheets ID or URL"
+                      value={spreadsheetId}
+                      onChange={(e) => setSpreadsheetId(e.target.value)}
+                      disabled={!isGoogleConnected}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Data to Sync</Label>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="sync-figures"
+                          checked={syncFigures}
+                          onCheckedChange={(checked) => setSyncFigures(!!checked)}
+                          disabled={!isGoogleConnected}
+                        />
+                        <Label htmlFor="sync-figures">Figures Collection</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="sync-wishlist"
+                          checked={syncWishlist}
+                          onCheckedChange={(checked) => setSyncWishlist(!!checked)}
+                          disabled={!isGoogleConnected}
+                        />
+                        <Label htmlFor="sync-wishlist">Wishlist Items</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="sync-customs"
+                          checked={syncCustoms}
+                          onCheckedChange={(checked) => setSyncCustoms(!!checked)}
+                          disabled={!isGoogleConnected}
+                        />
+                        <Label htmlFor="sync-customs">Custom Items</Label>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="sync-frequency">Sync Frequency</Label>
-                  <Select value={syncFrequency} onValueChange={setSyncFrequency} disabled={!isGoogleConnected}>
-                    <SelectTrigger id="sync-frequency">
-                      <SelectValue placeholder="Select frequency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="realtime">Real-time</SelectItem>
-                      <SelectItem value="hourly">Hourly</SelectItem>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="manual">Manual only</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <Label htmlFor="sync-frequency">Sync Frequency</Label>
+                    <Select value={syncFrequency} onValueChange={setSyncFrequency} disabled={!isGoogleConnected}>
+                      <SelectTrigger id="sync-frequency">
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="realtime">Real-time</SelectItem>
+                        <SelectItem value="hourly">Hourly</SelectItem>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="manual">Manual only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Button
-                className="w-full bg-neon-green text-black hover:bg-neon-green/90"
-                onClick={() => {
-                  if (!isGoogleConnected) {
-                    toast({
-                      title: "Not Connected",
-                      description: "Please connect to Google Sheets first.",
-                      variant: "destructive",
-                    })
-                    return
-                  }
+              <div className="space-y-2">
+                <Button
+                  className="w-full bg-neon-green text-black hover:bg-neon-green/90"
+                  onClick={handleGoogleSheetsSync}
+                  disabled={!isGoogleConnected}
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Export to Google Sheets
+                </Button>
 
-                  if (!spreadsheetId) {
-                    toast({
-                      title: "Missing Spreadsheet ID",
-                      description: "Please enter a Google Sheets ID or URL.",
-                      variant: "destructive",
-                    })
-                    return
-                  }
-
-                  toast({
-                    title: "Google Sheets Export",
-                    description: "Exporting data to Google Sheets...",
-                  })
-
-                  // Simulate export process
-                  setTimeout(() => {
-                    toast({
-                      title: "Export Complete",
-                      description: `Your data has been exported to Google Sheets successfully. Synced: ${[
-                        syncFigures ? "Figures" : "",
-                        syncWishlist ? "Wishlist" : "",
-                        syncCustoms ? "Customs" : "",
-                      ]
-                        .filter(Boolean)
-                        .join(", ")}`,
-                    })
-                  }, 2000)
-                }}
-                disabled={!isGoogleConnected}
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Export to Google Sheets
-              </Button>
-
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                {isGoogleConnected
-                  ? `Sync frequency: ${
-                      syncFrequency === "realtime"
-                        ? "Real-time"
-                        : syncFrequency === "hourly"
-                          ? "Every hour"
-                          : syncFrequency === "daily"
-                            ? "Once a day"
-                            : syncFrequency === "weekly"
-                              ? "Once a week"
-                              : "Manual only"
-                    }`
-                  : "Connect to Google Sheets to enable synchronization"}
-              </p>
-            </div>
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  {isGoogleConnected
+                    ? `Sync frequency: ${
+                        syncFrequency === "realtime"
+                          ? "Real-time"
+                          : syncFrequency === "hourly"
+                            ? "Every hour"
+                            : syncFrequency === "daily"
+                              ? "Once a day"
+                              : syncFrequency === "weekly"
+                                ? "Once a week"
+                                : "Manual only"
+                      }`
+                    : "Connect to Google Sheets to enable synchronization"}
+                </p>
+              </div>
+            </CardContent>
           </Card>
+
+          {/* Añadir el componente de importación de Google Sheets aquí */}
+          <div className="mt-6">
+            <GoogleSheetsImport />
+          </div>
         </TabsContent>
 
         {/* Reset Tab */}
