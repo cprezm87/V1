@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useRef } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -25,6 +25,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
 
 export default function SettingsPage() {
   const { toast } = useToast()
@@ -186,42 +187,169 @@ export default function SettingsPage() {
   }
 
   // Handle export data
-  const handleExportData = () => {
+  const handleExportData = (format: "json" | "csv" | "excel") => {
     try {
       // Get all data from localStorage
       const figureItems = localStorage.getItem("figureItems") || "[]"
       const wishlistItems = localStorage.getItem("wishlistItems") || "[]"
       const customItems = localStorage.getItem("customItems") || "[]"
 
-      // Create a JSON object with all data
-      const exportData = {
-        figureItems: JSON.parse(figureItems),
-        wishlistItems: JSON.parse(wishlistItems),
-        customItems: JSON.parse(customItems),
-        exportDate: new Date().toISOString(),
+      // Parse the data
+      const figuresData = JSON.parse(figureItems)
+      const wishlistData = JSON.parse(wishlistItems)
+      const customsData = JSON.parse(customItems)
+
+      if (format === "json") {
+        // Create a JSON object with all data
+        const exportData = {
+          figureItems: figuresData,
+          wishlistItems: wishlistData,
+          customItems: customsData,
+          exportDate: new Date().toISOString(),
+        }
+
+        // Convert to JSON string
+        const jsonString = JSON.stringify(exportData, null, 2)
+
+        // Create a blob and download link
+        const blob = new Blob([jsonString], { type: "application/json" })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `opacovault-backup-${new Date().toISOString().split("T")[0]}.json`
+        document.body.appendChild(a)
+        a.click()
+
+        // Clean up
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      } else if (format === "csv") {
+        // Function to convert array of objects to CSV
+        const convertToCSV = (objArray: any[]) => {
+          if (objArray.length === 0) return ""
+
+          // Get headers from first object
+          const headers = Object.keys(objArray[0])
+
+          // Create CSV header row
+          let csv = headers.join(",") + "\n"
+
+          // Add data rows
+          objArray.forEach((obj) => {
+            const row = headers
+              .map((header) => {
+                // Handle values that might contain commas or quotes
+                let value = obj[header] === null || obj[header] === undefined ? "" : obj[header]
+
+                // Convert objects or arrays to string
+                if (typeof value === "object") value = JSON.stringify(value)
+
+                // Escape quotes and wrap in quotes if contains comma or quote
+                value = String(value).replace(/"/g, '""')
+                if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+                  value = `"${value}"`
+                }
+
+                return value
+              })
+              .join(",")
+
+            csv += row + "\n"
+          })
+
+          return csv
+        }
+
+        // Create separate CSV files for each collection
+        const collections = [
+          { name: "figures", data: figuresData },
+          { name: "wishlist", data: wishlistData },
+          { name: "customs", data: customsData },
+        ]
+
+        collections.forEach((collection) => {
+          if (collection.data.length > 0) {
+            const csv = convertToCSV(collection.data)
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = `opacovault-${collection.name}-${new Date().toISOString().split("T")[0]}.csv`
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+          }
+        })
+      } else if (format === "excel") {
+        // For Excel, we'll use CSV format with .xlsx extension
+        // In a real app, you would use a library like xlsx or exceljs
+
+        // Function to convert array of objects to CSV
+        const convertToCSV = (objArray: any[]) => {
+          if (objArray.length === 0) return ""
+
+          // Get headers from first object
+          const headers = Object.keys(objArray[0])
+
+          // Create CSV header row
+          let csv = headers.join(",") + "\n"
+
+          // Add data rows
+          objArray.forEach((obj) => {
+            const row = headers
+              .map((header) => {
+                // Handle values that might contain commas or quotes
+                let value = obj[header] === null || obj[header] === undefined ? "" : obj[header]
+
+                // Convert objects or arrays to string
+                if (typeof value === "object") value = JSON.stringify(value)
+
+                // Escape quotes and wrap in quotes if contains comma or quote
+                value = String(value).replace(/"/g, '""')
+                if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+                  value = `"${value}"`
+                }
+
+                return value
+              })
+              .join(",")
+
+            csv += row + "\n"
+          })
+        }
+
+        // Create separate Excel files for each collection
+        const collections = [
+          { name: "figures", data: figuresData },
+          { name: "wishlist", data: wishlistData },
+          { name: "customs", data: customsData },
+        ]
+
+        collections.forEach((collection) => {
+          if (collection.data.length > 0) {
+            const csv = convertToCSV(collection.data)
+            const blob = new Blob([csv], {
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8;",
+            })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = `opacovault-${collection.name}-${new Date().toISOString().split("T")[0]}.xlsx`
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+          }
+        })
       }
-
-      // Convert to JSON string
-      const jsonString = JSON.stringify(exportData, null, 2)
-
-      // Create a blob and download link
-      const blob = new Blob([jsonString], { type: "application/json" })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `opacovault-backup-${new Date().toISOString().split("T")[0]}.json`
-      document.body.appendChild(a)
-      a.click()
-
-      // Clean up
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
 
       toast({
         title: "Data Exported",
-        description: "Your data has been exported successfully.",
+        description: `Your data has been exported successfully in ${format.toUpperCase()} format.`,
       })
     } catch (error) {
+      console.error("Error exporting data:", error)
       toast({
         title: "Export Failed",
         description: "There was an error exporting your data.",
@@ -710,16 +838,39 @@ export default function SettingsPage() {
         {/* Backup Tab */}
         <TabsContent value="backup" className="mt-6">
           <Card>
-            <CardContent classNamee="p-6 space-y-6">
+            <CardHeader>
+              <CardTitle>Data Export & Backup</CardTitle>
+              <CardDescription>Export your collection data in different formats for backup or analysis</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
               <div>
                 <h3 className="text-lg font-medium mb-2">Export Data</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Export your collection data to a JSON file for backup purposes.
+                  Export your collection data to different formats for backup or analysis purposes.
                 </p>
-                <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handleExportData}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Export to JSON
-                </Button>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Button
+                    className="w-full bg-neon-green text-black hover:bg-neon-green/90"
+                    onClick={() => handleExportData("json")}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Export to JSON
+                  </Button>
+                  <Button
+                    className="w-full bg-neon-green text-black hover:bg-neon-green/90"
+                    onClick={() => handleExportData("csv")}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Export to CSV
+                  </Button>
+                  <Button
+                    className="w-full bg-neon-green text-black hover:bg-neon-green/90"
+                    onClick={() => handleExportData("excel")}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Export to Excel
+                  </Button>
+                </div>
               </div>
 
               <div>
@@ -754,59 +905,62 @@ export default function SettingsPage() {
         {/* Sync Tab */}
         <TabsContent value="sync" className="mt-6">
           <Card>
-            <CardContent className="p-6 space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-2">Google Sheets Sync</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Sync your collection data with Google Sheets for advanced analysis and sharing.
-                </p>
-                <div className="space-y-4">
-                  <Button
-                    className="w-full"
-                    variant="outline"
-                    onClick={() => {
-                      toast({
-                        title: "Google Account Connected",
-                        description: "Your Google account has been connected successfully.",
-                      })
-                    }}
-                  >
-                    Connect Google Account
-                  </Button>
-
-                  <Button
-                    className="w-full bg-neon-green text-black hover:bg-neon-green/90"
-                    onClick={handleGoogleSheetsSync}
-                  >
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Force Manual Sync
-                  </Button>
+            <CardHeader>
+              <CardTitle>Google Sheets Sync</CardTitle>
+              <CardDescription>
+                Sync your collection data with Google Sheets for advanced analysis and sharing
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="border rounded-md p-4">
+                <h3 className="text-lg font-medium mb-2">Connection Status</h3>
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                  <p className="text-sm">Not connected to Google Sheets</p>
                 </div>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => {
+                    toast({
+                      title: "Google Account Connection",
+                      description: "This would open Google OAuth in a real application.",
+                    })
+                  }}
+                >
+                  Connect Google Account
+                </Button>
               </div>
 
               <div>
-                <h3 className="text-lg font-medium mb-2">Sync Settings</h3>
+                <h3 className="text-lg font-medium mb-2">Google Sheets Configuration</h3>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Auto Sync</p>
-                      <p className="text-sm text-muted-foreground">Automatically sync changes to Google Sheets</p>
+                  <div className="space-y-2">
+                    <Label htmlFor="spreadsheet-id">Spreadsheet ID or URL</Label>
+                    <Input id="spreadsheet-id" placeholder="Enter Google Sheets ID or URL" disabled={true} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Data to Sync</Label>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="sync-figures" checked={true} disabled={true} />
+                        <Label htmlFor="sync-figures">Figures Collection</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="sync-wishlist" checked={true} disabled={true} />
+                        <Label htmlFor="sync-wishlist">Wishlist Items</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="sync-customs" checked={true} disabled={true} />
+                        <Label htmlFor="sync-customs">Custom Items</Label>
+                      </div>
                     </div>
-                    <Switch
-                      className="data-[state=checked]:bg-neon-green"
-                      checked={true}
-                      onCheckedChange={() => {
-                        toast({
-                          title: "Auto Sync Updated",
-                          description: "Auto sync setting has been updated.",
-                        })
-                      }}
-                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="sync-frequency">Sync Frequency</Label>
-                    <Select defaultValue="daily">
+                    <Select defaultValue="manual" disabled={true}>
                       <SelectTrigger id="sync-frequency">
                         <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
@@ -815,10 +969,39 @@ export default function SettingsPage() {
                         <SelectItem value="hourly">Hourly</SelectItem>
                         <SelectItem value="daily">Daily</SelectItem>
                         <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="manual">Manual only</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Button
+                  className="w-full bg-neon-green text-black hover:bg-neon-green/90"
+                  onClick={() => {
+                    toast({
+                      title: "Google Sheets Export",
+                      description: "Exporting data to Google Sheets...",
+                    })
+
+                    // Simulate export process
+                    setTimeout(() => {
+                      toast({
+                        title: "Export Complete",
+                        description: "Your data has been exported to Google Sheets successfully.",
+                      })
+                    }, 2000)
+                  }}
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Export to Google Sheets
+                </Button>
+
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Note: This is a simulation. In a real app, this would create or update a Google Sheet with your
+                  collection data.
+                </p>
               </div>
             </CardContent>
           </Card>
