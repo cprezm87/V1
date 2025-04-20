@@ -39,6 +39,7 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     }
   }, [user])
 
+  // Modificar la función refreshItems para cargar datos de Firestore en lugar de localStorage
   const refreshItems = async (filter?: any) => {
     if (!user) return
 
@@ -47,6 +48,9 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
       const userItems = await getUserItems(user.uid, filter)
       setItems(userItems)
       setError(null)
+
+      // Sincronizar con localStorage para compatibilidad con código existente
+      localStorage.setItem("figureItems", JSON.stringify(userItems))
     } catch (err: any) {
       console.error("Error fetching items:", err)
       setError(err?.message || "Error al cargar los items. Por favor, intenta de nuevo.")
@@ -55,17 +59,7 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
-  const refreshStats = async () => {
-    if (!user) return
-
-    try {
-      const collectionStats = await getCollectionStats(user.uid)
-      setStats(collectionStats)
-    } catch (err) {
-      console.error("Error fetching stats:", err)
-    }
-  }
-
+  // Modificar la función addNewItem para guardar en Firestore
   const addNewItem = async (item: CollectionItem): Promise<string> => {
     if (!user) throw new Error("Usuario no autenticado")
 
@@ -87,6 +81,7 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
+  // Modificar la función updateExistingItem para actualizar en Firestore
   const updateExistingItem = async (id: string, item: Partial<CollectionItem>): Promise<void> => {
     try {
       await updateItem(id, item)
@@ -98,6 +93,7 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
+  // Modificar la función removeItem para eliminar de Firestore
   const removeItem = async (id: string): Promise<void> => {
     try {
       await deleteItem(id)
@@ -106,6 +102,17 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     } catch (err) {
       console.error("Error deleting item:", err)
       throw err
+    }
+  }
+
+  const refreshStats = async () => {
+    if (!user) return
+
+    try {
+      const collectionStats = await getCollectionStats(user.uid)
+      setStats(collectionStats)
+    } catch (err) {
+      console.error("Error fetching stats:", err)
     }
   }
 

@@ -14,7 +14,6 @@ import {
   Settings,
   Info,
   LogOut,
-  Newspaper,
 } from "lucide-react"
 
 import {
@@ -23,7 +22,6 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
@@ -38,11 +36,6 @@ const menuItems = [
     icon: Home,
     href: "/",
     isActive: false,
-  },
-  {
-    title: "News",
-    icon: Newspaper,
-    href: "/news",
   },
   {
     title: "Add",
@@ -126,12 +119,15 @@ export function AppSidebar() {
         <SidebarMenu>
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild isActive={item.isActive}>
-                <Link href={item.href} className="flex items-center gap-3">
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
+              <div
+                className={`flex items-center gap-3 w-full rounded-md p-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                  item.isActive ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : ""
+                }`}
+                onClick={() => router.push(item.href)}
+              >
+                <item.icon className="h-5 w-5" />
+                <span>{item.title}</span>
+              </div>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>

@@ -9,6 +9,8 @@ import {
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
+  setPersistence,
+  browserLocalPersistence,
 } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 
@@ -56,6 +58,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Iniciar sesión
   const signIn = async (email: string, password: string) => {
+    // Establecer persistencia para mantener la sesión
+    await setPersistence(auth, browserLocalPersistence)
+    // Iniciar sesión
     await signInWithEmailAndPassword(auth, email, password)
   }
 
