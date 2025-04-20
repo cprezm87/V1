@@ -61,7 +61,7 @@ export default function Home() {
       </div>
 
       {/* Main Collection Sections */}
-      <div className="grid gap-6 md:grid-cols-3 mb-10">
+      <div className="grid gap-6 md:grid-cols-2 mb-10">
         {/* Recent Additions Column */}
         <Card className="bg-[#111] p-6">
           <h3 className="text-2xl font-bold mb-1">{t("home.recentAdditions")}</h3>
@@ -89,38 +89,6 @@ export default function Home() {
             ) : (
               <p className="text-muted-foreground">{t("home.noRecent")}</p>
             )}
-          </div>
-        </Card>
-
-        {/* Upcoming Releases Column */}
-        <Card className="bg-[#111] p-6">
-          <h3 className="text-2xl font-bold mb-1">{t("home.upcomingReleases")}</h3>
-          <p className="text-muted-foreground mb-4">{t("home.horrorFigures")}</p>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="h-16 w-16 rounded-md overflow-hidden">
-                <Image src="/placeholder.svg?height=64&width=64" alt="Art the Clown" width={64} height={64} />
-              </div>
-              <div>
-                <h4 className="font-medium">Art the Clown (NECA)</h4>
-                <p className="text-sm text-muted-foreground">
-                  {t("home.releasesIn")} 2 {t("home.weeks")}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="h-16 w-16 rounded-md overflow-hidden">
-                <Image src="/placeholder.svg?height=64&width=64" alt="The Nun" width={64} height={64} />
-              </div>
-              <div>
-                <h4 className="font-medium">The Nun (McFarlane)</h4>
-                <p className="text-sm text-muted-foreground">
-                  {t("home.releasesIn")} 1 {t("home.month")}
-                </p>
-              </div>
-            </div>
           </div>
         </Card>
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Search, Edit, Trash2, ArrowUpDown, MoveRight, MoreHorizontal, Play, Check, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -13,105 +13,72 @@ import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-
-interface WishlistItem {
-  id: string
-  name: string
-  type: string
-  franchise: string
-  brand: string
-  serie: string
-  yearReleased: string
-  price: string
-  logo: string
-  photo: string
-  tagline: string
-  review: string
-  released: boolean
-  buy: boolean
-  comments: string
-}
-
-interface FigureItem {
-  id: string
-  name: string
-  type: string
-  franchise: string
-  brand: string
-  serie: string
-  yearReleased: string
-  condition: string
-  price: string
-  yearPurchase: string
-  upc: string
-  logo: string
-  photo: string
-  tagline: string
-  review: string
-  shelf: string
-  display: string
-  ranking: number
-  comments: string
-}
+import { useCollection } from "@/contexts/collection-context"
+import type { WishlistItem } from "@/lib/supabase"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function WishlistPage() {
   const { toast } = useToast()
-  const [items, setItems] = useState<WishlistItem[]>([])
-  const [figureItems, setFigureItems] = useState<FigureItem[]>([])
+  const { wishlistItems, loading, error, updateWishlistItem, deleteWishlistItem, moveWishlistToFigure } =
+    useCollection()
+
   const [sortBy, setSortBy] = useState("name")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [searchTerm, setSearchTerm] = useState("")
-  const [nextId, setNextId] = useState(1)
+  const [selectedItem, setSelectedItem] = useState<WishlistItem | null>(null)
   const [editItem, setEditItem] = useState<WishlistItem | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  // Modificar el estado para incluir el elemento seleccionado
-  const [selectedItem, setSelectedItem] = useState<WishlistItem | null>(null)
-
-  // Load items from localStorage on component mount
-  useEffect(() => {
-    const storedItems = localStorage.getItem("wishlistItems")
-    const storedFigures = localStorage.getItem("figureItems")
-    const storedNextId = localStorage.getItem("nextId")
-
-    if (storedItems) setItems(JSON.parse(storedItems))
-    if (storedFigures) setFigureItems(JSON.parse(storedFigures))
-    if (storedNextId) setNextId(Number.parseInt(storedNextId))
-  }, [])
 
   // Filter items by type and search term
   const getFilteredItems = (type: string) => {
-    return items
+    return wishlistItems
       .filter(
         (item) =>
-          item.type.toLowerCase() === type.toLowerCase() &&
+          item.type?.toLowerCase() === type.toLowerCase() &&
           (searchTerm === "" ||
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.franchise.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.brand.toLowerCase().includes(searchTerm.toLowerCase())),
+            item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.franchise?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.brand?.toLowerCase().includes(searchTerm.toLowerCase())),
       )
       .sort((a, b) => {
         if (sortBy === "name" || sortBy === "franchise" || sortBy === "brand") {
-          return sortOrder === "asc" ? a[sortBy].localeCompare(b[sortBy]) : b[sortBy].localeCompare(a[sortBy])
-        } else if (sortBy === "price" || sortBy === "yearReleased") {
           return sortOrder === "asc"
-            ? Number.parseInt(a[sortBy]) - Number.parseInt(b[sortBy])
-            : Number.parseInt(b[sortBy]) - Number.parseInt(a[sortBy])
+            ? (a[sortBy] || "").localeCompare(b[sortBy] || "")
+            : (b[sortBy] || "").localeCompare(a[sortBy] || "")
+        } else if (sortBy === "price" || sortBy === "yearReleased") {
+          const aValue = a[sortBy] ? Number.parseFloat(a[sortBy]) : 0
+          const bValue = b[sortBy] ? Number.parseFloat(b[sortBy]) : 0
+          return sortOrder === "asc" ? aValue - bValue : bValue - aValue
         } else {
           // Default sort by name
-          return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+          return sortOrder === "asc"
+            ? (a.name || "").localeCompare(b.name || "")
+            : (b.name || "").localeCompare(a.name || "")
         }
       })
   }
 
   // Handle item deletion
-  const handleDeleteItem = (id: string) => {
-    const updatedItems = items.filter((item) => item.id !== id)
-    setItems(updatedItems)
-    localStorage.setItem("wishlistItems", JSON.stringify(updatedItems))
-    toast({
-      title: "Deleted!",
-      description: "Item has been removed from your wishlist.",
-    })
+  const handleDeleteItem = async (id: string) => {
+    try {
+      await deleteWishlistItem(id)
+
+      if (selectedItem?.id === id) {
+        setSelectedItem(null)
+      }
+
+      toast({
+        title: "Deleted!",
+        description: "Item has been removed from your wishlist.",
+      })
+    } catch (error) {
+      console.error("Error deleting item:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete item. Please try again.",
+        variant: "destructive",
+      })
+    }
   }
 
   // Handle item edit
@@ -121,193 +88,62 @@ export default function WishlistPage() {
   }
 
   // Save edited item
-  const saveEditedItem = () => {
-    if (editItem) {
-      const updatedItems = items.map((item) => (item.id === editItem.id ? editItem : item))
-      setItems(updatedItems)
-      localStorage.setItem("wishlistItems", JSON.stringify(updatedItems))
-      setIsEditDialogOpen(false)
-      setEditItem(null)
-      toast({
-        title: "Updated!",
-        description: "Item has been updated successfully.",
-      })
+  const saveEditedItem = async () => {
+    if (editItem && editItem.id) {
+      try {
+        await updateWishlistItem(editItem.id, editItem)
+
+        // Update selected item if it's the one being edited
+        if (selectedItem?.id === editItem.id) {
+          setSelectedItem(editItem)
+        }
+
+        setIsEditDialogOpen(false)
+        setEditItem(null)
+
+        toast({
+          title: "Updated!",
+          description: "Item has been updated successfully.",
+        })
+      } catch (error) {
+        console.error("Error updating item:", error)
+        toast({
+          title: "Error",
+          description: "Failed to update item. Please try again.",
+          variant: "destructive",
+        })
+      }
     }
   }
 
   // Move item to checklist
-  const moveToChecklist = (item: WishlistItem) => {
-    // Create a new figure item from wishlist item
-    const formattedId = String(nextId).padStart(3, "0")
-    const newFigure: FigureItem = {
-      id: formattedId,
-      name: item.name,
-      type: item.type,
-      franchise: item.franchise,
-      brand: item.brand,
-      serie: item.serie,
-      yearReleased: item.yearReleased,
-      condition: "New", // Default value
-      price: item.price,
-      yearPurchase: new Date().getFullYear().toString(), // Current year
-      upc: "",
-      logo: item.logo,
-      photo: item.photo,
-      tagline: item.tagline,
-      review: item.review,
-      shelf: "Eins", // Default value
-      display: "Silent Horrors", // Default value
-      ranking: 0,
-      comments: item.comments,
+  const handleMoveToChecklist = async (item: WishlistItem) => {
+    try {
+      await moveWishlistToFigure(item)
+
+      if (selectedItem?.id === item.id) {
+        setSelectedItem(null)
+      }
+
+      toast({
+        title: "Moved to Checklist!",
+        description: "Item has been moved to your checklist.",
+      })
+    } catch (error) {
+      console.error("Error moving item to checklist:", error)
+      toast({
+        title: "Error",
+        description: "Failed to move item to checklist. Please try again.",
+        variant: "destructive",
+      })
     }
-
-    // Add to figures and remove from wishlist
-    const updatedFigures = [...figureItems, newFigure]
-    const updatedWishlist = items.filter((i) => i.id !== item.id)
-
-    setFigureItems(updatedFigures)
-    setItems(updatedWishlist)
-    setNextId(nextId + 1)
-
-    // Update localStorage
-    localStorage.setItem("figureItems", JSON.stringify(updatedFigures))
-    localStorage.setItem("wishlistItems", JSON.stringify(updatedWishlist))
-    localStorage.setItem("nextId", (nextId + 1).toString())
-
-    toast({
-      title: "Moved to Checklist!",
-      description: "Item has been moved to your checklist.",
-    })
   }
 
-  // Render wishlist item dialog content
-  const renderWishlistItemDialogContent = (item: WishlistItem) => (
-    <div className="flex flex-col gap-6">
-      {/* Logo */}
-      {item.logo && (
-        <div className="w-full">
-          <div className="relative h-32 w-full overflow-hidden">
-            <img
-              src={item.logo || "/placeholder.svg"}
-              alt={`${item.franchise} logo`}
-              className="object-contain w-full h-full"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Name and Tagline */}
-      <div className="text-center">
-        <h3 className="text-xl font-bold text-neon-green">{item.name}</h3>
-        {item.tagline && <p className="text-base italic">{item.tagline}</p>}
-      </div>
-
-      {/* Photo */}
-      {item.photo && (
-        <div className="w-full">
-          <div className="relative h-80 w-full overflow-hidden">
-            <img src={item.photo || "/placeholder.svg"} alt={item.name} className="object-contain w-full h-full" />
-          </div>
-        </div>
-      )}
-
-      {/* Details */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <p className="text-sm font-medium text-neon-green">
-            Brand: <span className="font-normal text-white">{item.brand}</span>
-          </p>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-neon-green">
-            Serie: <span className="font-normal text-white">{item.serie || "N/A"}</span>
-          </p>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-neon-green">
-            Franchise: <span className="font-normal text-white">{item.franchise}</span>
-          </p>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-neon-green">
-            Year Released: <span className="font-normal text-white">{item.yearReleased}</span>
-          </p>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-neon-green">
-            Price:{" "}
-            <span className="font-normal text-white">${Number.parseInt(item.price).toLocaleString("es-CO")}</span>
-          </p>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-neon-green">
-            Released:{" "}
-            <span className="font-normal text-white">
-              {item.released ? <Check className="h-4 w-4 text-neon-green" /> : <X className="h-4 w-4 text-red-500" />}
-            </span>
-          </p>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-neon-green">
-            Buy:{" "}
-            <span className="font-normal text-white">
-              {item.buy ? <Check className="h-4 w-4 text-neon-green" /> : <X className="h-4 w-4 text-red-500" />}
-            </span>
-          </p>
-        </div>
-      </div>
-
-      {/* Review */}
-      {item.review && (
-        <div>
-          <p className="text-sm font-medium text-neon-green mb-2">Review:</p>
-          <div className="aspect-video w-full overflow-hidden relative">
-            <Link href={item.review} target="_blank" className="block relative">
-              <div className="aspect-video w-full bg-black/20 rounded-md flex items-center justify-center">
-                <Play className="h-12 w-12 text-white" />
-              </div>
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Comments */}
-      {item.comments && (
-        <div>
-          <p className="text-sm font-medium text-neon-green">
-            Comments: <span className="font-normal text-white">{item.comments}</span>
-          </p>
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="flex justify-end space-x-4 mt-4">
-        <Button variant="outline" onClick={() => handleEditItem(item)}>
-          <Edit className="mr-2 h-4 w-4" />
-          Edit
-        </Button>
-        <Button variant="outline" onClick={() => moveToChecklist(item)}>
-          <MoveRight className="mr-2 h-4 w-4" />
-          Move to Checklist
-        </Button>
-        <Button
-          variant="destructive"
-          onClick={() => handleDeleteItem(item.id)}
-          className="bg-neon-green text-black hover:bg-neon-green/90"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
-        </Button>
-      </div>
-    </div>
-  )
-
-  // Agregar una función para manejar el clic en un elemento
+  // Handle item click
   const handleItemClick = (item: WishlistItem) => {
     setSelectedItem(item)
   }
 
-  // Modificar el return para implementar el diseño de dos columnas
   return (
     <div className="w-full py-6 px-6">
       <div className="mb-8 flex items-center justify-between">
@@ -363,7 +199,16 @@ export default function WishlistPage() {
             <TabsContent value="figures">
               <Card>
                 <CardContent className="space-y-2 pt-6">
-                  {getFilteredItems("figures").length > 0 ? (
+                  {loading.wishlist ? (
+                    // Loading skeleton
+                    Array(5)
+                      .fill(0)
+                      .map((_, i) => (
+                        <div key={i} className="p-2">
+                          <Skeleton className="h-8 w-full" />
+                        </div>
+                      ))
+                  ) : getFilteredItems("figures").length > 0 ? (
                     getFilteredItems("figures").map((item) => (
                       <div
                         key={item.id}
@@ -372,7 +217,7 @@ export default function WishlistPage() {
                         }`}
                         onClick={() => handleItemClick(item)}
                       >
-                        <span className="font-medium truncate">{item.name}</span>
+                        <span className="font-medium">{item.name}</span>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
@@ -393,14 +238,14 @@ export default function WishlistPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
-                              onClick={() => moveToChecklist(item)}
+                              onClick={() => handleMoveToChecklist(item)}
                             >
                               <MoveRight className="mr-2 h-4 w-4" />
                               Move to Checklist
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
-                              onClick={() => handleDeleteItem(item.id)}
+                              onClick={() => item.id && handleDeleteItem(item.id)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
@@ -421,7 +266,16 @@ export default function WishlistPage() {
             <TabsContent value="accessories">
               <Card>
                 <CardContent className="space-y-2 pt-6">
-                  {getFilteredItems("accessories").length > 0 ? (
+                  {loading.wishlist ? (
+                    // Loading skeleton
+                    Array(5)
+                      .fill(0)
+                      .map((_, i) => (
+                        <div key={i} className="p-2">
+                          <Skeleton className="h-8 w-full" />
+                        </div>
+                      ))
+                  ) : getFilteredItems("accessories").length > 0 ? (
                     getFilteredItems("accessories").map((item) => (
                       <div
                         key={item.id}
@@ -430,7 +284,7 @@ export default function WishlistPage() {
                         }`}
                         onClick={() => handleItemClick(item)}
                       >
-                        <span className="font-medium truncate">{item.name}</span>
+                        <span className="font-medium">{item.name}</span>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
@@ -451,14 +305,14 @@ export default function WishlistPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
-                              onClick={() => moveToChecklist(item)}
+                              onClick={() => handleMoveToChecklist(item)}
                             >
                               <MoveRight className="mr-2 h-4 w-4" />
                               Move to Checklist
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
-                              onClick={() => handleDeleteItem(item.id)}
+                              onClick={() => item.id && handleDeleteItem(item.id)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
@@ -479,7 +333,16 @@ export default function WishlistPage() {
             <TabsContent value="props">
               <Card>
                 <CardContent className="space-y-2 pt-6">
-                  {getFilteredItems("props").length > 0 ? (
+                  {loading.wishlist ? (
+                    // Loading skeleton
+                    Array(5)
+                      .fill(0)
+                      .map((_, i) => (
+                        <div key={i} className="p-2">
+                          <Skeleton className="h-8 w-full" />
+                        </div>
+                      ))
+                  ) : getFilteredItems("props").length > 0 ? (
                     getFilteredItems("props").map((item) => (
                       <div
                         key={item.id}
@@ -488,7 +351,7 @@ export default function WishlistPage() {
                         }`}
                         onClick={() => handleItemClick(item)}
                       >
-                        <span className="font-medium truncate">{item.name}</span>
+                        <span className="font-medium">{item.name}</span>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
@@ -509,14 +372,14 @@ export default function WishlistPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
-                              onClick={() => moveToChecklist(item)}
+                              onClick={() => handleMoveToChecklist(item)}
                             >
                               <MoveRight className="mr-2 h-4 w-4" />
                               Move to Checklist
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
-                              onClick={() => handleDeleteItem(item.id)}
+                              onClick={() => item.id && handleDeleteItem(item.id)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
@@ -593,14 +456,14 @@ export default function WishlistPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-neon-green">
-                        Year Released: <span className="font-normal text-white">{selectedItem.yearReleased}</span>
+                        Year Released: <span className="font-normal text-white">{selectedItem.year_released}</span>
                       </p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-neon-green">
                         Price:{" "}
                         <span className="font-normal text-white">
-                          ${Number.parseInt(selectedItem.price).toLocaleString("es-CO")}
+                          ${selectedItem.price ? Number.parseFloat(selectedItem.price).toLocaleString("es-CO") : "N/A"}
                         </span>
                       </p>
                     </div>
@@ -659,16 +522,13 @@ export default function WishlistPage() {
                       <Edit className="mr-2 h-4 w-4" />
                       Edit
                     </Button>
-                    <Button variant="outline" onClick={() => moveToChecklist(selectedItem)}>
+                    <Button variant="outline" onClick={() => handleMoveToChecklist(selectedItem)}>
                       <MoveRight className="mr-2 h-4 w-4" />
                       Move to Checklist
                     </Button>
                     <Button
                       variant="destructive"
-                      onClick={() => {
-                        handleDeleteItem(selectedItem.id)
-                        setSelectedItem(null)
-                      }}
+                      onClick={() => selectedItem.id && handleDeleteItem(selectedItem.id)}
                       className="bg-neon-green text-black hover:bg-neon-green/90"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
@@ -742,8 +602,8 @@ export default function WishlistPage() {
                   <Label htmlFor="edit-yearReleased">Year Released</Label>
                   <Input
                     id="edit-yearReleased"
-                    value={editItem.yearReleased}
-                    onChange={(e) => setEditItem({ ...editItem, yearReleased: e.target.value })}
+                    value={editItem.year_released}
+                    onChange={(e) => setEditItem({ ...editItem, year_released: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
