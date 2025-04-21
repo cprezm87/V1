@@ -12,8 +12,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-// Añadir esta importación al inicio del archivo
-import { DatabaseStatus } from "@/components/database-status"
 
 interface FigureItem {
   id: string
@@ -144,9 +142,7 @@ export default function ChecklistPage() {
 
   // Modificar el return para implementar el diseño de dos columnas
   return (
-    // Buscar el return y añadir el componente DatabaseStatus justo después de la apertura del primer div
     <div className="w-full py-6 px-6">
-      <DatabaseStatus />
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Checklist</h1>
         <div className="relative w-64">
