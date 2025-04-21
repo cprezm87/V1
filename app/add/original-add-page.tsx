@@ -19,6 +19,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 // Importar el nuevo componente
 import { ImageUploadField } from "@/components/image-upload-field"
 
+// Importaciones de Supabase y AuthContext
+import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/contexts/auth-context"
+
 // Display options based on shelf selection
 const displayOptions = {
   Eins: ["Silent Horrors", "The Gloom Hall", "Chamber of the Cursed", "Cryptic Experiments", "Monstrously Domestic"],
@@ -80,6 +84,7 @@ interface WishlistItem {
   released: boolean
   buy: boolean
   comments: string
+  trackingNumber: string
 }
 
 interface CustomItem {
@@ -97,6 +102,7 @@ interface CustomItem {
 export default function OriginalAddPage() {
   const { toast } = useToast()
   const { t } = useTheme()
+  const { user } = useAuth() // Añadir esta línea para obtener el usuario actual
   const [selectedShelf, setSelectedShelf] = useState<keyof typeof displayOptions | "">("")
   const [logoPreview, setLogoPreview] = useState("")
   const [photoPreview, setPhotoPreview] = useState("")
@@ -109,6 +115,7 @@ export default function OriginalAddPage() {
   const [showSuccessAlert, setShowSuccessAlert] = useState(false)
   const [showWishlistSuccessAlert, setShowWishlistSuccessAlert] = useState(false)
   const [showCustomSuccessAlert, setShowCustomSuccessAlert] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // State for storing items
   const [figureItems, setFigureItems] = useState<FigureItem[]>([])
@@ -136,6 +143,35 @@ export default function OriginalAddPage() {
     localStorage.setItem("nextId", nextId.toString())
   }, [figureItems, wishlistItems, customItems, nextId])
 
+  // Añadir este useEffect después de los otros useEffect existentes
+  useEffect(() => {
+    if (user) {
+      // Suscribirse a cambios en tiempo real
+      const checklistSubscription = supabase
+        .channel("checklist-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "checklist_items",
+            filter: `user_id=eq.${user.uid}`,
+          },
+          (payload) => {
+            console.log("Cambio en tiempo real:", payload)
+            // Actualizar la lista de items
+            const storedFigures = localStorage.getItem("figureItems")
+            if (storedFigures) setFigureItems(JSON.parse(storedFigures))
+          },
+        )
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(checklistSubscription)
+      }
+    }
+  }, [user])
+
   // Format ID with leading zeros
   const formattedId = String(nextId).padStart(3, "0")
 
@@ -145,22 +181,33 @@ export default function OriginalAddPage() {
   }
 
   // Handle form submissions
-  const handleFigureSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFigureSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Debes iniciar sesión para añadir items",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSubmitting(true)
     const form = e.currentTarget
     const formData = new FormData(form)
 
-    const newFigure: FigureItem = {
-      id: formattedId,
+    // Preparar el objeto para Supabase
+    const figureData = {
+      user_id: user.uid,
       name: formData.get("name") as string,
       type: formData.get("type") as string,
       franchise: formData.get("franchise") as string,
       brand: formData.get("brand") as string,
       serie: formData.get("serie") as string,
-      yearReleased: formData.get("yearReleased") as string,
+      year_released: formData.get("yearReleased") as string,
       condition: formData.get("condition") as string,
-      price: formData.get("price") as string,
-      yearPurchase: formData.get("yearPurchase") as string,
+      price: Number(formData.get("price")) || 0,
+      year_purchase: formData.get("yearPurchase") as string,
       upc: formData.get("upc") as string,
       logo: logoPreview,
       photo: photoPreview,
@@ -172,24 +219,64 @@ export default function OriginalAddPage() {
       comments: formData.get("comments") as string,
     }
 
-    setFigureItems([...figureItems, newFigure])
-    setNextId(nextId + 1)
+    try {
+      // Intentar insertar en Supabase
+      const { data, error } = await supabase.from("checklist_items").insert(figureData).select()
 
-    // Reset form
-    form.reset()
-    setLogoPreview("")
-    setPhotoPreview("")
-    setRating(0)
-    setSelectedShelf("")
+      if (error) {
+        console.error("Error al guardar en Supabase:", error)
+        throw error
+      }
 
-    // Show success alert
-    setShowSuccessAlert(true)
-    setTimeout(() => setShowSuccessAlert(false), 3000)
+      // También guardar en localStorage como respaldo
+      const newFigure: FigureItem = {
+        id: data?.[0]?.id || formattedId,
+        name: figureData.name,
+        brand: figureData.brand,
+        category: figureData.type,
+        series: figureData.serie,
+        releaseDate: figureData.year_released,
+        purchaseDate: figureData.year_purchase,
+        price: figureData.price,
+        condition: figureData.condition,
+        notes: figureData.comments,
+        imageUrl: figureData.photo,
+        inWishlist: false,
+        inCollection: true,
+        isCustom: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: user.uid,
+      }
 
-    toast({
-      title: t("add.added"),
-      description: t("add.itemAdded"),
-    })
+      setFigureItems([...figureItems, newFigure])
+      setNextId(nextId + 1)
+
+      // Reset form
+      form.reset()
+      setLogoPreview("")
+      setPhotoPreview("")
+      setRating(0)
+      setSelectedShelf("")
+
+      // Show success alert
+      setShowSuccessAlert(true)
+      setTimeout(() => setShowSuccessAlert(false), 3000)
+
+      toast({
+        title: t("add.added"),
+        description: t("add.itemAdded"),
+      })
+    } catch (err) {
+      console.error("Error al añadir item:", err)
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el item en la base de datos",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleWishlistSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -213,6 +300,7 @@ export default function OriginalAddPage() {
       released: formData.get("released") === "on",
       buy: formData.get("buy") === "on",
       comments: formData.get("wishlist-comments") as string,
+      trackingNumber: formData.get("wishlist-tracking") as string,
     }
 
     setWishlistItems([...wishlistItems, newWishlistItem])
@@ -466,8 +554,12 @@ export default function OriginalAddPage() {
                   <Button type="button" variant="outline">
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-neon-green text-black hover:bg-neon-green/90">
-                    Add to Checklist
+                  <Button
+                    type="submit"
+                    className="bg-neon-green text-black hover:bg-neon-green/90"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Añadiendo..." : "Add to Checklist"}
                   </Button>
                 </div>
               </form>
@@ -586,6 +678,11 @@ export default function OriginalAddPage() {
                       <Checkbox id="buy" name="buy" />
                       <Label htmlFor="buy">Buy</Label>
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="wishlist-tracking">Tracking Number</Label>
+                    <Input id="wishlist-tracking" name="wishlist-tracking" placeholder="Enter tracking number" />
                   </div>
                 </div>
 

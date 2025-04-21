@@ -3,603 +3,231 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { useAuth } from "./auth-context"
-import {
-  supabase,
-  type FigureItem,
-  type WishlistItem,
-  type CustomItem,
-  snakeToCamel,
-  camelToSnake,
-} from "@/lib/supabase"
-import type { RealtimeChannel } from "@supabase/supabase-js"
+import type { CollectionItem } from "../types/collection"
+import { supabase } from "@/lib/supabase"
 
 interface CollectionContextType {
-  figureItems: FigureItem[]
-  wishlistItems: WishlistItem[]
-  customItems: CustomItem[]
-  loading: {
-    figures: boolean
-    wishlist: boolean
-    customs: boolean
-  }
+  items: CollectionItem[]
+  loading: boolean
   error: string | null
   stats: any
-  addFigureItem: (item: FigureItem) => Promise<string>
-  updateFigureItem: (id: string, item: Partial<FigureItem>) => Promise<void>
-  deleteFigureItem: (id: string) => Promise<void>
-  getFigureItemById: (id: string) => Promise<FigureItem | null>
-  addWishlistItem: (item: WishlistItem) => Promise<string>
-  updateWishlistItem: (id: string, item: Partial<WishlistItem>) => Promise<void>
-  deleteWishlistItem: (id: string) => Promise<void>
-  getWishlistItemById: (id: string) => Promise<WishlistItem | null>
-  moveWishlistToFigure: (wishlistItem: WishlistItem) => Promise<void>
-  addCustomItem: (item: CustomItem) => Promise<string>
-  updateCustomItem: (id: string, item: Partial<CustomItem>) => Promise<void>
-  deleteCustomItem: (id: string) => Promise<void>
-  getCustomItemById: (id: string) => Promise<CustomItem | null>
+  addNewItem: (item: CollectionItem) => Promise<string>
+  updateExistingItem: (id: string, item: Partial<CollectionItem>) => Promise<void>
+  removeItem: (id: string) => Promise<void>
+  getItemById: (id: string) => Promise<CollectionItem | null>
+  refreshItems: (filter?: any) => Promise<void>
   refreshStats: () => Promise<void>
+  isDatabaseInitialized: boolean
+  checkDatabaseInitialization: () => Promise<boolean>
 }
 
 const CollectionContext = createContext<CollectionContextType | undefined>(undefined)
 
 export function CollectionProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
-  const [figureItems, setFigureItems] = useState<FigureItem[]>([])
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
-  const [customItems, setCustomItems] = useState<CustomItem[]>([])
-  const [loading, setLoading] = useState({
-    figures: true,
-    wishlist: true,
-    customs: true,
-  })
+  const [items, setItems] = useState<CollectionItem[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [stats, setStats] = useState<any>(null)
-  const [subscriptions, setSubscriptions] = useState<RealtimeChannel[]>([])
+  const [isDatabaseInitialized, setIsDatabaseInitialized] = useState<boolean>(false)
+
+  // Verificar si la base de datos está inicializada
+  const checkDatabaseInitialization = async (): Promise<boolean> => {
+    try {
+      const { error } = await supabase.from("checklist_items").select("id").limit(1)
+
+      // Si no hay error o el error es que no se encontraron resultados, la tabla existe
+      if (!error || error.code === "PGRST116") {
+        setIsDatabaseInitialized(true)
+        return true
+      }
+
+      // Si el error es que la tabla no existe
+      if (error.message.includes("does not exist")) {
+        setIsDatabaseInitialized(false)
+        return false
+      }
+
+      // Otros errores (conexión, etc.)
+      console.error("Error checking database:", error)
+      setIsDatabaseInitialized(false)
+      return false
+    } catch (err) {
+      console.error("Error checking database initialization:", err)
+      setIsDatabaseInitialized(false)
+      return false
+    }
+  }
 
   // Cargar items cuando el usuario cambia
   useEffect(() => {
     if (user) {
-      fetchFigureItems()
-      fetchWishlistItems()
-      fetchCustomItems()
-      setupRealtimeSubscriptions()
+      checkDatabaseInitialization().then((isInitialized) => {
+        refreshItems()
+        refreshStats()
+      })
     } else {
-      setFigureItems([])
-      setWishlistItems([])
-      setCustomItems([])
+      setItems([])
       setStats(null)
-      // Limpiar suscripciones
-      subscriptions.forEach((subscription) => subscription.unsubscribe())
-      setSubscriptions([])
-    }
-
-    return () => {
-      // Limpiar suscripciones al desmontar
-      subscriptions.forEach((subscription) => subscription.unsubscribe())
     }
   }, [user])
 
-  // Configurar suscripciones en tiempo real
-  const setupRealtimeSubscriptions = () => {
-    if (!user) return
+  // Suscribirse a cambios en tiempo real
+  useEffect(() => {
+    if (user) {
+      const subscription = supabase
+        .channel("checklist-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "checklist_items",
+            filter: `user_id=eq.${user.uid}`,
+          },
+          (payload) => {
+            console.log("Cambio en tiempo real:", payload)
+            refreshItems()
+          },
+        )
+        .subscribe()
 
-    // Limpiar suscripciones existentes
-    subscriptions.forEach((subscription) => subscription.unsubscribe())
-
-    // Suscribirse a cambios en figure_items
-    const figureSubscription = supabase
-      .channel("figure_items_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "figure_items",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log("Cambio en figure_items:", payload)
-          fetchFigureItems()
-        },
-      )
-      .subscribe()
-
-    // Suscribirse a cambios en wishlist_items
-    const wishlistSubscription = supabase
-      .channel("wishlist_items_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "wishlist_items",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log("Cambio en wishlist_items:", payload)
-          fetchWishlistItems()
-        },
-      )
-      .subscribe()
-
-    // Suscribirse a cambios en custom_items
-    const customSubscription = supabase
-      .channel("custom_items_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "custom_items",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log("Cambio en custom_items:", payload)
-          fetchCustomItems()
-        },
-      )
-      .subscribe()
-
-    setSubscriptions([figureSubscription, wishlistSubscription, customSubscription])
-  }
-
-  // Obtener items de figure_items
-  const fetchFigureItems = async () => {
-    if (!user) return
-
-    setLoading((prev) => ({ ...prev, figures: true }))
-    setError(null)
-
-    try {
-      const { data, error } = await supabase
-        .from("figure_items")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false })
-
-      if (error) {
-        throw error
+      return () => {
+        supabase.removeChannel(subscription)
       }
+    }
+  }, [user])
 
-      // Convertir snake_case a camelCase
-      const formattedData = data.map((item) => snakeToCamel<FigureItem>(item))
-      setFigureItems(formattedData)
+  const refreshItems = async (filter?: any) => {
+    if (!user) return
+
+    setLoading(true)
+    try {
+      // Intentar obtener datos de Supabase primero
+      if (isDatabaseInitialized) {
+        let query = supabase.from("checklist_items").select("*").eq("user_id", user.uid)
+
+        // Aplicar filtros si existen
+        if (filter) {
+          if (filter.inCollection !== undefined) {
+            // No aplicamos este filtro en Supabase ya que no existe esta columna
+          }
+          if (filter.inWishlist !== undefined) {
+            // No aplicamos este filtro en Supabase ya que no existe esta columna
+          }
+          if (filter.isCustom !== undefined) {
+            // No aplicamos este filtro en Supabase ya que no existe esta columna
+          }
+          if (filter.category) {
+            query = query.eq("category", filter.category)
+          }
+        }
+
+        const { data, error } = await query.order("created_at", { ascending: false })
+
+        if (error) {
+          console.error("Error fetching from Supabase:", error)
+          throw error
+        }
+
+        // Convertir los datos de Supabase al formato de CollectionItem
+        const formattedItems: CollectionItem[] = data.map((item) => ({
+          id: item.id,
+          name: item.name,
+          brand: item.brand,
+          category: item.type, // Mapear type a category
+          series: item.serie,
+          releaseDate: item.year_released,
+          purchaseDate: item.year_purchase,
+          price: item.price,
+          condition: item.condition,
+          notes: item.comments,
+          imageUrl: item.photo,
+          inWishlist: false, // Por defecto
+          inCollection: true, // Por defecto
+          isCustom: false, // Por defecto
+          createdAt: item.created_at,
+          updatedAt: item.updated_at,
+          userId: item.user_id,
+        }))
+
+        setItems(formattedItems)
+        setError(null)
+      } else {
+        // Fallback a localStorage si Supabase no está disponible
+        const storedItems = localStorage.getItem(`items_${user.uid}`)
+        let userItems: CollectionItem[] = storedItems ? JSON.parse(storedItems) : []
+
+        // Aplicar filtros si existen
+        if (filter) {
+          if (filter.inCollection !== undefined) {
+            userItems = userItems.filter((item) => item.inCollection === filter.inCollection)
+          }
+          if (filter.inWishlist !== undefined) {
+            userItems = userItems.filter((item) => item.inWishlist === filter.inWishlist)
+          }
+          if (filter.isCustom !== undefined) {
+            userItems = userItems.filter((item) => item.isCustom === filter.isCustom)
+          }
+          if (filter.category) {
+            userItems = userItems.filter((item) => item.category === filter.category)
+          }
+        }
+
+        // Ordenar por fecha de actualización
+        userItems.sort((a, b) => {
+          const dateA = new Date(a.updatedAt).getTime()
+          const dateB = new Date(b.updatedAt).getTime()
+          return dateB - dateA
+        })
+
+        setItems(userItems)
+        setError(null)
+      }
     } catch (err: any) {
-      console.error("Error fetching figure items:", err)
+      console.error("Error fetching items:", err)
       setError(err?.message || "Error al cargar los items. Por favor, intenta de nuevo.")
+
+      // Fallback a localStorage en caso de error
+      const storedItems = localStorage.getItem(`items_${user.uid}`)
+      if (storedItems) {
+        setItems(JSON.parse(storedItems))
+      }
     } finally {
-      setLoading((prev) => ({ ...prev, figures: false }))
+      setLoading(false)
     }
   }
 
-  // Obtener items de wishlist_items
-  const fetchWishlistItems = async () => {
-    if (!user) return
-
-    setLoading((prev) => ({ ...prev, wishlist: true }))
-    setError(null)
-
-    try {
-      const { data, error } = await supabase
-        .from("wishlist_items")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false })
-
-      if (error) {
-        throw error
-      }
-
-      // Convertir snake_case a camelCase
-      const formattedData = data.map((item) => snakeToCamel<WishlistItem>(item))
-      setWishlistItems(formattedData)
-    } catch (err: any) {
-      console.error("Error fetching wishlist items:", err)
-      setError(err?.message || "Error al cargar los items. Por favor, intenta de nuevo.")
-    } finally {
-      setLoading((prev) => ({ ...prev, wishlist: false }))
-    }
-  }
-
-  // Obtener items de custom_items
-  const fetchCustomItems = async () => {
-    if (!user) return
-
-    setLoading((prev) => ({ ...prev, customs: true }))
-    setError(null)
-
-    try {
-      const { data, error } = await supabase
-        .from("custom_items")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false })
-
-      if (error) {
-        throw error
-      }
-
-      // Convertir snake_case a camelCase
-      const formattedData = data.map((item) => snakeToCamel<CustomItem>(item))
-      setCustomItems(formattedData)
-    } catch (err: any) {
-      console.error("Error fetching custom items:", err)
-      setError(err?.message || "Error al cargar los items. Por favor, intenta de nuevo.")
-    } finally {
-      setLoading((prev) => ({ ...prev, customs: false }))
-    }
-  }
-
-  // Añadir un nuevo item a figure_items
-  const addFigureItem = async (item: FigureItem): Promise<string> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      // Convertir camelCase a snake_case y añadir user_id
-      const formattedItem = camelToSnake<any>({
-        ...item,
-        user_id: user.id,
-      })
-
-      const { data, error } = await supabase.from("figure_items").insert(formattedItem).select().single()
-
-      if (error) {
-        throw error
-      }
-
-      // Actualizar el estado local
-      await fetchFigureItems()
-      await refreshStats()
-
-      return data.id
-    } catch (err) {
-      console.error("Error adding figure item:", err)
-      throw err
-    }
-  }
-
-  // Actualizar un item existente en figure_items
-  const updateFigureItem = async (id: string, item: Partial<FigureItem>): Promise<void> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      // Convertir camelCase a snake_case
-      const formattedItem = camelToSnake<any>({
-        ...item,
-        updated_at: new Date().toISOString(),
-      })
-
-      const { error } = await supabase.from("figure_items").update(formattedItem).eq("id", id).eq("user_id", user.id)
-
-      if (error) {
-        throw error
-      }
-
-      // Actualizar el estado local
-      await fetchFigureItems()
-      await refreshStats()
-    } catch (err) {
-      console.error("Error updating figure item:", err)
-      throw err
-    }
-  }
-
-  // Eliminar un item de figure_items
-  const deleteFigureItem = async (id: string): Promise<void> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      const { error } = await supabase.from("figure_items").delete().eq("id", id).eq("user_id", user.id)
-
-      if (error) {
-        throw error
-      }
-
-      // Actualizar el estado local
-      await fetchFigureItems()
-      await refreshStats()
-    } catch (err) {
-      console.error("Error deleting figure item:", err)
-      throw err
-    }
-  }
-
-  // Obtener un item específico de figure_items
-  const getFigureItemById = async (id: string): Promise<FigureItem | null> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      const { data, error } = await supabase
-        .from("figure_items")
-        .select("*")
-        .eq("id", id)
-        .eq("user_id", user.id)
-        .single()
-
-      if (error) {
-        throw error
-      }
-
-      return snakeToCamel<FigureItem>(data)
-    } catch (err) {
-      console.error("Error getting figure item:", err)
-      throw err
-    }
-  }
-
-  // Añadir un nuevo item a wishlist_items
-  const addWishlistItem = async (item: WishlistItem): Promise<string> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      // Convertir camelCase a snake_case y añadir user_id
-      const formattedItem = camelToSnake<any>({
-        ...item,
-        user_id: user.id,
-      })
-
-      const { data, error } = await supabase.from("wishlist_items").insert(formattedItem).select().single()
-
-      if (error) {
-        throw error
-      }
-
-      // Actualizar el estado local
-      await fetchWishlistItems()
-      await refreshStats()
-
-      return data.id
-    } catch (err) {
-      console.error("Error adding wishlist item:", err)
-      throw err
-    }
-  }
-
-  // Actualizar un item existente en wishlist_items
-  const updateWishlistItem = async (id: string, item: Partial<WishlistItem>): Promise<void> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      // Convertir camelCase a snake_case
-      const formattedItem = camelToSnake<any>({
-        ...item,
-        updated_at: new Date().toISOString(),
-      })
-
-      const { error } = await supabase.from("wishlist_items").update(formattedItem).eq("id", id).eq("user_id", user.id)
-
-      if (error) {
-        throw error
-      }
-
-      // Actualizar el estado local
-      await fetchWishlistItems()
-      await refreshStats()
-    } catch (err) {
-      console.error("Error updating wishlist item:", err)
-      throw err
-    }
-  }
-
-  // Eliminar un item de wishlist_items
-  const deleteWishlistItem = async (id: string): Promise<void> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      const { error } = await supabase.from("wishlist_items").delete().eq("id", id).eq("user_id", user.id)
-
-      if (error) {
-        throw error
-      }
-
-      // Actualizar el estado local
-      await fetchWishlistItems()
-      await refreshStats()
-    } catch (err) {
-      console.error("Error deleting wishlist item:", err)
-      throw err
-    }
-  }
-
-  // Obtener un item específico de wishlist_items
-  const getWishlistItemById = async (id: string): Promise<WishlistItem | null> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      const { data, error } = await supabase
-        .from("wishlist_items")
-        .select("*")
-        .eq("id", id)
-        .eq("user_id", user.id)
-        .single()
-
-      if (error) {
-        throw error
-      }
-
-      return snakeToCamel<WishlistItem>(data)
-    } catch (err) {
-      console.error("Error getting wishlist item:", err)
-      throw err
-    }
-  }
-
-  // Mover un item de wishlist a figure
-  const moveWishlistToFigure = async (wishlistItem: WishlistItem): Promise<void> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      // Crear un nuevo figure item a partir del wishlist item
-      const figureItem: FigureItem = {
-        name: wishlistItem.name,
-        type: wishlistItem.type,
-        franchise: wishlistItem.franchise,
-        brand: wishlistItem.brand,
-        serie: wishlistItem.serie,
-        year_released: wishlistItem.year_released,
-        condition: "New", // Valor por defecto
-        price: wishlistItem.price,
-        year_purchase: new Date().getFullYear().toString(), // Año actual
-        logo: wishlistItem.logo,
-        photo: wishlistItem.photo,
-        tagline: wishlistItem.tagline,
-        review: wishlistItem.review,
-        shelf: "Eins", // Valor por defecto
-        display: "Silent Horrors", // Valor por defecto
-        ranking: 0,
-        comments: wishlistItem.comments,
-        user_id: user.id,
-      }
-
-      // Añadir a figure_items
-      await addFigureItem(figureItem)
-
-      // Eliminar de wishlist_items
-      if (wishlistItem.id) {
-        await deleteWishlistItem(wishlistItem.id)
-      }
-
-      // Actualizar el estado local
-      await fetchFigureItems()
-      await fetchWishlistItems()
-      await refreshStats()
-    } catch (err) {
-      console.error("Error moving wishlist item to figure:", err)
-      throw err
-    }
-  }
-
-  // Añadir un nuevo item a custom_items
-  const addCustomItem = async (item: CustomItem): Promise<string> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      // Convertir camelCase a snake_case y añadir user_id
-      const formattedItem = camelToSnake<any>({
-        ...item,
-        user_id: user.id,
-      })
-
-      const { data, error } = await supabase.from("custom_items").insert(formattedItem).select().single()
-
-      if (error) {
-        throw error
-      }
-
-      // Actualizar el estado local
-      await fetchCustomItems()
-      await refreshStats()
-
-      return data.id
-    } catch (err) {
-      console.error("Error adding custom item:", err)
-      throw err
-    }
-  }
-
-  // Actualizar un item existente en custom_items
-  const updateCustomItem = async (id: string, item: Partial<CustomItem>): Promise<void> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      // Convertir camelCase a snake_case
-      const formattedItem = camelToSnake<any>({
-        ...item,
-        updated_at: new Date().toISOString(),
-      })
-
-      const { error } = await supabase.from("custom_items").update(formattedItem).eq("id", id).eq("user_id", user.id)
-
-      if (error) {
-        throw error
-      }
-
-      // Actualizar el estado local
-      await fetchCustomItems()
-      await refreshStats()
-    } catch (err) {
-      console.error("Error updating custom item:", err)
-      throw err
-    }
-  }
-
-  // Eliminar un item de custom_items
-  const deleteCustomItem = async (id: string): Promise<void> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      const { error } = await supabase.from("custom_items").delete().eq("id", id).eq("user_id", user.id)
-
-      if (error) {
-        throw error
-      }
-
-      // Actualizar el estado local
-      await fetchCustomItems()
-      await refreshStats()
-    } catch (err) {
-      console.error("Error deleting custom item:", err)
-      throw err
-    }
-  }
-
-  // Obtener un item específico de custom_items
-  const getCustomItemById = async (id: string): Promise<CustomItem | null> => {
-    if (!user) throw new Error("Usuario no autenticado")
-
-    try {
-      const { data, error } = await supabase
-        .from("custom_items")
-        .select("*")
-        .eq("id", id)
-        .eq("user_id", user.id)
-        .single()
-
-      if (error) {
-        throw error
-      }
-
-      return snakeToCamel<CustomItem>(data)
-    } catch (err) {
-      console.error("Error getting custom item:", err)
-      throw err
-    }
-  }
-
-  // Actualizar estadísticas
   const refreshStats = async () => {
     if (!user) return
 
     try {
       // Calcular estadísticas basadas en los items
-      const collectionCount = figureItems.length
-      const wishlistCount = wishlistItems.length
-      const customCount = customItems.length
+      const collectionCount = items.filter((item) => item.inCollection).length
+      const wishlistCount = items.filter((item) => item.inWishlist).length
+      const customCount = items.filter((item) => item.isCustom).length
 
-      const brands = [...new Set(figureItems.map((item) => item.brand))]
-      const categories = [...new Set(figureItems.map((item) => item.type))]
+      const brands = [...new Set(items.map((item) => item.brand))]
+      const categories = [...new Set(items.map((item) => item.category))]
 
       const brandCounts = brands
         .map((brand) => ({
           brand,
-          count: figureItems.filter((item) => item.brand === brand).length,
+          count: items.filter((item) => item.brand === brand && item.inCollection).length,
         }))
         .sort((a, b) => b.count - a.count)
 
       const categoryCounts = categories
         .map((category) => ({
           category,
-          count: figureItems.filter((item) => item.type === category).length,
+          count: items.filter((item) => item.category === category && item.inCollection).length,
         }))
         .sort((a, b) => b.count - a.count)
 
       // Calcular valor total de la colección
-      const totalValue = figureItems
-        .filter((item) => item.price)
-        .reduce((sum, item) => {
-          const price = item.price ? Number.parseFloat(item.price) : 0
-          return sum + price
-        }, 0)
+      const totalValue = items
+        .filter((item) => item.inCollection && item.price)
+        .reduce((sum, item) => sum + (item.price || 0), 0)
 
       setStats({
         collectionCount,
@@ -614,27 +242,229 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
+  const addNewItem = async (item: CollectionItem): Promise<string> => {
+    if (!user) throw new Error("Usuario no autenticado")
+
+    try {
+      // Preparar el item para guardar
+      const itemWithUser = {
+        ...item,
+        userId: user.uid,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+
+      let newItemId = ""
+
+      // Intentar guardar en Supabase primero
+      if (isDatabaseInitialized) {
+        // Convertir el item al formato de Supabase
+        const supabaseItem = {
+          user_id: user.uid,
+          name: item.name,
+          type: item.category, // Mapear category a type
+          franchise: item.series, // Mapear series a franchise
+          brand: item.brand,
+          serie: item.series,
+          year_released: item.releaseDate,
+          condition: item.condition,
+          price: item.price,
+          year_purchase: item.purchaseDate,
+          upc: "",
+          logo: "",
+          photo: item.imageUrl,
+          tagline: "",
+          review: "",
+          shelf: "Eins", // Valor por defecto
+          display: "Silent Horrors", // Valor por defecto
+          ranking: 0,
+          comments: item.notes,
+        }
+
+        const { data, error } = await supabase.from("checklist_items").insert(supabaseItem).select()
+
+        if (error) {
+          console.error("Error saving to Supabase:", error)
+          throw error
+        }
+
+        if (data && data.length > 0) {
+          newItemId = data[0].id
+        }
+      }
+
+      // Como respaldo, también guardar en localStorage
+      // Generar un ID único si no se obtuvo de Supabase
+      if (!newItemId) {
+        newItemId = Date.now().toString()
+      }
+
+      const itemWithId = { ...itemWithUser, id: newItemId }
+
+      // Obtener items existentes
+      const storedItems = localStorage.getItem(`items_${user.uid}`)
+      const existingItems: CollectionItem[] = storedItems ? JSON.parse(storedItems) : []
+
+      // Añadir nuevo item
+      const updatedItems = [...existingItems, itemWithId]
+      localStorage.setItem(`items_${user.uid}`, JSON.stringify(updatedItems))
+
+      await refreshItems()
+      await refreshStats()
+      return newItemId
+    } catch (err) {
+      console.error("Error adding item:", err)
+      throw err
+    }
+  }
+
+  const updateExistingItem = async (id: string, item: Partial<CollectionItem>): Promise<void> => {
+    try {
+      // Intentar actualizar en Supabase primero
+      if (isDatabaseInitialized) {
+        // Convertir el item al formato de Supabase
+        const supabaseItem: any = {}
+
+        if (item.name) supabaseItem.name = item.name
+        if (item.category) supabaseItem.type = item.category
+        if (item.brand) supabaseItem.brand = item.brand
+        if (item.series) {
+          supabaseItem.serie = item.series
+          supabaseItem.franchise = item.series
+        }
+        if (item.releaseDate) supabaseItem.year_released = item.releaseDate
+        if (item.purchaseDate) supabaseItem.year_purchase = item.purchaseDate
+        if (item.price !== undefined) supabaseItem.price = item.price
+        if (item.condition) supabaseItem.condition = item.condition
+        if (item.notes) supabaseItem.comments = item.notes
+        if (item.imageUrl) supabaseItem.photo = item.imageUrl
+
+        supabaseItem.updated_at = new Date().toISOString()
+
+        const { error } = await supabase.from("checklist_items").update(supabaseItem).eq("id", id)
+
+        if (error) {
+          console.error("Error updating in Supabase:", error)
+          throw error
+        }
+      }
+
+      // Como respaldo, también actualizar en localStorage
+      const storedItems = localStorage.getItem(`items_${user?.uid}`)
+      if (!storedItems) return
+
+      const existingItems: CollectionItem[] = JSON.parse(storedItems)
+
+      // Actualizar el item específico
+      const updatedItems = existingItems.map((existingItem) =>
+        existingItem.id === id ? { ...existingItem, ...item, updatedAt: new Date() } : existingItem,
+      )
+
+      localStorage.setItem(`items_${user?.uid}`, JSON.stringify(updatedItems))
+
+      await refreshItems()
+      await refreshStats()
+    } catch (err) {
+      console.error("Error updating item:", err)
+      throw err
+    }
+  }
+
+  const removeItem = async (id: string): Promise<void> => {
+    try {
+      // Intentar eliminar de Supabase primero
+      if (isDatabaseInitialized) {
+        const { error } = await supabase.from("checklist_items").delete().eq("id", id)
+
+        if (error) {
+          console.error("Error deleting from Supabase:", error)
+          throw error
+        }
+      }
+
+      // Como respaldo, también eliminar de localStorage
+      const storedItems = localStorage.getItem(`items_${user?.uid}`)
+      if (!storedItems) return
+
+      const existingItems: CollectionItem[] = JSON.parse(storedItems)
+
+      // Filtrar el item a eliminar
+      const updatedItems = existingItems.filter((item) => item.id !== id)
+
+      localStorage.setItem(`items_${user?.uid}`, JSON.stringify(updatedItems))
+
+      await refreshItems()
+      await refreshStats()
+    } catch (err) {
+      console.error("Error deleting item:", err)
+      throw err
+    }
+  }
+
+  const getItemById = async (id: string): Promise<CollectionItem | null> => {
+    try {
+      // Intentar obtener de Supabase primero
+      if (isDatabaseInitialized) {
+        const { data, error } = await supabase.from("checklist_items").select("*").eq("id", id).single()
+
+        if (error) {
+          console.error("Error getting item from Supabase:", error)
+          throw error
+        }
+
+        if (data) {
+          // Convertir el item al formato de CollectionItem
+          return {
+            id: data.id,
+            name: data.name,
+            brand: data.brand,
+            category: data.type,
+            series: data.serie,
+            releaseDate: data.year_released,
+            purchaseDate: data.year_purchase,
+            price: data.price,
+            condition: data.condition,
+            notes: data.comments,
+            imageUrl: data.photo,
+            inWishlist: false,
+            inCollection: true,
+            isCustom: false,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at,
+            userId: data.user_id,
+          }
+        }
+      }
+
+      // Fallback a localStorage
+      const storedItems = localStorage.getItem(`items_${user?.uid}`)
+      if (!storedItems) return null
+
+      const existingItems: CollectionItem[] = JSON.parse(storedItems)
+
+      // Encontrar el item por ID
+      const item = existingItems.find((item) => item.id === id)
+
+      return item || null
+    } catch (err) {
+      console.error("Error getting item:", err)
+      throw err
+    }
+  }
+
   const value = {
-    figureItems,
-    wishlistItems,
-    customItems,
+    items,
     loading,
     error,
     stats,
-    addFigureItem,
-    updateFigureItem,
-    deleteFigureItem,
-    getFigureItemById,
-    addWishlistItem,
-    updateWishlistItem,
-    deleteWishlistItem,
-    getWishlistItemById,
-    moveWishlistToFigure,
-    addCustomItem,
-    updateCustomItem,
-    deleteCustomItem,
-    getCustomItemById,
+    addNewItem,
+    updateExistingItem,
+    removeItem,
+    getItemById,
+    refreshItems,
     refreshStats,
+    isDatabaseInitialized,
+    checkDatabaseInitialization,
   }
 
   return <CollectionContext.Provider value={value}>{children}</CollectionContext.Provider>

@@ -27,12 +27,18 @@ import {
 } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 
+// Añadir esta importación al inicio del archivo
+import { DatabaseSetup } from "./database-setup"
+
 // Primero, vamos a añadir las importaciones necesarias para las fuentes
 // Añadir estas importaciones al inicio del archivo, después de las importaciones existentes
 import { Inter, Roboto, Montserrat, Open_Sans, Poppins } from "next/font/google"
 
 // Añadir esta importación al inicio del archivo, junto con las demás importaciones
 import GoogleSheetsImport from "./google-sheets-import"
+
+// Añadir esta importación al inicio del archivo
+import { DatabaseInitializer } from "@/components/database-initializer"
 
 // Definir las fuentes
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
@@ -647,6 +653,9 @@ export default function SettingsPage() {
           </TabsTrigger>
           <TabsTrigger value="updates" className="whitespace-nowrap">
             {t("settings.updates")}
+          </TabsTrigger>
+          <TabsTrigger value="database" className="whitespace-nowrap">
+            Base de Datos
           </TabsTrigger>
         </TabsList>
 
@@ -1384,6 +1393,12 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+        <TabsContent value="database" className="mt-6">
+          <DatabaseSetup />
+        </TabsContent>
+        <TabsContent value="database" className="mt-6">
+          <DatabaseInitializer />
         </TabsContent>
       </Tabs>
     </div>

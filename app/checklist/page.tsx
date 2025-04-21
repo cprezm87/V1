@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, Edit, Trash2, ArrowUpDown, MoreHorizontal, Star, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,71 +12,84 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useCollection } from "@/contexts/collection-context"
-import type { FigureItem } from "@/lib/supabase"
-import { Skeleton } from "@/components/ui/skeleton"
+// Añadir esta importación al inicio del archivo
+import { DatabaseStatus } from "@/components/database-status"
+
+interface FigureItem {
+  id: string
+  name: string
+  type: string
+  franchise: string
+  brand: string
+  serie: string
+  yearReleased: string
+  condition: string
+  price: string
+  yearPurchase: string
+  upc: string
+  logo: string
+  photo: string
+  tagline: string
+  review: string
+  shelf: string
+  display: string
+  ranking: number
+  comments: string
+}
 
 export default function ChecklistPage() {
   const { toast } = useToast()
-  const { figureItems, loading, error, updateFigureItem, deleteFigureItem } = useCollection()
-
+  const [items, setItems] = useState<FigureItem[]>([])
   const [sortBy, setSortBy] = useState("name")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [searchTerm, setSearchTerm] = useState("")
+  // Modificar el estado para incluir el elemento seleccionado
   const [selectedItem, setSelectedItem] = useState<FigureItem | null>(null)
   const [editItem, setEditItem] = useState<FigureItem | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
+  // Load items from localStorage on component mount
+  useEffect(() => {
+    const storedItems = localStorage.getItem("figureItems")
+    if (storedItems) {
+      setItems(JSON.parse(storedItems))
+    }
+  }, [])
+
   // Filter items by type and search term
   const getFilteredItems = (type: string) => {
-    return figureItems
+    return items
       .filter(
         (item) =>
-          item.type?.toLowerCase() === type.toLowerCase() &&
+          item.type.toLowerCase() === type.toLowerCase() &&
           (searchTerm === "" ||
-            item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.franchise?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.brand?.toLowerCase().includes(searchTerm.toLowerCase())),
+            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.franchise.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.brand.toLowerCase().includes(searchTerm.toLowerCase())),
       )
       .sort((a, b) => {
         if (sortBy === "name" || sortBy === "franchise" || sortBy === "brand") {
-          return sortOrder === "asc"
-            ? (a[sortBy] || "").localeCompare(b[sortBy] || "")
-            : (b[sortBy] || "").localeCompare(a[sortBy] || "")
+          return sortOrder === "asc" ? a[sortBy].localeCompare(b[sortBy]) : b[sortBy].localeCompare(a[sortBy])
         } else if (sortBy === "price" || sortBy === "yearReleased" || sortBy === "yearPurchase") {
-          const aValue = a[sortBy] ? Number.parseFloat(a[sortBy]) : 0
-          const bValue = b[sortBy] ? Number.parseFloat(b[sortBy]) : 0
-          return sortOrder === "asc" ? aValue - bValue : bValue - aValue
+          return sortOrder === "asc"
+            ? Number.parseInt(a[sortBy]) - Number.parseInt(b[sortBy])
+            : Number.parseInt(b[sortBy]) - Number.parseInt(a[sortBy])
         } else {
           // Default sort by name
-          return sortOrder === "asc"
-            ? (a.name || "").localeCompare(b.name || "")
-            : (b.name || "").localeCompare(a.name || "")
+          return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
         }
       })
   }
 
   // Handle item deletion
-  const handleDeleteItem = async (id: string) => {
-    try {
-      await deleteFigureItem(id)
-
-      if (selectedItem?.id === id) {
-        setSelectedItem(null)
-      }
-
-      toast({
-        title: "Deleted!",
-        description: "Item has been removed from your checklist.",
-      })
-    } catch (error) {
-      console.error("Error deleting item:", error)
-      toast({
-        title: "Error",
-        description: "Failed to delete item. Please try again.",
-        variant: "destructive",
-      })
-    }
+  const handleDeleteItem = (id: string) => {
+    const updatedItems = items.filter((item) => item.id !== id)
+    setItems(updatedItems)
+    localStorage.setItem("figureItems", JSON.stringify(updatedItems))
+    toast({
+      title: "Deleted!",
+      description: "Item has been removed from your checklist.",
+    })
   }
 
   // Handle item edit
@@ -86,31 +99,17 @@ export default function ChecklistPage() {
   }
 
   // Save edited item
-  const saveEditedItem = async () => {
-    if (editItem && editItem.id) {
-      try {
-        await updateFigureItem(editItem.id, editItem)
-
-        // Update selected item if it's the one being edited
-        if (selectedItem?.id === editItem.id) {
-          setSelectedItem(editItem)
-        }
-
-        setIsEditDialogOpen(false)
-        setEditItem(null)
-
-        toast({
-          title: "Updated!",
-          description: "Item has been updated successfully.",
-        })
-      } catch (error) {
-        console.error("Error updating item:", error)
-        toast({
-          title: "Error",
-          description: "Failed to update item. Please try again.",
-          variant: "destructive",
-        })
-      }
+  const saveEditedItem = () => {
+    if (editItem) {
+      const updatedItems = items.map((item) => (item.id === editItem.id ? editItem : item))
+      setItems(updatedItems)
+      localStorage.setItem("figureItems", JSON.stringify(updatedItems))
+      setIsEditDialogOpen(false)
+      setEditItem(null)
+      toast({
+        title: "Updated!",
+        description: "Item has been updated successfully.",
+      })
     }
   }
 
@@ -125,7 +124,7 @@ export default function ChecklistPage() {
   }
 
   // Render stars for ranking
-  const renderStars = (ranking = 0) => {
+  const renderStars = (ranking: number) => {
     return (
       <div className="flex">
         {[...Array(5)].map((_, i) => (
@@ -138,13 +137,16 @@ export default function ChecklistPage() {
     )
   }
 
-  // Handle item click
+  // Agregar una función para manejar el clic en un elemento
   const handleItemClick = (item: FigureItem) => {
     setSelectedItem(item)
   }
 
+  // Modificar el return para implementar el diseño de dos columnas
   return (
+    // Buscar el return y añadir el componente DatabaseStatus justo después de la apertura del primer div
     <div className="w-full py-6 px-6">
+      <DatabaseStatus />
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Checklist</h1>
         <div className="relative w-64">
@@ -199,16 +201,7 @@ export default function ChecklistPage() {
             <TabsContent value="figures">
               <Card>
                 <CardContent className="space-y-2 pt-6">
-                  {loading.figures ? (
-                    // Loading skeleton
-                    Array(5)
-                      .fill(0)
-                      .map((_, i) => (
-                        <div key={i} className="p-2">
-                          <Skeleton className="h-8 w-full" />
-                        </div>
-                      ))
-                  ) : getFilteredItems("figures").length > 0 ? (
+                  {getFilteredItems("figures").length > 0 ? (
                     getFilteredItems("figures").map((item) => (
                       <div
                         key={item.id}
@@ -238,7 +231,7 @@ export default function ChecklistPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
-                              onClick={() => item.id && handleDeleteItem(item.id)}
+                              onClick={() => handleDeleteItem(item.id)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
@@ -259,16 +252,7 @@ export default function ChecklistPage() {
             <TabsContent value="accessories">
               <Card>
                 <CardContent className="space-y-2 pt-6">
-                  {loading.figures ? (
-                    // Loading skeleton
-                    Array(5)
-                      .fill(0)
-                      .map((_, i) => (
-                        <div key={i} className="p-2">
-                          <Skeleton className="h-8 w-full" />
-                        </div>
-                      ))
-                  ) : getFilteredItems("accessories").length > 0 ? (
+                  {getFilteredItems("accessories").length > 0 ? (
                     getFilteredItems("accessories").map((item) => (
                       <div
                         key={item.id}
@@ -298,7 +282,7 @@ export default function ChecklistPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
-                              onClick={() => item.id && handleDeleteItem(item.id)}
+                              onClick={() => handleDeleteItem(item.id)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
@@ -319,16 +303,7 @@ export default function ChecklistPage() {
             <TabsContent value="props">
               <Card>
                 <CardContent className="space-y-2 pt-6">
-                  {loading.figures ? (
-                    // Loading skeleton
-                    Array(5)
-                      .fill(0)
-                      .map((_, i) => (
-                        <div key={i} className="p-2">
-                          <Skeleton className="h-8 w-full" />
-                        </div>
-                      ))
-                  ) : getFilteredItems("props").length > 0 ? (
+                  {getFilteredItems("props").length > 0 ? (
                     getFilteredItems("props").map((item) => (
                       <div
                         key={item.id}
@@ -358,7 +333,7 @@ export default function ChecklistPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
-                              onClick={() => item.id && handleDeleteItem(item.id)}
+                              onClick={() => handleDeleteItem(item.id)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
@@ -440,7 +415,7 @@ export default function ChecklistPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-neon-green">
-                        Year Released: <span className="font-normal text-white">{selectedItem.year_released}</span>
+                        Year Released: <span className="font-normal text-white">{selectedItem.yearReleased}</span>
                       </p>
                     </div>
                     <div>
@@ -452,13 +427,13 @@ export default function ChecklistPage() {
                       <p className="text-sm font-medium text-neon-green">
                         Price:{" "}
                         <span className="font-normal text-white">
-                          ${selectedItem.price ? Number.parseFloat(selectedItem.price).toLocaleString("es-CO") : "N/A"}
+                          ${Number.parseInt(selectedItem.price).toLocaleString("es-CO")}
                         </span>
                       </p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-neon-green">
-                        Year Purchase: <span className="font-normal text-white">{selectedItem.year_purchase}</span>
+                        Year Purchase: <span className="font-normal text-white">{selectedItem.yearPurchase}</span>
                       </p>
                     </div>
                     <div>
@@ -518,7 +493,10 @@ export default function ChecklistPage() {
                     </Button>
                     <Button
                       variant="destructive"
-                      onClick={() => selectedItem.id && handleDeleteItem(selectedItem.id)}
+                      onClick={() => {
+                        handleDeleteItem(selectedItem.id)
+                        setSelectedItem(null)
+                      }}
                       className="bg-neon-green text-black hover:bg-neon-green/90"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
