@@ -66,7 +66,8 @@ export function ImageUpload({
         method: "POST",
         body: formData,
         headers: {
-          Authorization: `Bearer ${await user?.getIdToken()}`,
+          // Usar el ID del usuario directamente si está disponible
+          ...(user?.uid ? { "X-User-ID": user.uid } : {}),
         },
       })
 
