@@ -6,9 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle, AlertTriangle, Database, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/lib/supabase"
 
-export function DatabaseInitializer() {
+export function DatabaseInitializerSimple() {
   const { toast } = useToast()
   const [isCreating, setIsCreating] = useState(false)
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
@@ -22,24 +21,8 @@ export function DatabaseInitializer() {
     setDetails(null)
 
     try {
-      // Verificar conexión a Supabase
-      const { error: pingError } = await supabase.from("checklist_items").select("id").limit(1)
-
-      if (pingError && !pingError.message.includes("does not exist")) {
-        // Error de conexión
-        setStatus("error")
-        setMessage("Error de conexión a Supabase: " + pingError.message)
-        toast({
-          title: "Error de conexión",
-          description: "No se pudo conectar a Supabase. Verifica tu conexión e inténtalo de nuevo.",
-          variant: "destructive",
-        })
-        setIsCreating(false)
-        return
-      }
-
-      // Intentar crear la tabla usando nuestra API
-      const response = await fetch("/api/create-tables", {
+      // Intentar crear la tabla usando nuestra API simplificada
+      const response = await fetch("/api/create-table-simple", {
         method: "POST",
       })
 
@@ -76,22 +59,12 @@ export function DatabaseInitializer() {
     }
   }
 
-  // Función para verificar si la tabla existe
-  const checkTableExists = async () => {
-    try {
-      const { error } = await supabase.from("checklist_items").select("id").limit(1)
-      return !error || !error.message.includes("does not exist")
-    } catch (error) {
-      return false
-    }
-  }
-
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5" />
-          Inicialización de Base de Datos
+          Inicialización de Base de Datos (Método Simplificado)
         </CardTitle>
         <CardDescription>Configura la tabla necesaria en Supabase para almacenar tu colección</CardDescription>
       </CardHeader>
@@ -123,17 +96,7 @@ export function DatabaseInitializer() {
         )}
 
         <p className="mb-4">
-          Este proceso creará la tabla necesaria en tu base de datos Supabase para almacenar tu colección de figuras:
-        </p>
-
-        <ul className="list-disc pl-5 mb-4 space-y-1">
-          <li>
-            <strong>checklist_items</strong>: Para almacenar tus figuras y accesorios
-          </li>
-        </ul>
-
-        <p className="text-sm text-muted-foreground mb-4">
-          Nota: Este proceso es seguro de ejecutar múltiples veces. Si la tabla ya existe, no se modificará.
+          Este método alternativo intenta crear la tabla checklist_items usando un enfoque más simple.
         </p>
 
         <Alert className="mb-4">
@@ -144,10 +107,56 @@ export function DatabaseInitializer() {
             consola de Supabase siguiendo estos pasos:
             <ol className="list-decimal pl-5 mt-2 space-y-1">
               <li>Ve a la consola de Supabase y selecciona tu proyecto</li>
-              <li>Navega a la sección "Table Editor"</li>
-              <li>Crea una nueva tabla llamada "checklist_items" con los campos necesarios</li>
-              <li>Habilita RLS (Row Level Security) para la tabla</li>
-              <li>Crea políticas para permitir a los usuarios acceder solo a sus propios datos</li>
+              <li>Navega a la sección "SQL Editor"</li>
+              <li>
+                Ejecuta el siguiente SQL:
+                <pre className="mt-2 p-2 bg-black/20 rounded text-xs overflow-auto">
+                  {`CREATE TABLE IF NOT EXISTS checklist_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  franchise TEXT NOT NULL,
+  brand TEXT NOT NULL,
+  serie TEXT,
+  year_released TEXT,
+  condition TEXT,
+  price NUMERIC,
+  year_purchase TEXT,
+  upc TEXT,
+  logo TEXT,
+  photo TEXT,
+  tagline TEXT,
+  review TEXT,
+  shelf TEXT,
+  display TEXT,
+  ranking INTEGER,
+  comments TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Configurar Row Level Security (RLS)
+ALTER TABLE checklist_items ENABLE ROW LEVEL SECURITY;
+
+-- Crear políticas para que los usuarios solo puedan ver y modificar sus propios items
+CREATE POLICY "Users can view their own checklist items" 
+  ON checklist_items FOR SELECT 
+  USING (auth.uid()::text = user_id OR user_id = 'default-user-id');
+
+CREATE POLICY "Users can insert their own checklist items" 
+  ON checklist_items FOR INSERT 
+  WITH CHECK (auth.uid()::text = user_id OR user_id = 'default-user-id');
+
+CREATE POLICY "Users can update their own checklist items" 
+  ON checklist_items FOR UPDATE 
+  USING (auth.uid()::text = user_id OR user_id = 'default-user-id');
+
+CREATE POLICY "Users can delete their own checklist items" 
+  ON checklist_items FOR DELETE 
+  USING (auth.uid()::text = user_id OR user_id = 'default-user-id');`}
+                </pre>
+              </li>
             </ol>
           </AlertDescription>
         </Alert>
@@ -164,7 +173,7 @@ export function DatabaseInitializer() {
               Creando tabla...
             </>
           ) : (
-            "Crear tabla checklist_items"
+            "Crear tabla (método alternativo)"
           )}
         </Button>
       </CardFooter>
