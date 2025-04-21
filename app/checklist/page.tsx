@@ -66,7 +66,9 @@ export default function ChecklistPage() {
             item.brand.toLowerCase().includes(searchTerm.toLowerCase())),
       )
       .sort((a, b) => {
-        if (sortBy === "name" || sortBy === "franchise" || sortBy === "brand") {
+        if (sortBy === "id") {
+          return sortOrder === "asc" ? a.id.localeCompare(b.id) : b.id.localeCompare(a.id)
+        } else if (sortBy === "name" || sortBy === "franchise" || sortBy === "brand") {
           return sortOrder === "asc" ? a[sortBy].localeCompare(b[sortBy]) : b[sortBy].localeCompare(a[sortBy])
         } else if (sortBy === "price" || sortBy === "yearReleased" || sortBy === "yearPurchase") {
           return sortOrder === "asc"
@@ -164,6 +166,7 @@ export default function ChecklistPage() {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="id">ID</SelectItem>
               <SelectItem value="name">Name</SelectItem>
               <SelectItem value="price">Price</SelectItem>
               <SelectItem value="brand">Brand</SelectItem>
