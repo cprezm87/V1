@@ -16,7 +16,26 @@ interface ThemeContextType {
   t: (key: string) => string
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+// Crear el contexto con un valor por defecto para evitar errores
+const defaultContext: ThemeContextType = {
+  theme: "dark",
+  language: "en",
+  toggleTheme: () => {},
+  setLanguage: () => {},
+  translations: {},
+  t: (key: string) => key,
+}
+
+const ThemeContext = createContext<ThemeContextType>(defaultContext)
+
+// Hook personalizado para usar el contexto
+export const useTheme = () => {
+  const context = useContext(ThemeContext)
+  if (!context) {
+    throw new Error("useTheme must be used within a ThemeProvider")
+  }
+  return context
+}
 
 // Translations
 const translations: Record<Language, Record<string, string>> = {
@@ -957,7 +976,39 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Translation function
   const t = (key: string) => {
-    return translations[language][key] || translations.en[key] || key
+    return translations[language]?.[key] || translations.en?.[key] || key
+  }
+
+  // Definir un objeto de traducciones mínimo para evitar errores
+  const translations: Record<Language, Record<string, string>> = {
+    en: {
+      "nav.home": "Home",
+      "home.recentAdditions": "Recent Additions",
+      "home.latestFigures": "Latest figures added to your collection",
+      "home.favoriteItems": "Favorite Items",
+      "home.topRated": "Your top-rated items",
+      "home.noRecent": "No recent additions yet.",
+      "home.noFavorites": "No favorite items yet. Rate your items with 5 stars to see them here.",
+      "home.starRating": "5-star rating",
+      "home.addedRecently": "Added recently",
+    },
+    es: {
+      "nav.home": "Inicio",
+      "home.recentAdditions": "Adiciones Recientes",
+      "home.latestFigures": "Últimas figuras añadidas a tu colección",
+      "home.favoriteItems": "Elementos Favoritos",
+      "home.topRated": "Tus elementos mejor valorados",
+      "home.noRecent": "Aún no hay adiciones recientes.",
+      "home.noFavorites": "Aún no hay elementos favoritos. Califica tus elementos con 5 estrellas para verlos aquí.",
+      "home.starRating": "Calificación de 5 estrellas",
+      "home.addedRecently": "Añadido recientemente",
+    },
+    fr: {}, // Añadir traducciones según sea necesario
+    de: {}, // Añadir traducciones según sea necesario
+    pt: {}, // Añadir traducciones según sea necesario
+    zh: {}, // Añadir traducciones según sea necesario
+    ru: {}, // Añadir traducciones según sea necesario
+    it: {}, // Añadir traducciones según sea necesario
   }
 
   return (
@@ -974,12 +1025,4 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       {children}
     </ThemeContext.Provider>
   )
-}
-
-export function useTheme() {
-  const context = useContext(ThemeContext)
-  if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider")
-  }
-  return context
 }

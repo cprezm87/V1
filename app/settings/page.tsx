@@ -702,45 +702,44 @@ export default function SettingsPage() {
   return (
     <div className="container py-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">{t("nav.settings")}</h1>
+        <h1 className="text-3xl font-bold">Settings</h1>
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="w-full flex flex-wrap justify-center gap-1 mb-4">
+        {/* Modificar la sección de TabsList para que tenga el orden correcto de pestañas
+        y asegurarse de que todas las pestañas solicitadas estén incluidas */}
+        <TabsList className="w-full flex flex-wrap justify-center gap-4 mb-8 overflow-hidden">
           <TabsTrigger value="profile" className="px-4">
-            {t("settings.profile")}
+            Profile
           </TabsTrigger>
           <TabsTrigger value="appearance" className="px-4">
-            {t("settings.appearance")}
+            Appearance
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="px-4">
+            Notifications
           </TabsTrigger>
           <TabsTrigger value="language" className="px-4">
-            {t("settings.language")}
+            Language
           </TabsTrigger>
           <TabsTrigger value="currency" className="px-4">
             Currency
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="px-4">
-            {t("settings.notifications")}
-          </TabsTrigger>
           <TabsTrigger value="security" className="px-4">
-            {t("settings.security")}
+            Security
           </TabsTrigger>
           <TabsTrigger value="backup" className="px-4">
-            {t("settings.backup")}
+            Backup
           </TabsTrigger>
           <TabsTrigger value="sync" className="px-4">
-            {t("settings.sync")}
-          </TabsTrigger>
-          <TabsTrigger value="reset" className="px-4">
-            {t("settings.reset")}
+            Sync
           </TabsTrigger>
           <TabsTrigger value="updates" className="px-4">
-            {t("settings.updates")}
+            Updates
           </TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}
-        <TabsContent value="profile" className="mt-6">
+        <TabsContent value="profile" className="mt-6 overflow-hidden">
           <div className="grid gap-6 md:grid-cols-3">
             {/* Profile Information */}
             <Card>
@@ -857,7 +856,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Appearance Tab */}
-        <TabsContent value="appearance" className="mt-6">
+        <TabsContent value="appearance" className="mt-6 overflow-hidden">
           <Card>
             <CardContent className="p-6 space-y-6">
               <div className="flex items-center justify-between">
@@ -1003,7 +1002,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Language Tab */}
-        <TabsContent value="language" className="mt-6">
+        <TabsContent value="language" className="mt-6 overflow-hidden">
           <Card>
             <CardContent className="p-6 space-y-4">
               <div>
@@ -1099,7 +1098,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Currency Tab */}
-        <TabsContent value="currency" className="mt-6">
+        <TabsContent value="currency" className="mt-6 overflow-hidden">
           <Card>
             <CardContent className="p-6 space-y-4">
               <div>
@@ -1168,7 +1167,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Notifications Tab */}
-        <TabsContent value="notifications" className="mt-6">
+        <TabsContent value="notifications" className="mt-6 overflow-hidden">
           <Card>
             <CardContent className="p-6 space-y-6">
               <div className="flex items-center justify-between">
@@ -1241,7 +1240,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Security Tab */}
-        <TabsContent value="security" className="mt-6">
+        <TabsContent value="security" className="mt-6 overflow-hidden">
           <Card>
             <CardContent className="p-6 space-y-4">
               <div className="space-y-2">
@@ -1267,7 +1266,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Backup Tab */}
-        <TabsContent value="backup" className="mt-6">
+        <TabsContent value="backup" className="mt-6 overflow-hidden">
           <Card>
             <CardHeader>
               <CardTitle>Data Export & Backup</CardTitle>
@@ -1327,7 +1326,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Sync Tab */}
-        <TabsContent value="sync" className="mt-6">
+        <TabsContent value="sync" className="mt-6 overflow-hidden">
           <Card>
             <CardHeader>
               <CardTitle>Google Sheets Sync</CardTitle>
@@ -1461,12 +1460,48 @@ export default function SettingsPage() {
           </div>
         </TabsContent>
 
-        {/* Reset Tab */}
-        <TabsContent value="reset" className="mt-6">
+        {/* Updates Tab */}
+        <TabsContent value="updates" className="mt-6 overflow-hidden">
+          <div className="grid gap-6 md:grid-cols-2 mb-6">
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <h3 className="text-lg font-medium">Check for Updates</h3>
+                <p className="text-sm text-muted-foreground">Current version: 1.0.0</p>
+                <p className="text-sm text-muted-foreground">Last checked: April 19, 2025</p>
+                <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handleCheckUpdates}>
+                  Check for Updates
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <h3 className="text-lg font-medium">Report a Bug</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="bug-title">Bug Title</Label>
+                  <Input id="bug-title" placeholder="Brief description of the issue" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bug-description">Bug Description</Label>
+                  <Textarea id="bug-description" placeholder="Please provide details about the bug..." rows={4} />
+                </div>
+
+                <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handleBugReport}>
+                  Submit Bug Report
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Reset Application Section (moved from Reset tab) */}
           <Card>
-            <CardContent className="p-6 space-y-6">
+            <CardHeader>
+              <CardTitle>Reset Application</CardTitle>
+              <CardDescription>Reset the application to its initial state</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
               <div>
-                <h3 className="text-lg font-medium mb-2">Reset Application</h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   Reset the application to its initial state. This will delete all your data.
                 </p>
@@ -1503,41 +1538,6 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* Updates Tab */}
-        <TabsContent value="updates" className="mt-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <h3 className="text-lg font-medium">Check for Updates</h3>
-                <p className="text-sm text-muted-foreground">Current version: 1.0.0</p>
-                <p className="text-sm text-muted-foreground">Last checked: April 19, 2025</p>
-                <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handleCheckUpdates}>
-                  Check for Updates
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <h3 className="text-lg font-medium">Report a Bug</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="bug-title">Bug Title</Label>
-                  <Input id="bug-title" placeholder="Brief description of the issue" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bug-description">Bug Description</Label>
-                  <Textarea id="bug-description" placeholder="Please provide details about the bug..." rows={4} />
-                </div>
-
-                <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handleBugReport}>
-                  Submit Bug Report
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
     </div>

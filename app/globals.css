@@ -1,3 +1,12 @@
+/* Añadir estas reglas al inicio del archivo, antes de las reglas existentes */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -55,4 +64,27 @@
 /* Asegurar que todas las páginas tengan el mismo ancho */
 .container {
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Añadir estas reglas CSS para eliminar las barras de desplazamiento en toda la aplicación */
+/* Añadir al final del archivo */
+
+/* Ocultar barras de desplazamiento pero mantener la funcionalidad */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Aplicar a elementos específicos que necesitan ocultar la barra de desplazamiento */
+.tabs-list {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.tabs-list::-webkit-scrollbar {
+  display: none;
 }

@@ -12,6 +12,24 @@ import { CollectionProvider } from "@/contexts/collection-context"
 import { AuthForm } from "@/components/auth-form"
 
 export function RootLayoutContent({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthProvider>
+      <ThemeProvider>
+        <CollectionProvider>
+          <SidebarProvider>
+            <ClientLayoutContent>{children}</ClientLayoutContent>
+          </SidebarProvider>
+        </CollectionProvider>
+      </ThemeProvider>
+    </AuthProvider>
+  )
+}
+
+// Separamos la lógica de autenticación en un componente cliente
+function ClientLayoutContent({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth()
+  const [isClient, setIsClient] = useState(false)
+
   // Aplicar el tema al cargar la página
   useEffect(() => {
     // Aplicar el tema guardado en localStorage
@@ -23,26 +41,7 @@ export function RootLayoutContent({ children }: { children: React.ReactNode }) {
       // Por defecto, usar tema oscuro
       document.documentElement.classList.add("dark")
     }
-  }, [])
 
-  return (
-    <AuthProvider>
-      <ThemeProvider>
-        <CollectionProvider>
-          <SidebarProvider>
-            <RootLayoutWithAuth>{children}</RootLayoutWithAuth>
-          </SidebarProvider>
-        </CollectionProvider>
-      </ThemeProvider>
-    </AuthProvider>
-  )
-}
-
-function RootLayoutWithAuth({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
     setIsClient(true)
   }, [])
 
@@ -54,7 +53,7 @@ function RootLayoutWithAuth({ children }: { children: React.ReactNode }) {
   // If no user is logged in (and not using the default user), show the auth form
   if (!user || user.uid === "default-user-id") {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-screen w-full">
         <AuthForm />
       </div>
     )

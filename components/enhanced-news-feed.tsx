@@ -75,7 +75,7 @@ export function EnhancedNewsFeed({ initialSource = "fwoosh" }: EnhancedNewsFeedP
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-neon-green">{t("home.figureNews")}</h3>
+        <h3 className="text-xl font-semibold text-neon-green">Figure News</h3>
         <Button variant="outline" size="sm" onClick={handleRefresh} className="flex items-center gap-1">
           <RefreshCw className="h-4 w-4" />
           <span>Refresh</span>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 
 export default function AboutPage() {
   return (
-    <div className="container flex flex-col items-center py-10">
+    <div className="container flex flex-col items-center py-10 overflow-visible">
       <div className="mb-8 flex justify-center">
         <Image
           src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Logo-4Zlb0j92NkPwQnDHo19esvzjXCCMq5.png"

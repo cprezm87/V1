@@ -242,7 +242,7 @@ export function StoreNewsFeed() {
 
   return (
     <>
-      <h3 className="mb-4 text-xl font-semibold text-neon-green">{t("home.figureStores")}</h3>
+      <h3 className="mb-4 text-xl font-semibold text-neon-green">Figure Stores</h3>
       <Card>
         <CardContent className="p-0">
           <Tabs

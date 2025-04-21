@@ -176,7 +176,7 @@ export default function InsightsPage() {
   const COLORS = ["#83FF00", "#00C49F", "#FFBB28", "#FF8042"]
 
   return (
-    <div className="w-full py-6 px-6">
+    <div className="w-full py-6 px-6 overflow-visible">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Insights</h1>
       </div>
