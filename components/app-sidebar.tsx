@@ -13,6 +13,7 @@ import {
   Settings,
   Info,
   LogOut,
+  Database,
 } from "lucide-react"
 
 import {
@@ -71,6 +72,11 @@ const menuItems = [
     title: "Rewind",
     icon: Rewind,
     href: "/rewind",
+  },
+  {
+    title: "Supabase Data",
+    icon: Database,
+    href: "/supabase-data",
   },
   {
     title: "Settings",

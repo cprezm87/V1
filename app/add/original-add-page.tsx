@@ -19,6 +19,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 // Importar el nuevo componente
 import { ImageUploadField } from "@/components/image-upload-field"
 
+// Añadir la importación del cliente de Supabase al inicio del archivo:
+import { supabase } from "@/lib/supabaseClient"
+
 // Display options based on shelf selection
 const displayOptions = {
   Eins: ["Silent Horrors", "The Gloom Hall", "Chamber of the Cursed", "Cryptic Experiments", "Monstrously Domestic"],
@@ -183,8 +186,8 @@ export default function OriginalAddPage() {
     setSelectedShelf(value as keyof typeof displayOptions)
   }
 
-  // Handle form submissions
-  const handleFigureSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Modificar la función `handleFigureSubmit` para guardar los datos en Supabase:
+  const handleFigureSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
     const formData = new FormData(form)
@@ -227,8 +230,35 @@ export default function OriginalAddPage() {
     }
 
     try {
+      // Guardar en localStorage
       setFigureItems([...figureItems, newFigure])
       setNextId(nextId + 1)
+
+      // Guardar en Supabase
+      const { data, error } = await supabase.from("figures").insert([
+        {
+          name: newFigure.name,
+          type: newFigure.type,
+          franchise: newFigure.franchise,
+          brand: newFigure.brand,
+          serie: newFigure.serie,
+          yearReleased: newFigure.yearReleased,
+          condition: newFigure.condition,
+          price: newFigure.price,
+          yearPurchase: newFigure.yearPurchase,
+          upc: newFigure.upc,
+          logo: newFigure.logo,
+          photo: newFigure.photo,
+          tagline: newFigure.tagline,
+          review: newFigure.review,
+          shelf: newFigure.shelf,
+          display: newFigure.display,
+          ranking: newFigure.ranking,
+          comments: newFigure.comments,
+        },
+      ])
+
+      if (error) throw error
 
       // Reset form
       form.reset()
@@ -243,19 +273,20 @@ export default function OriginalAddPage() {
 
       toast({
         title: t("add.added"),
-        description: t("add.itemAdded"),
+        description: t("add.itemAdded") + " (Saved to Supabase)",
       })
     } catch (error) {
       console.error("Error adding figure:", error)
       toast({
         title: "Error",
-        description: "Failed to add item. Storage may be full.",
+        description: "Failed to add item to database. Please try again.",
         variant: "destructive",
       })
     }
   }
 
-  const handleWishlistSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Modificar la función `handleWishlistSubmit` para guardar los datos en Supabase:
+  const handleWishlistSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
     const formData = new FormData(form)
@@ -295,8 +326,32 @@ export default function OriginalAddPage() {
     }
 
     try {
+      // Guardar en localStorage
       setWishlistItems([...wishlistItems, newWishlistItem])
       setNextId(nextId + 1)
+
+      // Guardar en Supabase
+      const { data, error } = await supabase.from("wishlist").insert([
+        {
+          name: newWishlistItem.name,
+          type: newWishlistItem.type,
+          franchise: newWishlistItem.franchise,
+          brand: newWishlistItem.brand,
+          serie: newWishlistItem.serie,
+          yearReleased: newWishlistItem.yearReleased,
+          price: newWishlistItem.price,
+          logo: newWishlistItem.logo,
+          photo: newWishlistItem.photo,
+          tagline: newWishlistItem.tagline,
+          review: newWishlistItem.review,
+          released: newWishlistItem.released,
+          buy: newWishlistItem.buy,
+          comments: newWishlistItem.comments,
+          trackingNumber: newWishlistItem.trackingNumber,
+        },
+      ])
+
+      if (error) throw error
 
       // Reset form
       form.reset()
@@ -309,19 +364,20 @@ export default function OriginalAddPage() {
 
       toast({
         title: t("add.added"),
-        description: t("add.itemAdded"),
+        description: t("add.itemAdded") + " (Saved to Supabase)",
       })
     } catch (error) {
       console.error("Error adding wishlist item:", error)
       toast({
         title: "Error",
-        description: "Failed to add item. Storage may be full.",
+        description: "Failed to add item to database. Please try again.",
         variant: "destructive",
       })
     }
   }
 
-  const handleCustomSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Modificar la función `handleCustomSubmit` para guardar los datos en Supabase:
+  const handleCustomSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
     const formData = new FormData(form)
@@ -352,8 +408,25 @@ export default function OriginalAddPage() {
     }
 
     try {
+      // Guardar en localStorage
       setCustomItems([...customItems, newCustomItem])
       setNextId(nextId + 1)
+
+      // Guardar en Supabase
+      const { data, error } = await supabase.from("customs").insert([
+        {
+          name: newCustomItem.name,
+          type: newCustomItem.type,
+          franchise: newCustomItem.franchise,
+          head: newCustomItem.head,
+          body: newCustomItem.body,
+          logo: newCustomItem.logo,
+          tagline: newCustomItem.tagline,
+          comments: newCustomItem.comments,
+        },
+      ])
+
+      if (error) throw error
 
       // Reset form
       form.reset()
@@ -365,13 +438,13 @@ export default function OriginalAddPage() {
 
       toast({
         title: t("add.added"),
-        description: t("add.itemAdded"),
+        description: t("add.itemAdded") + " (Saved to Supabase)",
       })
     } catch (error) {
       console.error("Error adding custom item:", error)
       toast({
         title: "Error",
-        description: "Failed to add item. Storage may be full.",
+        description: "Failed to add item to database. Please try again.",
         variant: "destructive",
       })
     }
