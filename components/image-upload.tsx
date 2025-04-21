@@ -44,11 +44,7 @@ export function ImageUpload({
       return
     }
 
-    // Validar tamaño (máximo 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("La imagen no debe superar los 5MB")
-      return
-    }
+    // No hay límite de tamaño máximo
 
     setError(null)
     setIsUploading(true)

@@ -16,6 +16,7 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
 import { MovieNewsFeed } from "@/components/movie-news-feed"
+import { ImageUploadField } from "@/components/image-upload-field"
 
 interface MovieAnniversary {
   id: string
@@ -32,6 +33,7 @@ export default function RewindPage() {
   const [movieTitle, setMovieTitle] = useState("")
   const [releaseDate, setReleaseDate] = useState<Date | undefined>(undefined)
   const [poster, setPoster] = useState("")
+  const [posterPreview, setPosterPreview] = useState("")
   const [trailer, setTrailer] = useState("")
   const [comments, setComments] = useState("")
   const [anniversaries, setAnniversaries] = useState<MovieAnniversary[]>([])
@@ -42,6 +44,7 @@ export default function RewindPage() {
     (movie) => movie.releaseDate.getDate() === date?.getDate() && movie.releaseDate.getMonth() === date?.getMonth(),
   )
 
+  // Asegurarse de que la función handleAddAnniversary use la URL de la imagen
   const handleAddAnniversary = () => {
     if (!movieTitle || !releaseDate || !poster) {
       toast({
@@ -67,6 +70,7 @@ export default function RewindPage() {
     setMovieTitle("")
     setReleaseDate(undefined)
     setPoster("")
+    setPosterPreview("")
     setTrailer("")
     setComments("")
     setIsDialogOpen(false)
@@ -198,13 +202,15 @@ export default function RewindPage() {
                             </PopoverContent>
                           </Popover>
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="poster">Poster URL</Label>
-                          <Input
+                        <div className="space-y-2 md:col-span-2">
+                          <ImageUploadField
                             id="poster"
-                            value={poster}
-                            onChange={(e) => setPoster(e.target.value)}
-                            placeholder="Enter poster URL"
+                            label="Poster"
+                            value={posterPreview}
+                            onChange={(url) => {
+                              setPosterPreview(url)
+                              setPoster(url)
+                            }}
                           />
                         </div>
                         <div className="space-y-2">

@@ -37,11 +37,7 @@ export function ImageUploadField({ id, label, value, onChange, className = "" }:
       return
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("La imagen no debe superar los 5MB")
-      return
-    }
+    // No hay límite de tamaño máximo
 
     setError(null)
     setIsUploading(true)
@@ -137,7 +133,7 @@ export function ImageUploadField({ id, label, value, onChange, className = "" }:
             <>
               <Upload className="h-8 w-8 text-gray-500 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">Arrastra y suelta una imagen, o haz clic para seleccionar</p>
-              <p className="text-xs text-muted-foreground mt-1">Tamaño máximo: 5MB</p>
+              <p className="text-xs text-muted-foreground mt-1">Sin límite de tamaño</p>
             </>
           )}
           <Input
