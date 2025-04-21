@@ -116,8 +116,8 @@ export default function CustomsPage() {
   return (
     <div className="w-full py-6 px-6">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Custom's</h1>
-        <div className="relative w-64 ml-auto">
+        <h1 className="text-3xl font-bold">Customization Concepts</h1>
+        <div className="relative w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search customs..."

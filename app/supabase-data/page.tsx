@@ -5,13 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SupabaseFiguresList } from "@/components/supabase-figures-list"
 import { SupabaseWishlistList } from "@/components/supabase-wishlist-list"
 import { SupabaseCustomsList } from "@/components/supabase-customs-list"
+import { Input } from "@/components/ui/input"
+import { Search } from "lucide-react"
 
 export default function SupabaseDataPage() {
   return (
     <div className="container py-6">
-      <div className="mb-8">
+      <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Supabase Data</h1>
-        <p className="text-muted-foreground">View and manage your data stored in Supabase</p>
+        <div className="relative w-64">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search data..." className="pl-8" />
+        </div>
       </div>
 
       <Tabs defaultValue="figures" className="w-full">

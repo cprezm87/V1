@@ -89,7 +89,7 @@ export default function RewindPage() {
   return (
     <div className="container py-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Rewind</h1>
+        <h1 className="text-3xl font-bold">Cinema Milestones & News</h1>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 mb-10">

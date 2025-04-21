@@ -22,7 +22,7 @@ export default function AboutPage() {
           <p>Version: 1.0</p>
           <p>Creation Date: May 11, 2019</p>
           <p>Developer: Opaco Pérez</p>
-          <p>Platform: Web</p>
+          <p>Platform: App Web</p>
           <p>Technology: Python + NiceGUI + Vercel</p>
         </div>
 

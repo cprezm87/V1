@@ -7,7 +7,7 @@ export default function AddPage() {
   return (
     <div className="container py-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Add</h1>
+        <h1 className="text-3xl font-bold">Register A New Item</h1>
       </div>
 
       <OriginalAddPage />

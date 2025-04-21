@@ -16,6 +16,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts"
+import { Input } from "@/components/ui/input"
+import { Search } from "lucide-react"
 
 interface FigureItem {
   id: string
@@ -177,8 +179,12 @@ export default function InsightsPage() {
 
   return (
     <div className="w-full py-6 px-6 overflow-visible">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Insights</h1>
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Collection Data</h1>
+        <div className="relative w-64">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search insights..." className="pl-8" />
+        </div>
       </div>
 
       {/* Collection Overview, Total Collection Value, and Total Items in a row */}

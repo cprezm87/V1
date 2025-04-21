@@ -363,8 +363,8 @@ export default function OriginalAddPage() {
       setTimeout(() => setShowWishlistSuccessAlert(false), 3000)
 
       toast({
-        title: t("add.added"),
-        description: t("add.itemAdded") + " (Saved to Supabase)",
+        title: "Added!",
+        description: "Item Has Been Successfully Added To Your Wishlist" + " (Saved to Supabase)",
       })
     } catch (error) {
       console.error("Error adding wishlist item:", error)
@@ -666,7 +666,7 @@ export default function OriginalAddPage() {
                 <Alert className="mb-6 bg-neon-green/20 border-neon-green">
                   <CheckCircle className="h-4 w-4 text-neon-green" />
                   <AlertDescription className="text-neon-green font-medium">
-                    Added! Item has been successfully added to your wishlist.
+                    Added! Item Has Been Successfully Added To Your Wishlist.
                   </AlertDescription>
                 </Alert>
               )}
@@ -674,12 +674,12 @@ export default function OriginalAddPage() {
               <form onSubmit={handleWishlistSubmit} className="space-y-6">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-name">{t("add.name")}</Label>
+                    <Label htmlFor="wishlist-name">Name</Label>
                     <Input id="wishlist-name" name="wishlist-name" placeholder="Figure name" required />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-type">{t("add.type")}</Label>
+                    <Label htmlFor="wishlist-type">Type</Label>
                     <Select name="wishlist-type" required>
                       <SelectTrigger id="wishlist-type">
                         <SelectValue placeholder="Select type" />
@@ -693,22 +693,22 @@ export default function OriginalAddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-franchise">{t("add.franchise")}</Label>
+                    <Label htmlFor="wishlist-franchise">Franchise</Label>
                     <Input id="wishlist-franchise" name="wishlist-franchise" placeholder="Franchise name" required />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-brand">{t("add.brand")}</Label>
+                    <Label htmlFor="wishlist-brand">Brand</Label>
                     <Input id="wishlist-brand" name="wishlist-brand" placeholder="Brand name" required />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-serie">{t("add.serie")}</Label>
+                    <Label htmlFor="wishlist-serie">Serie</Label>
                     <Input id="wishlist-serie" name="wishlist-serie" placeholder="Serie name" />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-yearReleased">{t("add.yearReleased")}</Label>
+                    <Label htmlFor="wishlist-yearReleased">Year Released</Label>
                     <Input
                       id="wishlist-yearReleased"
                       name="wishlist-yearReleased"
@@ -721,7 +721,7 @@ export default function OriginalAddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-price">{t("add.price")}</Label>
+                    <Label htmlFor="wishlist-price">Price</Label>
                     <Input
                       id="wishlist-price"
                       name="wishlist-price"
@@ -751,12 +751,12 @@ export default function OriginalAddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-tagline">{t("add.tagline")}</Label>
+                    <Label htmlFor="wishlist-tagline">Tagline</Label>
                     <Input id="wishlist-tagline" name="wishlist-tagline" placeholder="Tagline" />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wishlist-review">{t("add.review")}</Label>
+                    <Label htmlFor="wishlist-review">Review</Label>
                     <Input id="wishlist-review" name="wishlist-review" placeholder="YouTube review URL" />
                   </div>
 
@@ -778,7 +778,7 @@ export default function OriginalAddPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wishlist-comments">{t("add.comments")}</Label>
+                  <Label htmlFor="wishlist-comments">Comments</Label>
                   <Textarea
                     id="wishlist-comments"
                     name="wishlist-comments"
@@ -816,12 +816,12 @@ export default function OriginalAddPage() {
               <form onSubmit={handleCustomSubmit} className="space-y-6">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-2">
-                    <Label htmlFor="custom-name">{t("add.name")}</Label>
+                    <Label htmlFor="custom-name">Name</Label>
                     <Input id="custom-name" name="custom-name" placeholder="Custom name" required />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="custom-type">{t("add.type")}</Label>
+                    <Label htmlFor="custom-type">Type</Label>
                     <Select name="custom-type" required>
                       <SelectTrigger id="custom-type">
                         <SelectValue placeholder="Select type" />
@@ -835,7 +835,7 @@ export default function OriginalAddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="custom-franchise">{t("add.franchise")}</Label>
+                    <Label htmlFor="custom-franchise">Franchise</Label>
                     <Input id="custom-franchise" name="custom-franchise" placeholder="Franchise name" required />
                   </div>
 
@@ -860,13 +860,13 @@ export default function OriginalAddPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="custom-tagline">{t("add.tagline")}</Label>
+                    <Label htmlFor="custom-tagline">Tagline</Label>
                     <Input id="custom-tagline" name="custom-tagline" placeholder="Tagline" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="custom-comments">{t("add.comments")}</Label>
+                  <Label htmlFor="custom-comments">Comments</Label>
                   <Textarea id="custom-comments" name="custom-comments" placeholder="Add your comments..." rows={4} />
                 </div>
 

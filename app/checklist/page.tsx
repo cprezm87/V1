@@ -158,12 +158,12 @@ export default function ChecklistPage() {
   return (
     <div className="w-full py-6 px-6">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Checklist</h1>
-        <div className="relative w-64 ml-auto">
+        <h1 className="text-3xl font-bold">Items In The Vault</h1>
+        <div className="relative w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search items..."
-            className="pl-8 ml-auto"
+            className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
