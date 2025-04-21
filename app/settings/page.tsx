@@ -34,9 +34,6 @@ import { Inter, Roboto, Montserrat, Open_Sans, Poppins } from "next/font/google"
 // Añadir esta importación al inicio del archivo, junto con las demás importaciones
 import GoogleSheetsImport from "./google-sheets-import"
 
-// Import the StorageManager component
-import { StorageManager } from "@/components/storage-manager"
-
 // Definir las fuentes
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const roboto = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-roboto" })
@@ -623,36 +620,33 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="w-full justify-start overflow-x-auto">
-          <TabsTrigger value="profile" className="whitespace-nowrap">
+        <TabsList className="w-full flex flex-wrap justify-center gap-1 mb-4">
+          <TabsTrigger value="profile" className="px-4">
             {t("settings.profile")}
           </TabsTrigger>
-          <TabsTrigger value="appearance" className="whitespace-nowrap">
+          <TabsTrigger value="appearance" className="px-4">
             {t("settings.appearance")}
           </TabsTrigger>
-          <TabsTrigger value="language" className="whitespace-nowrap">
+          <TabsTrigger value="language" className="px-4">
             {t("settings.language")}
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="whitespace-nowrap">
+          <TabsTrigger value="notifications" className="px-4">
             {t("settings.notifications")}
           </TabsTrigger>
-          <TabsTrigger value="security" className="whitespace-nowrap">
+          <TabsTrigger value="security" className="px-4">
             {t("settings.security")}
           </TabsTrigger>
-          <TabsTrigger value="backup" className="whitespace-nowrap">
+          <TabsTrigger value="backup" className="px-4">
             {t("settings.backup")}
           </TabsTrigger>
-          <TabsTrigger value="sync" className="whitespace-nowrap">
+          <TabsTrigger value="sync" className="px-4">
             {t("settings.sync")}
           </TabsTrigger>
-          <TabsTrigger value="reset" className="whitespace-nowrap">
+          <TabsTrigger value="reset" className="px-4">
             {t("settings.reset")}
           </TabsTrigger>
-          <TabsTrigger value="updates" className="whitespace-nowrap">
+          <TabsTrigger value="updates" className="px-4">
             {t("settings.updates")}
-          </TabsTrigger>
-          <TabsTrigger value="storage" className="whitespace-nowrap">
-            Storage
           </TabsTrigger>
         </TabsList>
 
@@ -1390,11 +1384,6 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* Storage Tab */}
-        <TabsContent value="storage" className="mt-6">
-          <StorageManager />
         </TabsContent>
       </Tabs>
     </div>
