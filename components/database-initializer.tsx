@@ -27,78 +27,28 @@ export function DatabaseInitializer() {
         // Error de conexión
         setStatus("error")
         setMessage("Error de conexión a Supabase: " + pingError.message)
+        toast({
+          title: "Error de conexión",
+          description: "No se pudo conectar a Supabase. Verifica tu conexión e inténtalo de nuevo.",
+          variant: "destructive",
+        })
+        setIsCreating(false)
         return
       }
 
-      // Script SQL para crear la tabla checklist_items
-      const createTableSQL = `
-        CREATE TABLE IF NOT EXISTS checklist_items (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id TEXT NOT NULL,
-          name TEXT NOT NULL,
-          type TEXT NOT NULL,
-          franchise TEXT NOT NULL,
-          brand TEXT NOT NULL,
-          serie TEXT,
-          year_released TEXT,
-          condition TEXT,
-          price NUMERIC,
-          year_purchase TEXT,
-          upc TEXT,
-          logo TEXT,
-          photo TEXT,
-          tagline TEXT,
-          review TEXT,
-          shelf TEXT,
-          display TEXT,
-          ranking INTEGER,
-          comments TEXT,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-        
-        -- Crear índice para mejorar el rendimiento
-        CREATE INDEX IF NOT EXISTS checklist_items_user_id_idx ON checklist_items(user_id);
-        
-        -- Configurar Row Level Security (RLS)
-        ALTER TABLE checklist_items ENABLE ROW LEVEL SECURITY;
-        
-        -- Crear políticas para que los usuarios solo puedan ver y modificar sus propios items
-        DROP POLICY IF EXISTS "Users can view their own checklist items" ON checklist_items;
-        CREATE POLICY "Users can view their own checklist items" 
-          ON checklist_items FOR SELECT 
-          USING (auth.uid()::text = user_id OR user_id = 'default-user-id');
-        
-        DROP POLICY IF EXISTS "Users can insert their own checklist items" ON checklist_items;
-        CREATE POLICY "Users can insert their own checklist items" 
-          ON checklist_items FOR INSERT 
-          WITH CHECK (auth.uid()::text = user_id OR user_id = 'default-user-id');
-        
-        DROP POLICY IF EXISTS "Users can update their own checklist items" ON checklist_items;
-        CREATE POLICY "Users can update their own checklist items" 
-          ON checklist_items FOR UPDATE 
-          USING (auth.uid()::text = user_id OR user_id = 'default-user-id');
-        
-        DROP POLICY IF EXISTS "Users can delete their own checklist items" ON checklist_items;
-        CREATE POLICY "Users can delete their own checklist items" 
-          ON checklist_items FOR DELETE 
-          USING (auth.uid()::text = user_id OR user_id = 'default-user-id');
-      `
-
-      // Ejecutar el script SQL
-      const response = await fetch("/api/execute-sql", {
+      // Intentar crear la tabla usando nuestra API
+      const response = await fetch("/api/create-tables", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ sql: createTableSQL }),
       })
 
       const data = await response.json()
 
       if (data.success) {
+        // Ahora intentemos crear las políticas de seguridad
+        await setupSecurityPolicies()
+
         setStatus("success")
-        setMessage("Tabla checklist_items creada correctamente")
+        setMessage("Tabla checklist_items creada y configurada correctamente")
         toast({
           title: "Éxito",
           description: "La tabla checklist_items se ha creado correctamente en Supabase",
@@ -108,7 +58,7 @@ export function DatabaseInitializer() {
         setMessage("Error al crear tabla: " + data.error)
         toast({
           title: "Error",
-          description: "No se pudo crear la tabla en Supabase",
+          description: data.error || "No se pudo crear la tabla en Supabase",
           variant: "destructive",
         })
       }
@@ -116,8 +66,75 @@ export function DatabaseInitializer() {
       console.error("Error creating table:", error)
       setStatus("error")
       setMessage("Error al crear tabla: " + (error instanceof Error ? error.message : String(error)))
+      toast({
+        title: "Error",
+        description: "Ocurrió un error inesperado. Por favor, intenta de nuevo más tarde.",
+        variant: "destructive",
+      })
     } finally {
       setIsCreating(false)
+    }
+  }
+
+  const setupSecurityPolicies = async () => {
+    try {
+      // Habilitar RLS en la tabla
+      await supabase.rpc("enable_rls", { table: "checklist_items" }).catch((err) => {
+        console.log("Error enabling RLS, might already be enabled:", err)
+      })
+
+      // Crear políticas de seguridad
+      const policies = [
+        {
+          name: "Users can view their own checklist items",
+          definition: "(auth.uid()::text = user_id OR user_id = 'default-user-id')",
+          operation: "SELECT",
+        },
+        {
+          name: "Users can insert their own checklist items",
+          definition: "(auth.uid()::text = user_id OR user_id = 'default-user-id')",
+          operation: "INSERT",
+        },
+        {
+          name: "Users can update their own checklist items",
+          definition: "(auth.uid()::text = user_id OR user_id = 'default-user-id')",
+          operation: "UPDATE",
+        },
+        {
+          name: "Users can delete their own checklist items",
+          definition: "(auth.uid()::text = user_id OR user_id = 'default-user-id')",
+          operation: "DELETE",
+        },
+      ]
+
+      // Intentar crear cada política
+      for (const policy of policies) {
+        await supabase
+          .rpc("create_policy", {
+            table_name: "checklist_items",
+            policy_name: policy.name,
+            definition: policy.definition,
+            operation: policy.operation,
+          })
+          .catch((err) => {
+            console.log(`Error creating policy ${policy.name}, might already exist:`, err)
+          })
+      }
+
+      return true
+    } catch (error) {
+      console.error("Error setting up security policies:", error)
+      return false
+    }
+  }
+
+  // Función para verificar si la tabla existe
+  const checkTableExists = async () => {
+    try {
+      const { error } = await supabase.from("checklist_items").select("id").limit(1)
+      return !error || !error.message.includes("does not exist")
+    } catch (error) {
+      return false
     }
   }
 
@@ -157,9 +174,25 @@ export function DatabaseInitializer() {
           </li>
         </ul>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground mb-4">
           Nota: Este proceso es seguro de ejecutar múltiples veces. Si la tabla ya existe, no se modificará.
         </p>
+
+        <Alert className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Importante</AlertTitle>
+          <AlertDescription>
+            Si encuentras errores durante la creación automática de la tabla, puedes crearla manualmente desde la
+            consola de Supabase siguiendo estos pasos:
+            <ol className="list-decimal pl-5 mt-2 space-y-1">
+              <li>Ve a la consola de Supabase y selecciona tu proyecto</li>
+              <li>Navega a la sección "Table Editor"</li>
+              <li>Crea una nueva tabla llamada "checklist_items" con los campos necesarios</li>
+              <li>Habilita RLS (Row Level Security) para la tabla</li>
+              <li>Crea políticas para permitir a los usuarios acceder solo a sus propios datos</li>
+            </ol>
+          </AlertDescription>
+        </Alert>
       </CardContent>
       <CardFooter>
         <Button

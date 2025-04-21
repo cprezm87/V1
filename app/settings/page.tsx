@@ -40,6 +40,9 @@ import GoogleSheetsImport from "./google-sheets-import"
 // Añadir esta importación al inicio del archivo
 import { DatabaseInitializer } from "@/components/database-initializer"
 
+// Añadir la importación del componente DatabaseTab en la parte superior del archivo:
+import { DatabaseTab } from "./database-tab"
+
 // Definir las fuentes
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const roboto = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-roboto" })
@@ -1399,6 +1402,9 @@ export default function SettingsPage() {
         </TabsContent>
         <TabsContent value="database" className="mt-6">
           <DatabaseInitializer />
+        </TabsContent>
+        <TabsContent value="database" className="mt-6">
+          <DatabaseTab />
         </TabsContent>
       </Tabs>
     </div>
