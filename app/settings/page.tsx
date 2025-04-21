@@ -102,6 +102,41 @@ export default function SettingsPage() {
   const [syncWishlist, setSyncWishlist] = useState(true)
   const [syncCustoms, setSyncCustoms] = useState(true)
   const [syncFrequency, setSyncFrequency] = useState("manual")
+  const [currency, setCurrency] = useState("USD")
+
+  // Función para aplicar los colores del tema a las variables CSS
+  const applyThemeColors = (colors: { primary: string; secondary: string; accent: string; background: string }) => {
+    // Variables CSS principales
+    document.documentElement.style.setProperty("--primary", colors.primary)
+    document.documentElement.style.setProperty("--accent", colors.accent)
+    document.documentElement.style.setProperty("--neon-green", colors.primary)
+
+    // Variables CSS adicionales que dependen del color primario
+    document.documentElement.style.setProperty("--ring", colors.primary)
+    document.documentElement.style.setProperty("--sidebar-accent", colors.primary)
+    document.documentElement.style.setProperty("--sidebar-ring", colors.primary)
+
+    // Actualizar colores de fondo si es necesario
+    document.documentElement.style.setProperty("--secondary", colors.secondary)
+
+    // Actualizar colores derivados
+    const primaryRGB = hexToRGB(colors.primary)
+    if (primaryRGB) {
+      document.documentElement.style.setProperty("--primary-rgb", `${primaryRGB.r}, ${primaryRGB.g}, ${primaryRGB.b}`)
+    }
+  }
+
+  // Función auxiliar para convertir hex a RGB
+  const hexToRGB = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    return result
+      ? {
+          r: Number.parseInt(result[1], 16),
+          g: Number.parseInt(result[2], 16),
+          b: Number.parseInt(result[3], 16),
+        }
+      : null
+  }
 
   // Añadir este useEffect después de la definición de los estados
   useEffect(() => {
@@ -109,6 +144,7 @@ export default function SettingsPage() {
     const savedTheme = localStorage.getItem("theme") as "dark" | "light"
     const savedThemeColor = localStorage.getItem("themeColor")
     const savedFont = localStorage.getItem("font")
+    const savedCurrency = localStorage.getItem("currency")
 
     // Aplicar tema guardado
     if (savedTheme) {
@@ -120,9 +156,7 @@ export default function SettingsPage() {
     if (savedThemeColor && themeColors[savedThemeColor as keyof typeof themeColors]) {
       setThemeColor(savedThemeColor)
       const colors = themeColors[savedThemeColor as keyof typeof themeColors]
-      document.documentElement.style.setProperty("--primary", colors.primary)
-      document.documentElement.style.setProperty("--accent", colors.accent)
-      document.documentElement.style.setProperty("--neon-green", colors.primary)
+      applyThemeColors(colors)
     }
 
     // Aplicar fuente guardada
@@ -141,6 +175,11 @@ export default function SettingsPage() {
                   ? poppins.className
                   : inter.className
       document.body.className = fontClass
+    }
+
+    // Aplicar moneda guardada
+    if (savedCurrency) {
+      setCurrency(savedCurrency)
     }
   }, [])
 
@@ -262,15 +301,51 @@ export default function SettingsPage() {
 
   // Handle app reset
   const handleAppReset = () => {
-    // Clear localStorage
-    localStorage.clear()
+    try {
+      // Limpiar todo el localStorage
+      localStorage.clear()
 
-    setIsResetDialogOpen(false)
+      // Reiniciar todos los estados a sus valores predeterminados
+      setName("Opaco Pérez")
+      setEmail("c.prezm87@gmail.com")
+      setBio("Collector of action figures and memorabilia. Focused on horror and sci-fi franchises.")
+      setThemeColor("neon")
+      setFont("inter")
+      setNotificationSound(true)
+      setPopupNotifications(true)
+      setCalendarNotifications(true)
+      setNotificationTime("1day")
+      setLogoPreview("/logo.png")
+      setUserPhotoPreview("/user.jpg")
+      setIsGoogleConnected(false)
+      setSpreadsheetId("")
+      setSyncFigures(true)
+      setSyncWishlist(true)
+      setSyncCustoms(true)
+      setSyncFrequency("manual")
+      setCurrency("USD")
 
-    toast({
-      title: "App Reset",
-      description: "The app has been reset to its initial state. Please refresh the page.",
-    })
+      // Cerrar el diálogo de confirmación
+      setIsResetDialogOpen(false)
+
+      // Mostrar mensaje de éxito
+      toast({
+        title: "Aplicación Reiniciada",
+        description: "La aplicación ha sido reiniciada correctamente. La página se recargará en 3 segundos.",
+      })
+
+      // Programar recarga de la página después de 3 segundos
+      setTimeout(() => {
+        window.location.reload()
+      }, 3000)
+    } catch (error) {
+      console.error("Error al reiniciar la aplicación:", error)
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al reiniciar la aplicación. Por favor, intenta de nuevo.",
+        variant: "destructive",
+      })
+    }
   }
 
   // Handle export data
@@ -613,6 +688,17 @@ export default function SettingsPage() {
     }, 2000)
   }
 
+  // Handle currency save
+  const handleCurrencySave = () => {
+    // Guardar en localStorage
+    localStorage.setItem("currency", currency)
+
+    toast({
+      title: "Currency Updated",
+      description: "Your currency settings have been updated successfully.",
+    })
+  }
+
   return (
     <div className="container py-6">
       <div className="mb-8">
@@ -629,6 +715,9 @@ export default function SettingsPage() {
           </TabsTrigger>
           <TabsTrigger value="language" className="px-4">
             {t("settings.language")}
+          </TabsTrigger>
+          <TabsTrigger value="currency" className="px-4">
+            Currency
           </TabsTrigger>
           <TabsTrigger value="notifications" className="px-4">
             {t("settings.notifications")}
@@ -791,11 +880,7 @@ export default function SettingsPage() {
                     setThemeColor(value)
                     // Aplicar colores del tema seleccionado
                     const colors = themeColors[value as keyof typeof themeColors]
-                    document.documentElement.style.setProperty("--primary", colors.primary)
-                    document.documentElement.style.setProperty("--accent", colors.accent)
-
-                    // Actualizar las variables CSS para los colores del tema
-                    document.documentElement.style.setProperty("--neon-green", colors.primary)
+                    applyThemeColors(colors)
                   }}
                 >
                   <SelectTrigger id="theme">
@@ -883,11 +968,11 @@ export default function SettingsPage() {
 
                   // Aplicar cambios
                   const colors = themeColors[themeColor as keyof typeof themeColors]
-                  document.documentElement.style.setProperty("--primary", colors.primary)
-                  document.documentElement.style.setProperty("--accent", colors.accent)
-                  document.documentElement.style.setProperty("--neon-green", colors.primary)
 
-                  // Aplicar tema
+                  // Aplicar todos los colores del tema
+                  applyThemeColors(colors)
+
+                  // Aplicar tema claro/oscuro
                   document.documentElement.classList.toggle("dark", theme === "dark")
                   document.documentElement.classList.toggle("light", theme === "light")
 
@@ -1008,6 +1093,75 @@ export default function SettingsPage() {
 
               <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handleLanguageSave}>
                 {t("settings.applyLanguage")}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Currency Tab */}
+        <TabsContent value="currency" className="mt-6">
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <div>
+                <h2 className="text-2xl font-semibold mb-1">Currency Settings</h2>
+                <p className="text-muted-foreground mb-6">Display values in your preferred currency</p>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="currency">Select Currency</Label>
+                    <Select value={currency} onValueChange={setCurrency}>
+                      <SelectTrigger id="currency">
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                        <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                        <SelectItem value="JPY">Japanese Yen (JPY)</SelectItem>
+                        <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                        <SelectItem value="MXN">Mexican Peso (MXN)</SelectItem>
+                        <SelectItem value="COP">Colombian Peso (COP)</SelectItem>
+                        <SelectItem value="ARS">Argentine Peso (ARS)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="p-4 border rounded-md bg-muted/30">
+                    <h3 className="font-medium mb-2">Preview</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>1,000</span>
+                        <span className="font-medium">
+                          {new Intl.NumberFormat(undefined, {
+                            style: "currency",
+                            currency: currency,
+                          }).format(1000)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>25,750</span>
+                        <span className="font-medium">
+                          {new Intl.NumberFormat(undefined, {
+                            style: "currency",
+                            currency: currency,
+                          }).format(25750)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>199.99</span>
+                        <span className="font-medium">
+                          {new Intl.NumberFormat(undefined, {
+                            style: "currency",
+                            currency: currency,
+                          }).format(199.99)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handleCurrencySave}>
+                Save Currency Settings
               </Button>
             </CardContent>
           </Card>

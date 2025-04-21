@@ -75,6 +75,7 @@ export default function InsightsPage() {
   const [customItems, setCustomItems] = useState<CustomItem[]>([])
   const [brandData, setBrandData] = useState<{ name: string; count: number }[]>([])
   const [typeData, setTypeData] = useState<{ name: string; value: number }[]>([])
+  const [yearPurchaseData, setYearPurchaseData] = useState<{ year: string; count: number }[]>([])
 
   // Load items from localStorage on component mount
   useEffect(() => {
@@ -132,6 +133,34 @@ export default function InsightsPage() {
       }))
 
       setTypeData(typeDataArray)
+    }
+  }, [figureItems])
+
+  // Calculate purchases by year
+  useEffect(() => {
+    if (figureItems.length > 0) {
+      const purchasesByYear: Record<string, number> = {}
+
+      figureItems.forEach((item) => {
+        if (item.yearPurchase) {
+          const year = item.yearPurchase
+
+          if (purchasesByYear[year]) {
+            purchasesByYear[year]++
+          } else {
+            purchasesByYear[year] = 1
+          }
+        }
+      })
+
+      const yearDataArray = Object.entries(purchasesByYear)
+        .map(([year, count]) => ({
+          year,
+          count,
+        }))
+        .sort((a, b) => a.year.localeCompare(b.year))
+
+      setYearPurchaseData(yearDataArray)
     }
   }, [figureItems])
 
@@ -209,8 +238,12 @@ export default function InsightsPage() {
                 <TabsTrigger value="types" className="flex-1">
                   Types
                 </TabsTrigger>
+                <TabsTrigger value="purchases" className="flex-1">
+                  Purchases by Year
+                </TabsTrigger>
               </TabsList>
 
+              {/* Contenido existente para la pestaña brands */}
               <TabsContent value="brands">
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
@@ -234,6 +267,7 @@ export default function InsightsPage() {
                 </div>
               </TabsContent>
 
+              {/* Contenido existente para la pestaña types */}
               <TabsContent value="types">
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
@@ -255,6 +289,30 @@ export default function InsightsPage() {
                       <Tooltip />
                       <Legend />
                     </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </TabsContent>
+
+              {/* Nueva pestaña para mostrar las compras por año */}
+              <TabsContent value="purchases">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={yearPurchaseData}
+                      margin={{
+                        top: 20,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="year" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => [`${value}`, "Items"]} />
+                      <Legend />
+                      <Bar dataKey="count" name="Items Purchased" fill="#83FF00" />
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               </TabsContent>
