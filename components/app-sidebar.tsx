@@ -93,14 +93,14 @@ export function AppSidebar() {
     try {
       await logout()
       toast({
-        title: "Sesión actualizada",
-        description: "Se ha actualizado la sesión correctamente.",
+        title: "Logged Out",
+        description: "You have been logged out successfully.",
       })
     } catch (error) {
-      console.error("Error al actualizar sesión:", error)
+      console.error("Error logging out:", error)
       toast({
         title: "Error",
-        description: "Ocurrió un error al actualizar la sesión.",
+        description: "An error occurred while logging out.",
         variant: "destructive",
       })
     }
@@ -147,7 +147,7 @@ export function AppSidebar() {
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />
-            <span>Refresh Session</span>
+            <span>Sign Out</span>
           </Button>
         </div>
       </SidebarFooter>

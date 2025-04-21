@@ -33,35 +33,24 @@ export const useAuth = () => {
   return context
 }
 
-// Usuario por defecto
-const DEFAULT_USER: User = {
-  uid: "default-user-id",
-  email: "user@example.com",
-  displayName: "Default User",
-}
-
 // Proveedor del contexto
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(DEFAULT_USER)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Cargar usuario desde localStorage al iniciar o usar el usuario por defecto
+  // Cargar usuario desde localStorage al iniciar
   useEffect(() => {
     const storedUser = localStorage.getItem("user")
     if (storedUser) {
       setUser(JSON.parse(storedUser))
-    } else {
-      // Si no hay usuario en localStorage, usar el usuario por defecto
-      setUser(DEFAULT_USER)
-      localStorage.setItem("user", JSON.stringify(DEFAULT_USER))
     }
     setLoading(false)
   }, [])
 
-  // Registrar un nuevo usuario (simulado)
+  // Registrar un nuevo usuario
   const signUp = async (email: string, password: string) => {
     // Simular un retraso para imitar una llamada a la API
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // Crear nuevo usuario
     const newUser: User = {
@@ -75,10 +64,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem("user", JSON.stringify(newUser))
   }
 
-  // Iniciar sesión (simulado)
+  // Iniciar sesión
   const signIn = async (email: string, password: string) => {
     // Simular un retraso para imitar una llamada a la API
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // Crear usuario
     const loggedInUser: User = {
@@ -92,17 +81,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem("user", JSON.stringify(loggedInUser))
   }
 
-  // Cerrar sesión (simulado)
+  // Cerrar sesión
   const logout = async () => {
-    // En lugar de eliminar el usuario, volvemos al usuario por defecto
-    setUser(DEFAULT_USER)
-    localStorage.setItem("user", JSON.stringify(DEFAULT_USER))
+    // Eliminar usuario del localStorage
+    localStorage.removeItem("user")
+    setUser(null)
   }
 
-  // Restablecer contraseña (simulado)
+  // Restablecer contraseña
   const resetPassword = async (email: string) => {
     // Simular un retraso para imitar una llamada a la API
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 1000))
     console.log(`Se enviaría un correo de restablecimiento a ${email}`)
   }
 

@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/contexts/theme-context"
 import { Toaster } from "@/components/ui/toaster"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { CollectionProvider } from "@/contexts/collection-context"
+import { AuthForm } from "@/components/auth-form"
 
 export function RootLayoutContent({ children }: { children: React.ReactNode }) {
   // Aplicar el tema al cargar la página
@@ -50,7 +51,16 @@ function RootLayoutWithAuth({ children }: { children: React.ReactNode }) {
     return null
   }
 
-  // Siempre mostrar el layout completo, ya que siempre habrá un usuario por defecto
+  // If no user is logged in (and not using the default user), show the auth form
+  if (!user || user.uid === "default-user-id") {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <AuthForm />
+      </div>
+    )
+  }
+
+  // If user is logged in, show the app
   return (
     <div className="flex h-screen">
       <AppSidebar />
