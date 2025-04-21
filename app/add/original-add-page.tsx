@@ -131,11 +131,49 @@ export default function OriginalAddPage() {
 
   // Save items to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("figureItems", JSON.stringify(figureItems))
-    localStorage.setItem("wishlistItems", JSON.stringify(wishlistItems))
-    localStorage.setItem("customItems", JSON.stringify(customItems))
-    localStorage.setItem("nextId", nextId.toString())
-  }, [figureItems, wishlistItems, customItems, nextId])
+    try {
+      // Helper function to limit image URL length
+      const limitImageSize = (item: any) => {
+        const maxUrlLength = 1000 // Limit URL length to prevent localStorage overflow
+        const processedItem = { ...item }
+
+        // Check and limit logo and photo URLs if they're data URLs
+        if (processedItem.logo && processedItem.logo.startsWith("data:")) {
+          processedItem.logo =
+            processedItem.logo.length > maxUrlLength
+              ? processedItem.logo.substring(0, maxUrlLength) + "...[truncated]"
+              : processedItem.logo
+        }
+
+        if (processedItem.photo && processedItem.photo.startsWith("data:")) {
+          processedItem.photo =
+            processedItem.photo.length > maxUrlLength
+              ? processedItem.photo.substring(0, maxUrlLength) + "...[truncated]"
+              : processedItem.photo
+        }
+
+        return processedItem
+      }
+
+      // Process items before storing
+      const processedFigureItems = figureItems.map(limitImageSize)
+      const processedWishlistItems = wishlistItems.map(limitImageSize)
+      const processedCustomItems = customItems.map(limitImageSize)
+
+      // Store in localStorage with error handling
+      localStorage.setItem("figureItems", JSON.stringify(processedFigureItems))
+      localStorage.setItem("wishlistItems", JSON.stringify(processedWishlistItems))
+      localStorage.setItem("customItems", JSON.stringify(processedCustomItems))
+      localStorage.setItem("nextId", nextId.toString())
+    } catch (error) {
+      console.error("Error saving to localStorage:", error)
+      toast({
+        title: "Storage Error",
+        description: "Unable to save all data. Consider removing some items or images.",
+        variant: "destructive",
+      })
+    }
+  }, [figureItems, wishlistItems, customItems, nextId, toast])
 
   // Format ID with leading zeros
   const formattedId = String(nextId).padStart(3, "0")
@@ -150,6 +188,21 @@ export default function OriginalAddPage() {
     e.preventDefault()
     const form = e.currentTarget
     const formData = new FormData(form)
+
+    // Check image sizes before adding
+    const logoSize = logoPreview.length
+    const photoSize = photoPreview.length
+    const totalSize = logoSize + photoSize
+
+    // Warn if images are too large
+    if (totalSize > 500000) {
+      // 500KB threshold
+      toast({
+        title: "Warning",
+        description: "Images are very large and may cause storage issues. Consider using external image URLs instead.",
+        variant: "destructive",
+      })
+    }
 
     const newFigure: FigureItem = {
       id: formattedId,
@@ -173,30 +226,54 @@ export default function OriginalAddPage() {
       comments: formData.get("comments") as string,
     }
 
-    setFigureItems([...figureItems, newFigure])
-    setNextId(nextId + 1)
+    try {
+      setFigureItems([...figureItems, newFigure])
+      setNextId(nextId + 1)
 
-    // Reset form
-    form.reset()
-    setLogoPreview("")
-    setPhotoPreview("")
-    setRating(0)
-    setSelectedShelf("")
+      // Reset form
+      form.reset()
+      setLogoPreview("")
+      setPhotoPreview("")
+      setRating(0)
+      setSelectedShelf("")
 
-    // Show success alert
-    setShowSuccessAlert(true)
-    setTimeout(() => setShowSuccessAlert(false), 3000)
+      // Show success alert
+      setShowSuccessAlert(true)
+      setTimeout(() => setShowSuccessAlert(false), 3000)
 
-    toast({
-      title: t("add.added"),
-      description: t("add.itemAdded"),
-    })
+      toast({
+        title: t("add.added"),
+        description: t("add.itemAdded"),
+      })
+    } catch (error) {
+      console.error("Error adding figure:", error)
+      toast({
+        title: "Error",
+        description: "Failed to add item. Storage may be full.",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleWishlistSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
     const formData = new FormData(form)
+
+    // Check image sizes before adding
+    const logoSize = wishlistLogoPreview.length
+    const photoSize = wishlistPhotoPreview.length
+    const totalSize = logoSize + photoSize
+
+    // Warn if images are too large
+    if (totalSize > 500000) {
+      // 500KB threshold
+      toast({
+        title: "Warning",
+        description: "Images are very large and may cause storage issues. Consider using external image URLs instead.",
+        variant: "destructive",
+      })
+    }
 
     const newWishlistItem: WishlistItem = {
       id: formattedId,
@@ -217,28 +294,50 @@ export default function OriginalAddPage() {
       trackingNumber: formData.get("wishlist-tracking") as string,
     }
 
-    setWishlistItems([...wishlistItems, newWishlistItem])
-    setNextId(nextId + 1)
+    try {
+      setWishlistItems([...wishlistItems, newWishlistItem])
+      setNextId(nextId + 1)
 
-    // Reset form
-    form.reset()
-    setWishlistLogoPreview("")
-    setWishlistPhotoPreview("")
+      // Reset form
+      form.reset()
+      setWishlistLogoPreview("")
+      setWishlistPhotoPreview("")
 
-    // Show success alert
-    setShowWishlistSuccessAlert(true)
-    setTimeout(() => setShowWishlistSuccessAlert(false), 3000)
+      // Show success alert
+      setShowWishlistSuccessAlert(true)
+      setTimeout(() => setShowWishlistSuccessAlert(false), 3000)
 
-    toast({
-      title: t("add.added"),
-      description: t("add.itemAdded"),
-    })
+      toast({
+        title: t("add.added"),
+        description: t("add.itemAdded"),
+      })
+    } catch (error) {
+      console.error("Error adding wishlist item:", error)
+      toast({
+        title: "Error",
+        description: "Failed to add item. Storage may be full.",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleCustomSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
     const formData = new FormData(form)
+
+    // Check image sizes before adding
+    const logoSize = customLogoPreview.length
+
+    // Warn if images are too large
+    if (logoSize > 500000) {
+      // 500KB threshold
+      toast({
+        title: "Warning",
+        description: "Images are very large and may cause storage issues. Consider using external image URLs instead.",
+        variant: "destructive",
+      })
+    }
 
     const newCustomItem: CustomItem = {
       id: formattedId,
@@ -252,21 +351,30 @@ export default function OriginalAddPage() {
       comments: formData.get("custom-comments") as string,
     }
 
-    setCustomItems([...customItems, newCustomItem])
-    setNextId(nextId + 1)
+    try {
+      setCustomItems([...customItems, newCustomItem])
+      setNextId(nextId + 1)
 
-    // Reset form
-    form.reset()
-    setCustomLogoPreview("")
+      // Reset form
+      form.reset()
+      setCustomLogoPreview("")
 
-    // Show success alert
-    setShowCustomSuccessAlert(true)
-    setTimeout(() => setShowCustomSuccessAlert(false), 3000)
+      // Show success alert
+      setShowCustomSuccessAlert(true)
+      setTimeout(() => setShowCustomSuccessAlert(false), 3000)
 
-    toast({
-      title: t("add.added"),
-      description: t("add.itemAdded"),
-    })
+      toast({
+        title: t("add.added"),
+        description: t("add.itemAdded"),
+      })
+    } catch (error) {
+      console.error("Error adding custom item:", error)
+      toast({
+        title: "Error",
+        description: "Failed to add item. Storage may be full.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (

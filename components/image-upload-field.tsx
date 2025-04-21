@@ -32,20 +32,57 @@ export function ImageUploadField({ id, label, value, onChange, className = "" }:
       return
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must not exceed 5MB")
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Image must not exceed 2MB")
       return
     }
 
     setError(null)
 
-    // Create preview
+    // Create preview with size limitation
     const reader = new FileReader()
     reader.onload = () => {
       const result = reader.result as string
-      setPreview(result)
-      onChange(result)
+
+      // If the image is too large, compress it by creating a smaller version
+      if (result.length > 500000) {
+        // 500KB threshold
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement("canvas")
+          // Calculate new dimensions (reduce to 50% if too large)
+          const maxWidth = 800
+          const maxHeight = 800
+          let width = img.width
+          let height = img.height
+
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              height = Math.round(height * (maxWidth / width))
+              width = maxWidth
+            } else {
+              width = Math.round(width * (maxHeight / height))
+              height = maxHeight
+            }
+          }
+
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext("2d")
+          ctx?.drawImage(img, 0, 0, width, height)
+
+          // Get compressed image as data URL with reduced quality
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.7)
+          setPreview(compressedDataUrl)
+          onChange(compressedDataUrl)
+        }
+        img.src = result
+      } else {
+        // If image is small enough, use it directly
+        setPreview(result)
+        onChange(result)
+      }
     }
     reader.readAsDataURL(file)
   }

@@ -34,6 +34,9 @@ import { Inter, Roboto, Montserrat, Open_Sans, Poppins } from "next/font/google"
 // Añadir esta importación al inicio del archivo, junto con las demás importaciones
 import GoogleSheetsImport from "./google-sheets-import"
 
+// Import the StorageManager component
+import { StorageManager } from "@/components/storage-manager"
+
 // Definir las fuentes
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const roboto = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-roboto" })
@@ -647,6 +650,9 @@ export default function SettingsPage() {
           </TabsTrigger>
           <TabsTrigger value="updates" className="whitespace-nowrap">
             {t("settings.updates")}
+          </TabsTrigger>
+          <TabsTrigger value="storage" className="whitespace-nowrap">
+            Storage
           </TabsTrigger>
         </TabsList>
 
@@ -1384,6 +1390,11 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Storage Tab */}
+        <TabsContent value="storage" className="mt-6">
+          <StorageManager />
         </TabsContent>
       </Tabs>
     </div>
