@@ -162,8 +162,8 @@ export default function ChecklistPage() {
         <div className="relative w-64 ml-auto">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search item..."
-            className="pl-8"
+            placeholder="Search items..."
+            className="pl-8 ml-auto"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />

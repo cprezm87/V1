@@ -54,7 +54,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.rewind": "Rewind",
     "nav.insights": "Insights",
     "nav.about": "About",
-    "nav.settings": "Settings",
+    "nav.settings": "Configuration",
     "nav.signout": "Sign Out",
 
     // Settings
@@ -119,8 +119,8 @@ const translations: Record<Language, Record<string, string>> = {
     "profile.photoChanged": "Photo Changed",
     "profile.photoUpdated": "Your profile photo has been updated.",
     "profile.uploadImage": "Upload Image",
-    "profile.dragDrop": "Drag and drop an image, or click to select",
-    "profile.maxSize": "Maximum file size: 5MB",
+    "profile.dragDrop": "Drag & Drop",
+    "profile.maxSize": "Max Size",
 
     // Web Preview
     "preview.visitWebsite": "Visit Website",

@@ -33,7 +33,7 @@ export function ImageUploadField({ id, label, value, onChange, className = "" }:
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      setError("Por favor, selecciona un archivo de imagen válido")
+      setError("Please select a valid image file")
       return
     }
 
@@ -75,12 +75,12 @@ export function ImageUploadField({ id, label, value, onChange, className = "" }:
       onChange(data.url)
 
       toast({
-        title: "Imagen subida",
-        description: "La imagen se ha subido correctamente a la nube",
+        title: "Image uploaded",
+        description: "The image has been successfully uploaded to the cloud",
       })
     } catch (err) {
       console.error("Error al subir imagen:", err)
-      setError("Error al subir la imagen. Por favor, intenta de nuevo.")
+      setError("Error uploading image. Please try again.")
     } finally {
       setIsUploading(false)
     }
@@ -106,7 +106,7 @@ export function ImageUploadField({ id, label, value, onChange, className = "" }:
             fill
             className="object-contain"
             onError={() => {
-              setError("Error al cargar la imagen. Por favor, verifica la URL e intenta de nuevo.")
+              setError("Error loading image. Please verify the URL and try again.")
               setPreview("")
             }}
           />
@@ -128,13 +128,13 @@ export function ImageUploadField({ id, label, value, onChange, className = "" }:
           {isUploading ? (
             <div className="flex flex-col items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-gray-500 mb-2" />
-              <p className="text-sm text-muted-foreground">Subiendo imagen a la nube...</p>
+              <p className="text-sm text-muted-foreground">Uploading image to cloud...</p>
             </div>
           ) : (
             <>
               <Upload className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Arrastra y suelta una imagen, o haz clic para seleccionar</p>
-              <p className="text-xs text-muted-foreground mt-1">Sin límite de tamaño</p>
+              <p className="text-sm text-muted-foreground">Drag and drop an image, or click to select</p>
+              <p className="text-xs text-muted-foreground mt-1">No size limit</p>
             </>
           )}
           <Input

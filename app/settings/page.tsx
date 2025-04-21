@@ -5,17 +5,18 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Globe, AlertTriangle, Download, Upload, RefreshCw } from "lucide-react"
+import { Globe, Upload, AlertTriangle, RefreshCw, FileUp, FileDown } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/components/ui/use-toast"
 import { useTheme } from "@/contexts/theme-context"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Dialog,
   DialogContent,
@@ -25,17 +26,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Checkbox } from "@/components/ui/checkbox"
 
 // Primero, vamos a añadir las importaciones necesarias para las fuentes
 // Añadir estas importaciones al inicio del archivo, después de las importaciones existentes
 import { Inter, Roboto, Montserrat, Open_Sans, Poppins } from "next/font/google"
-
-// Añadir esta importación al inicio del archivo, junto con las demás importaciones
-import GoogleSheetsImport from "./google-sheets-import"
-
-// Añadir la importación del componente CloudStorageStatus
-import { CloudStorageStatus } from "@/components/cloud-storage-status"
 
 // Definir las fuentes
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
@@ -80,7 +74,7 @@ const themeColors = {
 
 export default function SettingsPage() {
   const { toast } = useToast()
-  const { theme, toggleTheme, language, setLanguage, t } = useTheme()
+  const { theme, toggleTheme, language, setLanguage } = useTheme()
   const [name, setName] = useState("Opaco Pérez")
   const [email, setEmail] = useState("c.prezm87@gmail.com")
   const [bio, setBio] = useState(
@@ -97,6 +91,7 @@ export default function SettingsPage() {
   const [userPhotoPreview, setUserPhotoPreview] = useState("/user.jpg")
   const logoInputRef = useRef<HTMLInputElement>(null)
   const userPhotoInputRef = useRef<HTMLInputElement>(null)
+  const importFileRef = useRef<HTMLInputElement>(null)
 
   // Añadir este estado cerca de los otros estados al inicio del componente
   const [isGoogleConnected, setIsGoogleConnected] = useState(false)
@@ -106,6 +101,9 @@ export default function SettingsPage() {
   const [syncCustoms, setSyncCustoms] = useState(true)
   const [syncFrequency, setSyncFrequency] = useState("manual")
   const [currency, setCurrency] = useState("USD")
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
 
   // Función para aplicar los colores del tema a las variables CSS
   const applyThemeColors = (colors: { primary: string; secondary: string; accent: string; background: string }) => {
@@ -189,7 +187,7 @@ export default function SettingsPage() {
   // Handle profile save
   const handleProfileSave = () => {
     toast({
-      title: t("profile.saveChanges"),
+      title: "Save Changes",
       description: "Your profile has been updated successfully.",
     })
   }
@@ -242,8 +240,8 @@ export default function SettingsPage() {
       if (event.target?.result) {
         setUserPhotoPreview(event.target.result as string)
         toast({
-          title: t("profile.photoChanged"),
-          description: t("profile.photoUpdated"),
+          title: "Photo Changed",
+          description: "Your profile photo has been updated.",
         })
       }
     }
@@ -253,7 +251,7 @@ export default function SettingsPage() {
   // Handle appearance save
   const handleAppearanceSave = () => {
     toast({
-      title: t("settings.saveAppearance"),
+      title: "Save Appearance",
       description: "Your appearance settings have been updated successfully.",
     })
   }
@@ -273,10 +271,33 @@ export default function SettingsPage() {
 
   // Handle password change
   const handlePasswordChange = () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Please fill in all password fields",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords do not match",
+        variant: "destructive",
+      })
+      return
+    }
+
     toast({
       title: "Password Changed",
       description: "Your password has been changed successfully.",
     })
+
+    // Reset form
+    setCurrentPassword("")
+    setNewPassword("")
+    setConfirmPassword("")
   }
 
   // Handle check for updates
@@ -333,8 +354,8 @@ export default function SettingsPage() {
 
       // Mostrar mensaje de éxito
       toast({
-        title: "Aplicación Reiniciada",
-        description: "La aplicación ha sido reiniciada correctamente. La página se recargará en 3 segundos.",
+        title: "Application Reset",
+        description: "The application has been reset successfully. The page will reload in 3 seconds.",
       })
 
       // Programar recarga de la página después de 3 segundos
@@ -342,10 +363,10 @@ export default function SettingsPage() {
         window.location.reload()
       }, 3000)
     } catch (error) {
-      console.error("Error al reiniciar la aplicación:", error)
+      console.error("Error resetting application:", error)
       toast({
         title: "Error",
-        description: "Ocurrió un error al reiniciar la aplicación. Por favor, intenta de nuevo.",
+        description: "An error occurred while resetting the application. Please try again.",
         variant: "destructive",
       })
     }
@@ -702,10 +723,19 @@ export default function SettingsPage() {
     })
   }
 
+  // Handle Google connection
+  const handleGoogleConnect = () => {
+    setIsGoogleConnected(true)
+    toast({
+      title: "Connected to Google",
+      description: "Your account has been connected to Google successfully.",
+    })
+  }
+
   return (
     <div className="container py-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Settings</h1>
+        <h1 className="text-3xl font-bold">Configuration</h1>
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
@@ -748,17 +778,17 @@ export default function SettingsPage() {
             <Card>
               <CardContent className="p-6 space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">{t("profile.name")}</Label>
+                  <Label htmlFor="name">Name</Label>
                   <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">{t("profile.email")}</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bio">{t("profile.bio")}</Label>
+                  <Label htmlFor="bio">Bio</Label>
                   <Textarea
                     id="bio"
                     placeholder="Tell us about yourself..."
@@ -768,7 +798,7 @@ export default function SettingsPage() {
                 </div>
 
                 <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handleProfileSave}>
-                  {t("profile.saveChanges")}
+                  Save Changes
                 </Button>
               </CardContent>
             </Card>
@@ -779,7 +809,7 @@ export default function SettingsPage() {
                 <div className="flex flex-col items-center space-y-6">
                   <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-neon-green">
                     <Image
-                      src={userPhotoPreview || "/placeholder.svg"}
+                      src={userPhotoPreview || "/placeholder.svg?height=128&width=128"}
                       alt="User profile"
                       fill
                       className="object-cover"
@@ -791,8 +821,9 @@ export default function SettingsPage() {
                         className="border-2 border-dashed border-border rounded-md p-4 text-center cursor-pointer hover:border-neon-green"
                         onClick={() => userPhotoInputRef.current?.click()}
                       >
-                        <p className="text-sm text-muted-foreground">{t("profile.dragDrop")}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{t("profile.maxSize")}</p>
+                        <Upload className="h-8 w-8 text-gray-500 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">Drag and drop an image, or click to select</p>
+                        <p className="text-xs text-muted-foreground mt-1">No size limit</p>
                         <input
                           ref={userPhotoInputRef}
                           id="user-photo-upload"
@@ -807,7 +838,7 @@ export default function SettingsPage() {
                       className="w-full bg-neon-green text-black hover:bg-neon-green/90"
                       onClick={() => userPhotoInputRef.current?.click()}
                     >
-                      {t("profile.changePhoto")}
+                      Change Photo
                     </Button>
                   </div>
                 </div>
@@ -820,7 +851,7 @@ export default function SettingsPage() {
                 <div className="flex flex-col items-center space-y-6">
                   <div className="relative h-20 w-60 overflow-hidden">
                     <Image
-                      src={logoPreview || "/placeholder.svg"}
+                      src={logoPreview || "/placeholder.svg?height=80&width=240"}
                       alt="Logo"
                       width={240}
                       height={80}
@@ -833,8 +864,9 @@ export default function SettingsPage() {
                         className="border-2 border-dashed border-border rounded-md p-4 text-center cursor-pointer hover:border-neon-green"
                         onClick={() => logoInputRef.current?.click()}
                       >
-                        <p className="text-sm text-muted-foreground">{t("profile.dragDrop")}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{t("profile.maxSize")}</p>
+                        <Upload className="h-8 w-8 text-gray-500 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">Drag and drop an image, or click to select</p>
+                        <p className="text-xs text-muted-foreground mt-1">No size limit</p>
                         <input
                           ref={logoInputRef}
                           id="logo-upload"
@@ -849,7 +881,7 @@ export default function SettingsPage() {
                       className="w-full bg-neon-green text-black hover:bg-neon-green/90"
                       onClick={() => logoInputRef.current?.click()}
                     >
-                      {t("profile.updateLogo")}
+                      Update Logo
                     </Button>
                   </div>
                 </div>
@@ -864,7 +896,7 @@ export default function SettingsPage() {
             <CardContent className="p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-medium">{t("settings.darkMode")}</h3>
+                  <h3 className="text-lg font-medium">Dark Mode</h3>
                   <p className="text-sm text-muted-foreground">Toggle dark mode on or off</p>
                 </div>
                 <Switch
@@ -875,7 +907,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="theme">{t("settings.theme")}</Label>
+                <Label htmlFor="theme">Theme</Label>
                 <Select
                   value={themeColor}
                   onValueChange={(value) => {
@@ -914,7 +946,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="font">{t("settings.font")}</Label>
+                <Label htmlFor="font">Font</Label>
                 <Select
                   value={font}
                   onValueChange={(value) => {
@@ -982,24 +1014,94 @@ export default function SettingsPage() {
                   handleAppearanceSave()
                 }}
               >
-                {t("settings.saveAppearance")}
+                Save Appearance
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="mt-6">
             <CardContent className="p-6">
-              <h3 className="text-lg font-medium mb-4">{t("settings.preview")}</h3>
+              <h3 className="text-lg font-medium mb-4">Preview</h3>
               <div className={`rounded-lg border p-4 ${theme === "dark" ? "bg-background" : "bg-white text-black"}`}>
-                <h4 className="font-medium">{t("settings.themePreview")}</h4>
+                <h4 className="font-medium">Theme Preview</h4>
                 <p className="text-sm">This is how your theme will look.</p>
                 <div className="mt-4 flex gap-2">
-                  <Button className="bg-neon-green text-black hover:bg-neon-green/90">{t("settings.primary")}</Button>
+                  <Button className="bg-neon-green text-black hover:bg-neon-green/90">Primary</Button>
                   <Button variant="outline" className="border-neon-green text-neon-green hover:bg-neon-green/10">
-                    {t("settings.secondary")}
+                    Secondary
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Notifications Tab */}
+        <TabsContent value="notifications" className="mt-6 overflow-hidden">
+          <Card>
+            <CardContent className="p-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">Sound Notifications</h3>
+                  <p className="text-sm text-muted-foreground">Enable sound for notifications</p>
+                </div>
+                <Switch
+                  checked={notificationSound}
+                  onCheckedChange={setNotificationSound}
+                  className="data-[state=checked]:bg-neon-green"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">Popup Notifications</h3>
+                  <p className="text-sm text-muted-foreground">Show popup notifications</p>
+                </div>
+                <Switch
+                  checked={popupNotifications}
+                  onCheckedChange={setPopupNotifications}
+                  className="data-[state=checked]:bg-neon-green"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">Calendar Notifications</h3>
+                  <p className="text-sm text-muted-foreground">Receive notifications for calendar events</p>
+                </div>
+                <Switch
+                  checked={calendarNotifications}
+                  onCheckedChange={setCalendarNotifications}
+                  className="data-[state=checked]:bg-neon-green"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notification-time">Notification Time</Label>
+                <Select value={notificationTime} onValueChange={setNotificationTime}>
+                  <SelectTrigger id="notification-time">
+                    <SelectValue placeholder="Select notification time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1hour">1 hour before</SelectItem>
+                    <SelectItem value="3hours">3 hours before</SelectItem>
+                    <SelectItem value="1day">1 day before</SelectItem>
+                    <SelectItem value="1week">1 week before</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                className="w-full bg-neon-green text-black hover:bg-neon-green/90"
+                onClick={() => {
+                  toast({
+                    title: "Notifications Updated",
+                    description: "Your notification settings have been updated successfully.",
+                  })
+                }}
+              >
+                Save Notification Settings
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1009,8 +1111,8 @@ export default function SettingsPage() {
           <Card>
             <CardContent className="p-6 space-y-4">
               <div>
-                <h2 className="text-2xl font-semibold mb-1">{t("settings.language")}</h2>
-                <p className="text-muted-foreground mb-6">{t("settings.chooseLanguage")}</p>
+                <h2 className="text-2xl font-semibold mb-1">Language</h2>
+                <p className="text-muted-foreground mb-6">Choose Language</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-4">
@@ -1091,10 +1193,10 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <p className="text-sm text-muted-foreground">{t("settings.restartLanguage")}</p>
+              <p className="text-sm text-muted-foreground">The application will restart to apply language changes</p>
 
               <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handleLanguageSave}>
-                {t("settings.applyLanguage")}
+                Apply Language
               </Button>
             </CardContent>
           </Card>
@@ -1105,59 +1207,28 @@ export default function SettingsPage() {
           <Card>
             <CardContent className="p-6 space-y-4">
               <div>
-                <h2 className="text-2xl font-semibold mb-1">Currency Settings</h2>
-                <p className="text-muted-foreground mb-6">Display values in your preferred currency</p>
+                <h2 className="text-2xl font-semibold mb-1">Currency</h2>
+                <p className="text-muted-foreground mb-6">Choose your preferred currency</p>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currency">Select Currency</Label>
+                    <Label htmlFor="currency">Currency</Label>
                     <Select value={currency} onValueChange={setCurrency}>
                       <SelectTrigger id="currency">
                         <SelectValue placeholder="Select currency" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="USD">US Dollar (USD)</SelectItem>
-                        <SelectItem value="EUR">Euro (EUR)</SelectItem>
-                        <SelectItem value="JPY">Japanese Yen (JPY)</SelectItem>
-                        <SelectItem value="GBP">British Pound (GBP)</SelectItem>
-                        <SelectItem value="MXN">Mexican Peso (MXN)</SelectItem>
-                        <SelectItem value="COP">Colombian Peso (COP)</SelectItem>
-                        <SelectItem value="ARS">Argentine Peso (ARS)</SelectItem>
+                        <SelectItem value="USD">USD - US Dollar</SelectItem>
+                        <SelectItem value="EUR">EUR - Euro</SelectItem>
+                        <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                        <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+                        <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
+                        <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+                        <SelectItem value="COP">COP - Colombian Peso</SelectItem>
+                        <SelectItem value="MXN">MXN - Mexican Peso</SelectItem>
+                        <SelectItem value="BRL">BRL - Brazilian Real</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-
-                  <div className="p-4 border rounded-md bg-muted/30">
-                    <h3 className="font-medium mb-2">Preview</h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>1,000</span>
-                        <span className="font-medium">
-                          {new Intl.NumberFormat(undefined, {
-                            style: "currency",
-                            currency: currency,
-                          }).format(1000)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>25,750</span>
-                        <span className="font-medium">
-                          {new Intl.NumberFormat(undefined, {
-                            style: "currency",
-                            currency: currency,
-                          }).format(25750)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>199.99</span>
-                        <span className="font-medium">
-                          {new Intl.NumberFormat(undefined, {
-                            style: "currency",
-                            currency: currency,
-                          }).format(199.99)}
-                        </span>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -1169,101 +1240,88 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Notifications Tab */}
-        <TabsContent value="notifications" className="mt-6 overflow-hidden">
-          <Card>
-            <CardContent className="p-6 space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium">Sound Notifications</h3>
-                  <p className="text-sm text-muted-foreground">Enable sound for notifications</p>
-                </div>
-                <Switch
-                  checked={notificationSound}
-                  onCheckedChange={setNotificationSound}
-                  className="data-[state=checked]:bg-neon-green"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium">Pop-up Notifications</h3>
-                  <p className="text-sm text-muted-foreground">Show pop-up notifications</p>
-                </div>
-                <Switch
-                  checked={popupNotifications}
-                  onCheckedChange={setPopupNotifications}
-                  className="data-[state=checked]:bg-neon-green"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium">Calendar Notifications</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Sync with calendar for release dates and Rewind events
-                  </p>
-                </div>
-                <Switch
-                  checked={calendarNotifications}
-                  onCheckedChange={setCalendarNotifications}
-                  className="data-[state=checked]:bg-neon-green"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notification-time">Notification Time</Label>
-                <Select value={notificationTime} onValueChange={setNotificationTime}>
-                  <SelectTrigger id="notification-time">
-                    <SelectValue placeholder="Select notification time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1hour">1 hour before</SelectItem>
-                    <SelectItem value="3hours">3 hours before</SelectItem>
-                    <SelectItem value="1day">1 day before</SelectItem>
-                    <SelectItem value="3days">3 days before</SelectItem>
-                    <SelectItem value="1week">1 week before</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button
-                className="w-full bg-neon-green text-black hover:bg-neon-green/90"
-                onClick={() => {
-                  toast({
-                    title: "Notifications Updated",
-                    description: "Your notification settings have been updated.",
-                  })
-                }}
-              >
-                Save Notification Settings
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         {/* Security Tab */}
         <TabsContent value="security" className="mt-6 overflow-hidden">
           <Card>
-            <CardContent className="p-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <Input id="current-password" type="password" />
-              </div>
+            <CardContent className="p-6 space-y-6">
+              <div>
+                <h2 className="text-2xl font-semibold mb-1">Security</h2>
+                <p className="text-muted-foreground mb-6">Manage your account security</p>
 
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input id="new-password" type="password" />
-              </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="current-password">Current Password</Label>
+                    <Input
+                      id="current-password"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm New Password</Label>
-                <Input id="confirm-password" type="password" />
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm New Password</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
 
               <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handlePasswordChange}>
                 Change Password
               </Button>
+
+              <div className="pt-4 border-t">
+                <h3 className="text-lg font-medium mb-2">Reset Application</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  This will reset all settings and data to default values. This action cannot be undone.
+                </p>
+
+                <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" className="w-full">
+                      Reset Application
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Reset Application</DialogTitle>
+                      <DialogDescription>
+                        Are you sure you want to reset the application? This will delete all your data and settings.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Warning</AlertTitle>
+                        <AlertDescription>This action cannot be undone.</AlertDescription>
+                      </Alert>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsResetDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button variant="destructive" onClick={handleAppReset}>
+                        Reset
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1271,107 +1329,86 @@ export default function SettingsPage() {
         {/* Backup Tab */}
         <TabsContent value="backup" className="mt-6 overflow-hidden">
           <Card>
-            <CardHeader>
-              <CardTitle>Data Export & Backup</CardTitle>
-              <CardDescription>Export your collection data in different formats for backup or analysis</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="p-6 space-y-6">
               <div>
-                <h3 className="text-lg font-medium mb-2">Export Data</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Export your collection data to different formats for backup or analysis purposes.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button
-                    className="w-full bg-neon-green text-black hover:bg-neon-green/90"
-                    onClick={() => handleExportData("json")}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Export to JSON
-                  </Button>
-                  <Button
-                    className="w-full bg-neon-green text-black hover:bg-neon-green/90"
-                    onClick={() => handleExportData("csv")}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Export to CSV
-                  </Button>
-                </div>
-              </div>
+                <h2 className="text-2xl font-semibold mb-1">Backup & Restore</h2>
+                <p className="text-muted-foreground mb-6">Manage your data backups</p>
 
-              <div>
-                <h3 className="text-lg font-medium mb-2">Import Data</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Import your collection data from a previously exported JSON or CSV file.
-                </p>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="import-file" className="cursor-pointer">
-                    <div className="flex items-center justify-center w-full p-4 border-2 border-dashed border-border rounded-md hover:border-neon-green">
-                      <Upload className="mr-2 h-4 w-4" />
-                      <span>Select JSON or CSV backup file</span>
-                      <Input
-                        id="import-file"
-                        type="file"
-                        accept=".json,.csv"
-                        className="hidden"
-                        onChange={handleImportData}
-                      />
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Export Data</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Export your collection data in different formats
+                    </p>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" className="flex items-center" onClick={() => handleExportData("json")}>
+                        <FileDown className="mr-2 h-4 w-4" />
+                        Export as JSON
+                      </Button>
+                      <Button variant="outline" className="flex items-center" onClick={() => handleExportData("csv")}>
+                        <FileDown className="mr-2 h-4 w-4" />
+                        Export as CSV
+                      </Button>
+                      <Button variant="outline" className="flex items-center" onClick={() => handleExportData("excel")}>
+                        <FileDown className="mr-2 h-4 w-4" />
+                        Export as Excel
+                      </Button>
                     </div>
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    Note: Importing data will overwrite your current collection. Make sure to export your current data
-                    first.
-                  </p>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <h3 className="text-lg font-medium mb-2">Import Data</h3>
+                    <p className="text-sm text-muted-foreground mb-4">Import your collection data from a backup file</p>
+
+                    <Button
+                      variant="outline"
+                      className="flex items-center"
+                      onClick={() => importFileRef.current?.click()}
+                    >
+                      <FileUp className="mr-2 h-4 w-4" />
+                      Import Data
+                    </Button>
+                    <input
+                      ref={importFileRef}
+                      type="file"
+                      accept=".json,.csv"
+                      className="hidden"
+                      onChange={handleImportData}
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
-          {/* Dentro del TabsContent con value="backup", después de la tarjeta existente, añadir: */}
-          <div className="mt-6">
-            <CloudStorageStatus />
-          </div>
         </TabsContent>
 
         {/* Sync Tab */}
         <TabsContent value="sync" className="mt-6 overflow-hidden">
           <Card>
-            <CardHeader>
-              <CardTitle>Google Sheets Sync</CardTitle>
-              <CardDescription>
-                Sync your collection data with Google Sheets for advanced analysis and sharing
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="border rounded-md p-4">
-                <h3 className="text-lg font-medium mb-2">Connection Status</h3>
-                <div className={`flex items-center space-x-2 mb-4`}>
-                  <div className={`h-3 w-3 rounded-full ${isGoogleConnected ? "bg-green-500" : "bg-red-500"}`}></div>
-                  <p className="text-sm">
-                    {isGoogleConnected ? "Connected to Google Sheets" : "Not connected to Google Sheets"}
-                  </p>
-                </div>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => {
-                    setIsGoogleConnected(!isGoogleConnected)
-                    toast({
-                      title: isGoogleConnected ? "Disconnected" : "Connected",
-                      description: isGoogleConnected
-                        ? "Disconnected from Google Sheets"
-                        : "Successfully connected to Google Sheets",
-                    })
-                  }}
-                >
-                  {isGoogleConnected ? "Disconnect Google Account" : "Connect Google Account"}
-                </Button>
-              </div>
-
+            <CardContent className="p-6 space-y-6">
               <div>
-                <h3 className="text-lg font-medium mb-2">Google Sheets Configuration</h3>
+                <h2 className="text-2xl font-semibold mb-1">Sync</h2>
+                <p className="text-muted-foreground mb-6">Sync your data with external services</p>
+
                 <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium">Connect to Google</h3>
+                      <p className="text-sm text-muted-foreground">Connect to Google for syncing</p>
+                    </div>
+                    <Button
+                      variant={isGoogleConnected ? "outline" : "default"}
+                      className={isGoogleConnected ? "" : "bg-neon-green text-black hover:bg-neon-green/90"}
+                      onClick={handleGoogleConnect}
+                      disabled={isGoogleConnected}
+                    >
+                      {isGoogleConnected ? "Connected" : "Connect"}
+                    </Button>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="spreadsheet-id">Spreadsheet ID or URL</Label>
+                    <Label htmlFor="spreadsheet-id">Google Sheets ID or URL</Label>
                     <Input
                       id="spreadsheet-id"
                       placeholder="Enter Google Sheets ID or URL"
@@ -1382,34 +1419,37 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Data to Sync</Label>
-                    <div className="space-y-2">
+                    <Label>Sync Options</Label>
+                    <div className="flex flex-col space-y-2">
                       <div className="flex items-center space-x-2">
-                        <Checkbox
+                        <Switch
                           id="sync-figures"
                           checked={syncFigures}
-                          onCheckedChange={(checked) => setSyncFigures(!!checked)}
+                          onCheckedChange={setSyncFigures}
                           disabled={!isGoogleConnected}
+                          className="data-[state=checked]:bg-neon-green"
                         />
-                        <Label htmlFor="sync-figures">Figures Collection</Label>
+                        <Label htmlFor="sync-figures">Sync Figures</Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Checkbox
+                        <Switch
                           id="sync-wishlist"
                           checked={syncWishlist}
-                          onCheckedChange={(checked) => setSyncWishlist(!!checked)}
+                          onCheckedChange={setSyncWishlist}
                           disabled={!isGoogleConnected}
+                          className="data-[state=checked]:bg-neon-green"
                         />
-                        <Label htmlFor="sync-wishlist">Wishlist Items</Label>
+                        <Label htmlFor="sync-wishlist">Sync Wishlist</Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Checkbox
+                        <Switch
                           id="sync-customs"
                           checked={syncCustoms}
-                          onCheckedChange={(checked) => setSyncCustoms(!!checked)}
+                          onCheckedChange={setSyncCustoms}
                           disabled={!isGoogleConnected}
+                          className="data-[state=checked]:bg-neon-green"
                         />
-                        <Label htmlFor="sync-customs">Custom Items</Label>
+                        <Label htmlFor="sync-customs">Sync Customs</Label>
                       </div>
                     </div>
                   </div>
@@ -1418,130 +1458,71 @@ export default function SettingsPage() {
                     <Label htmlFor="sync-frequency">Sync Frequency</Label>
                     <Select value={syncFrequency} onValueChange={setSyncFrequency} disabled={!isGoogleConnected}>
                       <SelectTrigger id="sync-frequency">
-                        <SelectValue placeholder="Select frequency" />
+                        <SelectValue placeholder="Select sync frequency" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="realtime">Real-time</SelectItem>
-                        <SelectItem value="hourly">Hourly</SelectItem>
+                        <SelectItem value="manual">Manual</SelectItem>
                         <SelectItem value="daily">Daily</SelectItem>
                         <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="manual">Manual only</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <Button
+                    className="w-full bg-neon-green text-black hover:bg-neon-green/90"
+                    onClick={handleGoogleSheetsSync}
+                    disabled={!isGoogleConnected}
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Sync Now
+                  </Button>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Button
-                  className="w-full bg-neon-green text-black hover:bg-neon-green/90"
-                  onClick={handleGoogleSheetsSync}
-                  disabled={!isGoogleConnected}
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Export to Google Sheets
-                </Button>
-
-                <p className="text-xs text-muted-foreground text-center mt-2">
-                  {isGoogleConnected
-                    ? `Sync frequency: ${
-                        syncFrequency === "realtime"
-                          ? "Real-time"
-                          : syncFrequency === "hourly"
-                            ? "Every hour"
-                            : syncFrequency === "daily"
-                              ? "Once a day"
-                              : syncFrequency === "weekly"
-                                ? "Once a week"
-                                : "Manual only"
-                      }`
-                    : "Connect to Google Sheets to enable synchronization"}
-                </p>
               </div>
             </CardContent>
           </Card>
-
-          {/* Añadir el componente de importación de Google Sheets aquí */}
-          <div className="mt-6">
-            <GoogleSheetsImport />
-          </div>
         </TabsContent>
 
         {/* Updates Tab */}
         <TabsContent value="updates" className="mt-6 overflow-hidden">
-          <div className="grid gap-6 md:grid-cols-2 mb-6">
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <h3 className="text-lg font-medium">Check for Updates</h3>
-                <p className="text-sm text-muted-foreground">Current version: 1.0.0</p>
-                <p className="text-sm text-muted-foreground">Last checked: April 19, 2025</p>
-                <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handleCheckUpdates}>
-                  Check for Updates
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <h3 className="text-lg font-medium">Report a Bug</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="bug-title">Bug Title</Label>
-                  <Input id="bug-title" placeholder="Brief description of the issue" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bug-description">Bug Description</Label>
-                  <Textarea id="bug-description" placeholder="Please provide details about the bug..." rows={4} />
-                </div>
-
-                <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handleBugReport}>
-                  Submit Bug Report
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Reset Application Section (moved from Reset tab) */}
           <Card>
-            <CardHeader>
-              <CardTitle>Reset Application</CardTitle>
-              <CardDescription>Reset the application to its initial state</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
+            <CardContent className="p-6 space-y-6">
               <div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Reset the application to its initial state. This will delete all your data.
-                </p>
+                <h2 className="text-2xl font-semibold mb-1">Updates</h2>
+                <p className="text-muted-foreground mb-6">Check for updates and report bugs</p>
 
-                <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="destructive" className="w-full">
-                      <AlertTriangle className="mr-2 h-4 w-4" />
-                      Reset Application
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Application Version</h3>
+                    <p className="text-sm text-muted-foreground">Current Version: 1.0.0</p>
+                  </div>
+
+                  <Button
+                    className="w-full bg-neon-green text-black hover:bg-neon-green/90"
+                    onClick={handleCheckUpdates}
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Check for Updates
+                  </Button>
+
+                  <div className="pt-4 border-t">
+                    <h3 className="text-lg font-medium mb-2">Report a Bug</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      If you encounter any issues, please report them here
+                    </p>
+
+                    <div className="space-y-2">
+                      <Textarea placeholder="Describe the bug you encountered..." className="min-h-[100px]" />
+                    </div>
+
+                    <Button
+                      className="w-full mt-2 bg-neon-green text-black hover:bg-neon-green/90"
+                      onClick={handleBugReport}
+                    >
+                      Submit Bug Report
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Are you absolutely sure?</DialogTitle>
-                      <DialogDescription>
-                        This action cannot be undone. This will permanently delete all your collection data and reset
-                        the application to its initial state.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsResetDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button variant="destructive" onClick={handleAppReset}>
-                        Yes, Reset Everything
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-
-                <p className="text-xs text-muted-foreground mt-2">
-                  Note: We recommend exporting your data before resetting the application.
-                </p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

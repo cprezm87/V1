@@ -40,7 +40,7 @@ export function ImageUpload({
 
     // Validar tipo de archivo
     if (!file.type.startsWith("image/")) {
-      setError("Por favor, selecciona un archivo de imagen válido")
+      setError("Please select a valid image file")
       return
     }
 
@@ -81,12 +81,12 @@ export function ImageUpload({
       onImageUploaded(data.url)
 
       toast({
-        title: "Imagen subida",
-        description: "La imagen se ha subido correctamente a la nube",
+        title: "Image uploaded",
+        description: "The image has been successfully uploaded to the cloud",
       })
     } catch (err) {
       console.error("Error al subir imagen:", err)
-      setError("Error al subir la imagen. Por favor, intenta de nuevo.")
+      setError("Error uploading image. Please try again.")
       setPreview("")
     } finally {
       setIsUploading(false)
@@ -133,7 +133,7 @@ export function ImageUpload({
             className="object-contain"
             unoptimized={preview.startsWith("https://drive.google.com")}
             onError={() => {
-              setError("Error al cargar la imagen. Verifica la URL e intenta de nuevo.")
+              setError("Error loading image. Please verify the URL and try again.")
               setPreview("")
             }}
           />
@@ -177,12 +177,12 @@ export function ImageUpload({
               {isUploading ? (
                 <div className="flex flex-col items-center justify-center">
                   <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-                  <p className="mt-2 text-sm text-gray-500">Subiendo imagen a la nube...</p>
+                  <p className="text-sm text-muted-foreground">Uploading image to cloud...</p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center">
                   <Upload className="h-8 w-8 text-gray-500" />
-                  <p className="mt-2 text-sm text-gray-500">Haz clic para seleccionar una imagen</p>
+                  <p className="mt-2 text-sm text-gray-500">Click to select an image</p>
                 </div>
               )}
               <Input
