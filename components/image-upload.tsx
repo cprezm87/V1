@@ -10,6 +10,7 @@ import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
 import { Loader2, Upload, X, LinkIcon } from "lucide-react"
 import { convertGoogleDriveUrl } from "@/lib/utils"
+import { useToast } from "@/components/ui/use-toast"
 
 interface ImageUploadProps {
   onImageUploaded: (url: string) => void
@@ -25,6 +26,7 @@ export function ImageUpload({
   defaultImage = "",
 }: ImageUploadProps) {
   const { user } = useAuth()
+  const { toast } = useToast()
   const [isUploading, setIsUploading] = useState(false)
   const [preview, setPreview] = useState<string>(defaultImage ? convertGoogleDriveUrl(defaultImage) : "")
   const [error, setError] = useState<string | null>(null)
@@ -52,7 +54,7 @@ export function ImageUpload({
     setIsUploading(true)
 
     try {
-      // Crear vista previa
+      // Crear vista previa temporal mientras se sube
       const reader = new FileReader()
       reader.onload = () => {
         setPreview(reader.result as string)
@@ -77,7 +79,14 @@ export function ImageUpload({
       }
 
       const data = await response.json()
+
+      // Actualizar con la URL de la imagen en la nube
       onImageUploaded(data.url)
+
+      toast({
+        title: "Imagen subida",
+        description: "La imagen se ha subido correctamente a la nube",
+      })
     } catch (err) {
       console.error("Error al subir imagen:", err)
       setError("Error al subir la imagen. Por favor, intenta de nuevo.")
@@ -171,7 +180,7 @@ export function ImageUpload({
               {isUploading ? (
                 <div className="flex flex-col items-center justify-center">
                   <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-                  <p className="mt-2 text-sm text-gray-500">Subiendo imagen...</p>
+                  <p className="mt-2 text-sm text-gray-500">Subiendo imagen a la nube...</p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center">

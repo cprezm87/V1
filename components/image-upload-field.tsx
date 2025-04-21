@@ -6,8 +6,10 @@ import { useState, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Image from "next/image"
-import { Upload, X } from "lucide-react"
+import { Upload, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/components/ui/use-toast"
 
 interface ImageUploadFieldProps {
   id: string
@@ -18,73 +20,73 @@ interface ImageUploadFieldProps {
 }
 
 export function ImageUploadField({ id, label, value, onChange, className = "" }: ImageUploadFieldProps) {
+  const { user } = useAuth()
+  const { toast } = useToast()
   const [preview, setPreview] = useState<string>(value || "")
   const [error, setError] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      setError("Please select a valid image file")
+      setError("Por favor, selecciona un archivo de imagen válido")
       return
     }
 
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      setError("Image must not exceed 2MB")
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("La imagen no debe superar los 5MB")
       return
     }
 
     setError(null)
+    setIsUploading(true)
 
-    // Create preview with size limitation
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = reader.result as string
-
-      // If the image is too large, compress it by creating a smaller version
-      if (result.length > 500000) {
-        // 500KB threshold
-        const img = new Image()
-        img.onload = () => {
-          const canvas = document.createElement("canvas")
-          // Calculate new dimensions (reduce to 50% if too large)
-          const maxWidth = 800
-          const maxHeight = 800
-          let width = img.width
-          let height = img.height
-
-          if (width > maxWidth || height > maxHeight) {
-            if (width > height) {
-              height = Math.round(height * (maxWidth / width))
-              width = maxWidth
-            } else {
-              width = Math.round(width * (maxHeight / height))
-              height = maxHeight
-            }
-          }
-
-          canvas.width = width
-          canvas.height = height
-          const ctx = canvas.getContext("2d")
-          ctx?.drawImage(img, 0, 0, width, height)
-
-          // Get compressed image as data URL with reduced quality
-          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.7)
-          setPreview(compressedDataUrl)
-          onChange(compressedDataUrl)
-        }
-        img.src = result
-      } else {
-        // If image is small enough, use it directly
-        setPreview(result)
-        onChange(result)
+    try {
+      // Crear vista previa temporal mientras se sube
+      const reader = new FileReader()
+      reader.onload = () => {
+        setPreview(reader.result as string)
       }
+      reader.readAsDataURL(file)
+
+      // Preparar FormData para la carga
+      const formData = new FormData()
+      formData.append("file", file)
+
+      // Subir a través de nuestra API
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${await user?.getIdToken()}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error("Error al subir la imagen")
+      }
+
+      const data = await response.json()
+
+      // Actualizar con la URL de la imagen en la nube
+      setPreview(data.url)
+      onChange(data.url)
+
+      toast({
+        title: "Imagen subida",
+        description: "La imagen se ha subido correctamente a la nube",
+      })
+    } catch (err) {
+      console.error("Error al subir imagen:", err)
+      setError("Error al subir la imagen. Por favor, intenta de nuevo.")
+    } finally {
+      setIsUploading(false)
     }
-    reader.readAsDataURL(file)
   }
 
   const handleRemoveImage = () => {
@@ -103,11 +105,11 @@ export function ImageUploadField({ id, label, value, onChange, className = "" }:
         <div className="relative w-full h-40 bg-gray-100 dark:bg-gray-800 rounded-md overflow-hidden">
           <Image
             src={preview || "/placeholder.svg"}
-            alt={`Preview of ${label}`}
+            alt={`Vista previa de ${label}`}
             fill
             className="object-contain"
             onError={() => {
-              setError("Error loading image. Please check the URL and try again.")
+              setError("Error al cargar la imagen. Por favor, verifica la URL e intenta de nuevo.")
               setPreview("")
             }}
           />
@@ -126,9 +128,18 @@ export function ImageUploadField({ id, label, value, onChange, className = "" }:
           className="border-2 border-dashed border-border rounded-md p-4 text-center cursor-pointer hover:border-neon-green"
           onClick={() => fileInputRef.current?.click()}
         >
-          <Upload className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Drag and drop an image, or click to select</p>
-          <p className="text-xs text-muted-foreground mt-1">Maximum file size: 5MB</p>
+          {isUploading ? (
+            <div className="flex flex-col items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-500 mb-2" />
+              <p className="text-sm text-muted-foreground">Subiendo imagen a la nube...</p>
+            </div>
+          ) : (
+            <>
+              <Upload className="h-8 w-8 text-gray-500 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Arrastra y suelta una imagen, o haz clic para seleccionar</p>
+              <p className="text-xs text-muted-foreground mt-1">Tamaño máximo: 5MB</p>
+            </>
+          )}
           <Input
             id={id}
             ref={fileInputRef}
@@ -136,6 +147,7 @@ export function ImageUploadField({ id, label, value, onChange, className = "" }:
             accept="image/*"
             className="hidden"
             onChange={handleFileChange}
+            disabled={isUploading}
           />
         </div>
       )}

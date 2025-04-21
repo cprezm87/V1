@@ -34,6 +34,9 @@ import { Inter, Roboto, Montserrat, Open_Sans, Poppins } from "next/font/google"
 // Añadir esta importación al inicio del archivo, junto con las demás importaciones
 import GoogleSheetsImport from "./google-sheets-import"
 
+// Añadir la importación del componente CloudStorageStatus
+import { CloudStorageStatus } from "@/components/cloud-storage-status"
+
 // Definir las fuentes
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const roboto = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-roboto" })
@@ -1323,6 +1326,10 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+          {/* Dentro del TabsContent con value="backup", después de la tarjeta existente, añadir: */}
+          <div className="mt-6">
+            <CloudStorageStatus />
+          </div>
         </TabsContent>
 
         {/* Sync Tab */}
