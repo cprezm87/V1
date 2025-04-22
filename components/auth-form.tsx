@@ -121,7 +121,7 @@ export function AuthForm() {
   return (
     <div className="w-full max-w-md mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex justify-center mb-8">
-        <Image src="/logo.png" alt="OPACO Pérez" width={240} height={80} className="h-auto" />
+        <Image src="/OV.png" alt="OPACO Pérez" width={240} height={80} className="h-auto" />
       </div>
 
       <Card className="border-border bg-card">

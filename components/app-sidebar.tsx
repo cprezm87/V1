@@ -110,7 +110,7 @@ export function AppSidebar() {
     <Sidebar className="border-r border-sidebar-border">
       <SidebarHeader className="flex items-center justify-center py-4">
         <Link href="/">
-          <Image src="/logo.png" alt="OPACO Pérez" width={180} height={50} className="h-auto" />
+          <Image src="/OV.png" alt="OPACO VAULT" width={180} height={50} className="h-auto" />
         </Link>
       </SidebarHeader>
       <SidebarContent>
