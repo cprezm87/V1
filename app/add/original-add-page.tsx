@@ -15,13 +15,11 @@ import { Star, StarIcon, CheckCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useTheme } from "@/contexts/theme-context"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useAuth } from "@/contexts/auth-context"
+import { DatabaseConnectionStatus } from "@/components/database-connection-status"
 
 // Importar el nuevo componente
 import { ImageUploadField } from "@/components/image-upload-field"
-
-// Añadir la importación del cliente de Supabase al inicio del archivo:
-// Remove this line
-// import { supabase } from "@/lib/supabaseClient"
 
 // Display options based on shelf selection
 const displayOptions = {
@@ -102,6 +100,7 @@ interface CustomItem {
 export default function OriginalAddPage() {
   const { toast } = useToast()
   const { t } = useTheme()
+  const { user } = useAuth()
   const [selectedShelf, setSelectedShelf] = useState<keyof typeof displayOptions | "">("")
   const [logoPreview, setLogoPreview] = useState("")
   const [photoPreview, setPhotoPreview] = useState("")
@@ -114,6 +113,7 @@ export default function OriginalAddPage() {
   const [showSuccessAlert, setShowSuccessAlert] = useState(false)
   const [showWishlistSuccessAlert, setShowWishlistSuccessAlert] = useState(false)
   const [showCustomSuccessAlert, setShowCustomSuccessAlert] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // State for storing items
   const [figureItems, setFigureItems] = useState<FigureItem[]>([])
@@ -187,7 +187,7 @@ export default function OriginalAddPage() {
     setSelectedShelf(value as keyof typeof displayOptions)
   }
 
-  // Modificar la función `handleFigureSubmit` para guardar los datos en Supabase:
+  // Modificar la función `handleFigureSubmit` para guardar los datos en la base de datos:
   const handleFigureSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
@@ -231,9 +231,51 @@ export default function OriginalAddPage() {
     }
 
     try {
-      // Save to localStorage only
+      setIsSubmitting(true)
+
+      // Save to localStorage
       setFigureItems([...figureItems, newFigure])
       setNextId(nextId + 1)
+
+      // Save to database
+      if (user) {
+        const dbFigure = {
+          originalId: newFigure.id,
+          name: newFigure.name,
+          type: newFigure.type,
+          franchise: newFigure.franchise,
+          brand: newFigure.brand,
+          serie: newFigure.serie,
+          yearReleased: newFigure.yearReleased,
+          condition: newFigure.condition,
+          price: newFigure.price,
+          yearPurchase: newFigure.yearPurchase,
+          upc: newFigure.upc,
+          logo: newFigure.logo,
+          photo: newFigure.photo,
+          tagline: newFigure.tagline,
+          review: newFigure.review,
+          shelf: newFigure.shelf,
+          display: newFigure.display,
+          ranking: newFigure.ranking,
+          comments: newFigure.comments,
+          userId: user.uid,
+        }
+
+        const response = await fetch("/api/figures", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dbFigure),
+        })
+
+        if (!response.ok) {
+          throw new Error(`Error saving to database: ${response.statusText}`)
+        }
+
+        console.log("Figure saved to database successfully")
+      }
 
       // Reset form
       form.reset()
@@ -264,10 +306,12 @@ export default function OriginalAddPage() {
         description: errorMessage,
         variant: "destructive",
       })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
-  // Modificar la función `handleWishlistSubmit` para guardar los datos en Supabase:
+  // Modificar la función `handleWishlistSubmit` para guardar los datos en la base de datos:
   const handleWishlistSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
@@ -308,9 +352,48 @@ export default function OriginalAddPage() {
     }
 
     try {
-      // Save to localStorage only
+      setIsSubmitting(true)
+
+      // Save to localStorage
       setWishlistItems([...wishlistItems, newWishlistItem])
       setNextId(nextId + 1)
+
+      // Save to database
+      if (user) {
+        const dbWishlistItem = {
+          originalId: newWishlistItem.id,
+          name: newWishlistItem.name,
+          type: newWishlistItem.type,
+          franchise: newWishlistItem.franchise,
+          brand: newWishlistItem.brand,
+          serie: newWishlistItem.serie,
+          yearReleased: newWishlistItem.yearReleased,
+          price: newWishlistItem.price,
+          logo: newWishlistItem.logo,
+          photo: newWishlistItem.photo,
+          tagline: newWishlistItem.tagline,
+          review: newWishlistItem.review,
+          released: newWishlistItem.released,
+          buy: newWishlistItem.buy,
+          comments: newWishlistItem.comments,
+          trackingNumber: newWishlistItem.trackingNumber,
+          userId: user.uid,
+        }
+
+        const response = await fetch("/api/wishlist", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dbWishlistItem),
+        })
+
+        if (!response.ok) {
+          throw new Error(`Error saving to database: ${response.statusText}`)
+        }
+
+        console.log("Wishlist item saved to database successfully")
+      }
 
       // Reset form
       form.reset()
@@ -339,10 +422,12 @@ export default function OriginalAddPage() {
         description: errorMessage,
         variant: "destructive",
       })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
-  // Modificar la función `handleCustomSubmit` para guardar los datos en Supabase:
+  // Modificar la función `handleCustomSubmit` para guardar los datos en la base de datos:
   const handleCustomSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
@@ -374,9 +459,41 @@ export default function OriginalAddPage() {
     }
 
     try {
-      // Save to localStorage only
+      setIsSubmitting(true)
+
+      // Save to localStorage
       setCustomItems([...customItems, newCustomItem])
       setNextId(nextId + 1)
+
+      // Save to database
+      if (user) {
+        const dbCustomItem = {
+          originalId: newCustomItem.id,
+          name: newCustomItem.name,
+          type: newCustomItem.type,
+          franchise: newCustomItem.franchise,
+          head: newCustomItem.head,
+          body: newCustomItem.body,
+          logo: newCustomItem.logo,
+          tagline: newCustomItem.tagline,
+          comments: newCustomItem.comments,
+          userId: user.uid,
+        }
+
+        const response = await fetch("/api/customs", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dbCustomItem),
+        })
+
+        if (!response.ok) {
+          throw new Error(`Error saving to database: ${response.statusText}`)
+        }
+
+        console.log("Custom item saved to database successfully")
+      }
 
       // Reset form
       form.reset()
@@ -404,11 +521,15 @@ export default function OriginalAddPage() {
         description: errorMessage,
         variant: "destructive",
       })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
     <div className="w-full">
+      <DatabaseConnectionStatus />
+
       <Tabs defaultValue="figures" className="w-full" value={activeTab} onValueChange={setActiveTab}>
         <div className="flex justify-center mb-6">
           <TabsList>
@@ -432,7 +553,7 @@ export default function OriginalAddPage() {
                 <Alert className="mb-6 bg-neon-green/20 border-neon-green">
                   <CheckCircle className="h-4 w-4 text-neon-green" />
                   <AlertDescription className="text-neon-green font-medium">
-                    Added! Item has been successfully added to your collection.
+                    Added! Item has been successfully added to your collection and database.
                   </AlertDescription>
                 </Alert>
               )}
@@ -606,8 +727,12 @@ export default function OriginalAddPage() {
                   <Button type="button" variant="outline">
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-neon-green text-black hover:bg-neon-green/90">
-                    Add to Checklist
+                  <Button
+                    type="submit"
+                    className="bg-neon-green text-black hover:bg-neon-green/90"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Saving..." : "Add to Checklist"}
                   </Button>
                 </div>
               </form>
@@ -623,7 +748,7 @@ export default function OriginalAddPage() {
                 <Alert className="mb-6 bg-neon-green/20 border-neon-green">
                   <CheckCircle className="h-4 w-4 text-neon-green" />
                   <AlertDescription className="text-neon-green font-medium">
-                    Added! Item Has Been Successfully Added To Your Wishlist.
+                    Added! Item Has Been Successfully Added To Your Wishlist and Database.
                   </AlertDescription>
                 </Alert>
               )}
@@ -748,8 +873,12 @@ export default function OriginalAddPage() {
                   <Button type="button" variant="outline">
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-neon-green text-black hover:bg-neon-green/90">
-                    Add to Wishlist
+                  <Button
+                    type="submit"
+                    className="bg-neon-green text-black hover:bg-neon-green/90"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Saving..." : "Add to Wishlist"}
                   </Button>
                 </div>
               </form>
@@ -765,7 +894,7 @@ export default function OriginalAddPage() {
                 <Alert className="mb-6 bg-neon-green/20 border-neon-green">
                   <CheckCircle className="h-4 w-4 text-neon-green" />
                   <AlertDescription className="text-neon-green font-medium">
-                    Added! Custom item has been successfully added to your customs collection.
+                    Added! Custom item has been successfully added to your customs collection and database.
                   </AlertDescription>
                 </Alert>
               )}
@@ -831,8 +960,12 @@ export default function OriginalAddPage() {
                   <Button type="button" variant="outline">
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-neon-green text-black hover:bg-neon-green/90">
-                    Add to Customs
+                  <Button
+                    type="submit"
+                    className="bg-neon-green text-black hover:bg-neon-green/90"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Saving..." : "Add to Customs"}
                   </Button>
                 </div>
               </form>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { CalendarIcon, Play, Plus } from "lucide-react"
@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
 import { MovieNewsFeed } from "@/components/movie-news-feed"
 import { ImageUploadField } from "@/components/image-upload-field"
+import { useAuth } from "@/contexts/auth-context"
+import { DatabaseConnectionStatus } from "@/components/database-connection-status"
 
 interface MovieAnniversary {
   id: string
@@ -29,6 +31,7 @@ interface MovieAnniversary {
 
 export default function RewindPage() {
   const { toast } = useToast()
+  const { user } = useAuth()
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [movieTitle, setMovieTitle] = useState("")
   const [releaseDate, setReleaseDate] = useState<Date | undefined>(undefined)
@@ -38,6 +41,41 @@ export default function RewindPage() {
   const [comments, setComments] = useState("")
   const [anniversaries, setAnniversaries] = useState<MovieAnniversary[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Cargar aniversarios desde la base de datos al montar el componente
+  useEffect(() => {
+    const loadAnniversaries = async () => {
+      if (user) {
+        try {
+          console.log("Fetching movie anniversaries for user:", user.uid)
+          const response = await fetch(`/api/movie-anniversaries?userId=${user.uid}`)
+
+          if (!response.ok) {
+            const errorText = await response.text()
+            console.error(`Error loading anniversaries: Status ${response.status}, ${errorText}`)
+            throw new Error(`Error loading anniversaries: ${response.statusText}`)
+          }
+
+          const data = await response.json()
+          console.log("Received anniversaries data:", data)
+
+          // Convertir las fechas de string a Date
+          const formattedAnniversaries = data.anniversaries.map((anniv: any) => ({
+            ...anniv,
+            id: anniv.originalId || anniv.id.toString(),
+            releaseDate: new Date(anniv.releaseDate),
+          }))
+
+          setAnniversaries(formattedAnniversaries)
+        } catch (error) {
+          console.error("Error loading anniversaries:", error)
+        }
+      }
+    }
+
+    loadAnniversaries()
+  }, [user])
 
   // Calcular efemérides para la fecha seleccionada
   const todayAnniversaries = anniversaries.filter(
@@ -45,7 +83,7 @@ export default function RewindPage() {
   )
 
   // Asegurarse de que la función handleAddAnniversary use la URL de la imagen
-  const handleAddAnniversary = () => {
+  const handleAddAnniversary = async () => {
     if (!movieTitle || !releaseDate || !poster) {
       toast({
         title: "Error",
@@ -64,21 +102,62 @@ export default function RewindPage() {
       comments,
     }
 
-    setAnniversaries([...anniversaries, newAnniversary])
+    try {
+      setIsSubmitting(true)
 
-    // Reset form
-    setMovieTitle("")
-    setReleaseDate(undefined)
-    setPoster("")
-    setPosterPreview("")
-    setTrailer("")
-    setComments("")
-    setIsDialogOpen(false)
+      // Guardar en el estado local
+      setAnniversaries([...anniversaries, newAnniversary])
 
-    toast({
-      title: "Added!",
-      description: "Movie anniversary has been added.",
-    })
+      // Guardar en la base de datos
+      if (user) {
+        const dbAnniversary = {
+          originalId: newAnniversary.id,
+          title: newAnniversary.title,
+          releaseDate: newAnniversary.releaseDate.toISOString().split("T")[0], // Formato YYYY-MM-DD
+          poster: newAnniversary.poster,
+          trailer: newAnniversary.trailer,
+          comments: newAnniversary.comments,
+          userId: user.uid,
+        }
+
+        const response = await fetch("/api/movie-anniversaries", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dbAnniversary),
+        })
+
+        if (!response.ok) {
+          throw new Error(`Error saving to database: ${response.statusText}`)
+        }
+
+        console.log("Movie anniversary saved to database successfully")
+      }
+
+      // Reset form
+      setMovieTitle("")
+      setReleaseDate(undefined)
+      setPoster("")
+      setPosterPreview("")
+      setTrailer("")
+      setComments("")
+      setIsDialogOpen(false)
+
+      toast({
+        title: "Added!",
+        description: "Movie anniversary has been added to your collection and database.",
+      })
+    } catch (error) {
+      console.error("Error adding movie anniversary:", error)
+      toast({
+        title: "Error",
+        description: "Failed to add movie anniversary. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const getYearsSince = (date: Date) => {
@@ -91,6 +170,8 @@ export default function RewindPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Cinema Milestones & News</h1>
       </div>
+
+      <DatabaseConnectionStatus />
 
       <div className="grid gap-6 md:grid-cols-2 mb-10">
         {/* Efemérides Today - Ahora primero */}
@@ -214,7 +295,7 @@ export default function RewindPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="trailer">Trailer URL</Label>
+                          <Label htmlFor="trailer">Trailer</Label>
                           <Input
                             id="trailer"
                             value={trailer}
@@ -240,8 +321,9 @@ export default function RewindPage() {
                         <Button
                           className="bg-neon-green text-black hover:bg-neon-green/90"
                           onClick={handleAddAnniversary}
+                          disabled={isSubmitting}
                         >
-                          Add Anniversary
+                          {isSubmitting ? "Saving..." : "Add Anniversary"}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
