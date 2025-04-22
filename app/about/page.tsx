@@ -81,14 +81,14 @@ export default function AboutPage() {
             <div className="max-w-2xl text-center">
               <div className="mb-8 space-y-4">
                 <p>
-                  Hi, I'm Opaco Pérez — a passionate horror figure collector, lifelong horror film enthusiast, proud
-                  dad and rugbier.
+                  Hi, I'm Opaco Pérez — a passionate horror figure collector, lifelong horror film enthusiast, proud dad
+                  and rugbier.
                 </p>
                 <p>
                   I've been immersed in the world of horror since I can remember. Beyond collecting, I've given talks at
                   Comic-Con about the history of horror cinema, combining my love for storytelling with a deep
-                  appreciation for the genre's evolution. I also share horror movie reviews on social
-                  media, where I connect with fellow fans from around the world.
+                  appreciation for the genre's evolution. I also share horror movie reviews on social media, where I
+                  connect with fellow fans from around the world.
                 </p>
                 <p>
                   This app was born from a personal need — I wanted a way to keep my growing horror collection

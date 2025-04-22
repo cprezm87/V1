@@ -1130,9 +1130,9 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="pt" id="pt" />
-                          <Label htmlFor="pt" className="flex items-center">
-                            <Globe className="mr-2 h-4 w-4" /> Portuguese
+                          <RadioGroupItem value="es" id="es" />
+                          <Label htmlFor="es" className="flex items-center">
+                            <Globe className="mr-2 h-4 w-4" /> Spanish
                           </Label>
                         </div>
 
@@ -1144,9 +1144,9 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="it" id="it" />
-                          <Label htmlFor="it" className="flex items-center">
-                            <Globe className="mr-2 h-4 w-4" /> Italian
+                          <RadioGroupItem value="fr" id="fr" />
+                          <Label htmlFor="fr" className="flex items-center">
+                            <Globe className="mr-2 h-4 w-4" /> French
                           </Label>
                         </div>
                       </RadioGroup>
@@ -1161,16 +1161,9 @@ export default function SettingsPage() {
                         className="flex flex-col space-y-4"
                       >
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="es" id="es" />
-                          <Label htmlFor="es" className="flex items-center">
-                            <Globe className="mr-2 h-4 w-4" /> Spanish
-                          </Label>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="fr" id="fr" />
-                          <Label htmlFor="fr" className="flex items-center">
-                            <Globe className="mr-2 h-4 w-4" /> French
+                          <RadioGroupItem value="de" id="de" />
+                          <Label htmlFor="de" className="flex items-center">
+                            <Globe className="mr-2 h-4 w-4" /> German
                           </Label>
                         </div>
 
@@ -1182,9 +1175,16 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="de" id="de" />
-                          <Label htmlFor="de" className="flex items-center">
-                            <Globe className="mr-2 h-4 w-4" /> German
+                          <RadioGroupItem value="pt" id="pt" />
+                          <Label htmlFor="pt" className="flex items-center">
+                            <Globe className="mr-2 h-4 w-4" /> Portuguese
+                          </Label>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="it" id="it" />
+                          <Label htmlFor="it" className="flex items-center">
+                            <Globe className="mr-2 h-4 w-4" /> Italian
                           </Label>
                         </div>
                       </RadioGroup>
