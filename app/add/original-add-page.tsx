@@ -231,6 +231,33 @@ export default function OriginalAddPage() {
     }
 
     try {
+      // Send data to Zapier webhook
+      await fetch("https://hooks.zapier.com/hooks/catch/22623944/2xlyjjw/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          Id: newFigure.id,
+          Name: newFigure.name,
+          Type: newFigure.type,
+          Franchise: newFigure.franchise,
+          Brand: newFigure.brand,
+          Serie: newFigure.serie,
+          YearReleased: newFigure.yearReleased,
+          Condition: newFigure.condition,
+          Price: newFigure.price,
+          YearPurchase: newFigure.yearPurchase,
+          UPC: newFigure.upc,
+          Logo: newFigure.logo,
+          Photo: newFigure.photo,
+          Tagline: newFigure.tagline,
+          Review: newFigure.review,
+          Shelf: newFigure.shelf,
+          Display: newFigure.display,
+          Ranking: newFigure.ranking,
+          Comments: newFigure.comments,
+        }),
+      })
+
       // Save to localStorage only
       setFigureItems([...figureItems, newFigure])
       setNextId(nextId + 1)
@@ -308,6 +335,30 @@ export default function OriginalAddPage() {
     }
 
     try {
+      // Send data to Zapier webhook
+      await fetch("https://hooks.zapier.com/hooks/catch/22623944/2xlyjjw/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          Id: newWishlistItem.id,
+          Name: newWishlistItem.name,
+          Type: newWishlistItem.type,
+          Franchise: newWishlistItem.franchise,
+          Brand: newWishlistItem.brand,
+          Serie: newWishlistItem.serie,
+          YearReleased: newWishlistItem.yearReleased,
+          Price: newWishlistItem.price,
+          Logo: newWishlistItem.logo,
+          Photo: newWishlistItem.photo,
+          Tagline: newWishlistItem.tagline,
+          Review: newWishlistItem.review,
+          Released: newWishlistItem.released,
+          Buy: newWishlistItem.buy,
+          TrackingNumber: newWishlistItem.trackingNumber,
+          Comments: newWishlistItem.comments,
+        }),
+      })
+
       // Save to localStorage only
       setWishlistItems([...wishlistItems, newWishlistItem])
       setNextId(nextId + 1)
@@ -374,6 +425,23 @@ export default function OriginalAddPage() {
     }
 
     try {
+      // Send data to Zapier webhook
+      await fetch("https://hooks.zapier.com/hooks/catch/22623944/2xlyjjw/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          Id: newCustomItem.id,
+          Name: newCustomItem.name,
+          Type: newCustomItem.type,
+          Franchise: newCustomItem.franchise,
+          Head: newCustomItem.head,
+          Body: newCustomItem.body,
+          Logo: newCustomItem.logo,
+          Tagline: newCustomItem.tagline,
+          Comments: newCustomItem.comments,
+        }),
+      })
+
       // Save to localStorage only
       setCustomItems([...customItems, newCustomItem])
       setNextId(nextId + 1)

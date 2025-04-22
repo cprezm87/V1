@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Edit, Trash2, ArrowUpDown, MoreHorizontal, Star, ArrowLeft, X } from "lucide-react"
+import { Search, Edit, Trash2, ArrowUpDown, MoreHorizontal, Star, ArrowLeft, X, RefreshCw } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -591,6 +591,36 @@ export default function ChecklistPage() {
 
                       {/* Action Buttons */}
                       <div className="flex justify-end space-x-4 mt-4">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            // Importación dinámica para evitar problemas de SSR
+                            import("@/lib/zapier-service").then(({ sendItemToZapier }) => {
+                              toast({
+                                title: "Sincronizando...",
+                                description: `Enviando ${selectedItem.name} a Zapier`,
+                              })
+
+                              sendItemToZapier(selectedItem).then((result) => {
+                                if (result.success) {
+                                  toast({
+                                    title: "Sincronización completada",
+                                    description: `${selectedItem.name} ha sido enviado correctamente a Zapier`,
+                                  })
+                                } else {
+                                  toast({
+                                    title: "Error de sincronización",
+                                    description: result.message,
+                                    variant: "destructive",
+                                  })
+                                }
+                              })
+                            })
+                          }}
+                        >
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Sincronizar con Zapier
+                        </Button>
                         <Button variant="outline" onClick={() => handleEditItem(selectedItem)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
