@@ -21,6 +21,7 @@ import { ImageUploadField } from "@/components/image-upload-field"
 
 // Añadir la importación del cliente de Supabase al inicio del archivo:
 import { supabase } from "@/lib/supabaseClient"
+import { executeQuery } from "@/lib/neonDb"
 
 // Display options based on shelf selection
 const displayOptions = {
@@ -235,30 +236,68 @@ export default function OriginalAddPage() {
       setNextId(nextId + 1)
 
       // Guardar en Supabase
-      const { data, error } = await supabase.from("figures").insert([
-        {
-          name: newFigure.name,
-          type: newFigure.type,
-          franchise: newFigure.franchise,
-          brand: newFigure.brand,
-          serie: newFigure.serie,
-          yearReleased: newFigure.yearReleased,
-          condition: newFigure.condition,
-          price: newFigure.price,
-          yearPurchase: newFigure.yearPurchase,
-          upc: newFigure.upc,
-          logo: newFigure.logo,
-          photo: newFigure.photo,
-          tagline: newFigure.tagline,
-          review: newFigure.review,
-          shelf: newFigure.shelf,
-          display: newFigure.display,
-          ranking: newFigure.ranking,
-          comments: newFigure.comments,
-        },
-      ])
+      try {
+        const { data, error } = await supabase.from("figures").insert([
+          {
+            name: newFigure.name,
+            type: newFigure.type,
+            franchise: newFigure.franchise,
+            brand: newFigure.brand,
+            serie: newFigure.serie,
+            yearReleased: newFigure.yearReleased,
+            condition: newFigure.condition,
+            price: newFigure.price,
+            yearPurchase: newFigure.yearPurchase,
+            upc: newFigure.upc,
+            logo: newFigure.logo,
+            photo: newFigure.photo,
+            tagline: newFigure.tagline,
+            review: newFigure.review,
+            shelf: newFigure.shelf,
+            display: newFigure.display,
+            ranking: newFigure.ranking,
+            comments: newFigure.comments,
+          },
+        ])
 
-      if (error) throw error
+        if (error) console.error("Supabase error:", error)
+      } catch (supabaseError) {
+        console.error("Error saving to Supabase:", supabaseError)
+        // Continue execution - don't block on Supabase error
+      }
+
+      // Guardar en Neon
+      try {
+        await executeQuery(
+          `INSERT INTO figures (
+            name, type, franchise, brand, serie, yearreleased, condition, price, 
+            yearpurchase, upc, logo, photo, tagline, review, shelf, display, ranking, comments
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+          [
+            newFigure.name,
+            newFigure.type,
+            newFigure.franchise,
+            newFigure.brand,
+            newFigure.serie,
+            newFigure.yearReleased,
+            newFigure.condition,
+            newFigure.price,
+            newFigure.yearPurchase,
+            newFigure.upc,
+            newFigure.logo,
+            newFigure.photo,
+            newFigure.tagline,
+            newFigure.review,
+            newFigure.shelf,
+            newFigure.display,
+            newFigure.ranking,
+            newFigure.comments,
+          ],
+        )
+      } catch (neonError) {
+        console.error("Error saving to Neon:", neonError)
+        // Continue execution - don't block on Neon error
+      }
 
       // Reset form
       form.reset()
@@ -273,13 +312,13 @@ export default function OriginalAddPage() {
 
       toast({
         title: t("add.added"),
-        description: t("add.itemAdded") + " (Saved to Supabase)",
+        description: t("add.itemAdded") + " (Saved to localStorage and available databases)",
       })
     } catch (error) {
       console.error("Error adding figure:", error)
       toast({
         title: "Error",
-        description: "Failed to add item to database. Please try again.",
+        description: "Failed to add item. Please try again.",
         variant: "destructive",
       })
     }
@@ -353,6 +392,31 @@ export default function OriginalAddPage() {
 
       if (error) throw error
 
+      // Guardar en Neon
+      await executeQuery(
+        `INSERT INTO wishlist (
+          name, type, franchise, brand, serie, yearreleased, price, logo, photo, 
+          tagline, review, released, buy, comments, trackingnumber
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+        [
+          newWishlistItem.name,
+          newWishlistItem.type,
+          newWishlistItem.franchise,
+          newWishlistItem.brand,
+          newWishlistItem.serie,
+          newWishlistItem.yearReleased,
+          newWishlistItem.price,
+          newWishlistItem.logo,
+          newWishlistItem.photo,
+          newWishlistItem.tagline,
+          newWishlistItem.review,
+          newWishlistItem.released,
+          newWishlistItem.buy,
+          newWishlistItem.comments,
+          newWishlistItem.trackingNumber,
+        ],
+      )
+
       // Reset form
       form.reset()
       setWishlistLogoPreview("")
@@ -364,7 +428,7 @@ export default function OriginalAddPage() {
 
       toast({
         title: "Added!",
-        description: "Item Has Been Successfully Added To Your Wishlist" + " (Saved to Supabase)",
+        description: "Item Has Been Successfully Added To Your Wishlist" + " (Saved to Neon and Supabase)",
       })
     } catch (error) {
       console.error("Error adding wishlist item:", error)
@@ -428,6 +492,23 @@ export default function OriginalAddPage() {
 
       if (error) throw error
 
+      // Guardar en Neon
+      await executeQuery(
+        `INSERT INTO customs (
+          name, type, franchise, head, body, logo, tagline, comments
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          newCustomItem.name,
+          newCustomItem.type,
+          newCustomItem.franchise,
+          newCustomItem.head,
+          newCustomItem.body,
+          newCustomItem.logo,
+          newCustomItem.tagline,
+          newCustomItem.comments,
+        ],
+      )
+
       // Reset form
       form.reset()
       setCustomLogoPreview("")
@@ -438,7 +519,7 @@ export default function OriginalAddPage() {
 
       toast({
         title: t("add.added"),
-        description: t("add.itemAdded") + " (Saved to Supabase)",
+        description: t("add.itemAdded") + " (Saved to Neon and Supabase)",
       })
     } catch (error) {
       console.error("Error adding custom item:", error)
@@ -456,7 +537,7 @@ export default function OriginalAddPage() {
         <div className="flex justify-center mb-6">
           <TabsList>
             <TabsTrigger value="figures" className="px-8">
-              Figures
+              Checklist
             </TabsTrigger>
             <TabsTrigger value="wishlist" className="px-8">
               Wishlist

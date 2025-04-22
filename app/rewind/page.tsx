@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { CalendarIcon, Play, Plus } from "lucide-react"
@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
 import { MovieNewsFeed } from "@/components/movie-news-feed"
 import { ImageUploadField } from "@/components/image-upload-field"
+import { executeQuery } from "@/lib/neonDb"
 
 interface MovieAnniversary {
   id: string
@@ -39,13 +40,48 @@ export default function RewindPage() {
   const [anniversaries, setAnniversaries] = useState<MovieAnniversary[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
+  // Load anniversaries from the database
+  useEffect(() => {
+    const loadAnniversaries = async () => {
+      try {
+        // Use the executeQuery function with the updated syntax
+        const result = await executeQuery("SELECT * FROM movie_anniversaries", [])
+
+        if (result && result.length > 0) {
+          const dbAnniversaries = result.map((item: any) => ({
+            id: item.id.toString(),
+            title: item.title,
+            releaseDate: new Date(item.release_date),
+            poster: item.poster,
+            trailer: item.trailer,
+            comments: item.comments,
+          }))
+
+          setAnniversaries(dbAnniversaries)
+        }
+      } catch (error) {
+        console.error("Error loading anniversaries:", error)
+        // Fall back to localStorage or default data if available
+        const storedAnniversaries = localStorage.getItem("movieAnniversaries")
+        if (storedAnniversaries) {
+          try {
+            setAnniversaries(JSON.parse(storedAnniversaries))
+          } catch (parseError) {
+            console.error("Error parsing stored anniversaries:", parseError)
+          }
+        }
+      }
+    }
+
+    loadAnniversaries()
+  }, [])
+
   // Calcular efemérides para la fecha seleccionada
   const todayAnniversaries = anniversaries.filter(
     (movie) => movie.releaseDate.getDate() === date?.getDate() && movie.releaseDate.getMonth() === date?.getMonth(),
   )
 
-  // Asegurarse de que la función handleAddAnniversary use la URL de la imagen
-  const handleAddAnniversary = () => {
+  const handleAddAnniversary = async () => {
     if (!movieTitle || !releaseDate || !poster) {
       toast({
         title: "Error",
@@ -55,30 +91,47 @@ export default function RewindPage() {
       return
     }
 
-    const newAnniversary: MovieAnniversary = {
-      id: Date.now().toString(),
-      title: movieTitle,
-      releaseDate,
-      poster,
-      trailer,
-      comments,
+    try {
+      // Save to local state first
+      const newAnniversary: MovieAnniversary = {
+        id: Date.now().toString(),
+        title: movieTitle,
+        releaseDate,
+        poster,
+        trailer,
+        comments,
+      }
+
+      setAnniversaries([...anniversaries, newAnniversary])
+
+      // Save to Neon database using the updated syntax
+      await executeQuery(
+        `INSERT INTO movie_anniversaries (title, release_date, poster, trailer, comments) 
+        VALUES ($1, $2, $3, $4, $5)`,
+        [movieTitle, releaseDate, poster, trailer, comments],
+      )
+
+      // Reset form
+      setMovieTitle("")
+      setReleaseDate(undefined)
+      setPoster("")
+      setPosterPreview("")
+      setTrailer("")
+      setComments("")
+      setIsDialogOpen(false)
+
+      toast({
+        title: "Added!",
+        description: "Movie anniversary has been added to the database.",
+      })
+    } catch (error) {
+      console.error("Error saving movie anniversary:", error)
+      toast({
+        title: "Error",
+        description: "Failed to save to database. Please try again.",
+        variant: "destructive",
+      })
     }
-
-    setAnniversaries([...anniversaries, newAnniversary])
-
-    // Reset form
-    setMovieTitle("")
-    setReleaseDate(undefined)
-    setPoster("")
-    setPosterPreview("")
-    setTrailer("")
-    setComments("")
-    setIsDialogOpen(false)
-
-    toast({
-      title: "Added!",
-      description: "Movie anniversary has been added.",
-    })
   }
 
   const getYearsSince = (date: Date) => {
