@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
 import { MovieNewsFeed } from "@/components/movie-news-feed"
 import { ImageUploadField } from "@/components/image-upload-field"
+import { HorrorReviewChannels } from "@/components/horror-review-channels"
 
 interface MovieAnniversary {
   id: string
@@ -294,6 +295,11 @@ export default function RewindPage() {
       {/* Movies News Section */}
       <section className="mb-10">
         <MovieNewsFeed />
+      </section>
+
+      {/* Horror Review Channels Section */}
+      <section className="mb-10">
+        <HorrorReviewChannels />
       </section>
     </div>
   )

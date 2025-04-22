@@ -322,15 +322,19 @@ export default function ChecklistPage() {
                       {selectedItem.review && (
                         <div>
                           <p className="text-sm font-medium text-neon-green mb-2">Review:</p>
-                          <div className="aspect-video w-full overflow-hidden">
+                          <div className="aspect-video w-full overflow-hidden relative">
                             <iframe
                               width="100%"
                               height="100%"
-                              src={selectedItem.review.replace("watch?v=", "embed/")}
+                              src={
+                                selectedItem.review.replace("watch?v=", "embed/") +
+                                "?autoplay=0&modestbranding=1&rel=0&showinfo=0"
+                              }
                               title="YouTube video player"
                               frameBorder="0"
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               allowFullScreen
+                              className="absolute inset-0 w-full h-full object-cover"
                             ></iframe>
                           </div>
                         </div>

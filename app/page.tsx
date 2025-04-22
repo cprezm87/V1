@@ -9,6 +9,7 @@ import { useTheme } from "@/contexts/theme-context"
 import { EnhancedNewsFeed } from "@/components/enhanced-news-feed"
 import { BrandNewsFeed } from "@/components/brand-news-feed"
 import { StoreNewsFeed } from "@/components/store-news-feed"
+import { FigureTubeFeed } from "@/components/figure-tube-feed"
 
 interface FigureItem {
   id: string
@@ -138,6 +139,11 @@ export default function Home() {
       {/* Figure Stores Section */}
       <section className="mb-10">
         <StoreNewsFeed />
+      </section>
+
+      {/* FigureTube Section */}
+      <section className="mb-10">
+        <FigureTubeFeed />
       </section>
     </div>
   )
