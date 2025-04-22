@@ -1,9 +1,9 @@
 "use client"
 
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useToast } from "@/components/ui/use-toast"
 
-// Define interfaces for data types
+// Definir interfaces para los tipos de datos
 interface FigureItem {
   id: string | number
   name: string
@@ -57,7 +57,7 @@ interface CustomItem {
   comments?: string
 }
 
-// Define the context type
+// Definir el tipo para el contexto
 interface SupabaseCollectionContextType {
   figures: FigureItem[]
   wishlist: WishlistItem[]
@@ -72,65 +72,80 @@ interface SupabaseCollectionContextType {
   deleteCustomItem: (id: string | number) => Promise<void>
 }
 
-// Create the context
+// Crear el contexto
 const SupabaseCollectionContext = createContext<SupabaseCollectionContextType | undefined>(undefined)
 
-// Context provider
+// Proveedor del contexto
 export function SupabaseCollectionProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast()
   const [figures, setFigures] = useState<FigureItem[]>([])
   const [wishlist, setWishlist] = useState<WishlistItem[]>([])
   const [customs, setCustoms] = useState<CustomItem[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Function to load figures from Supabase
+  // Cargar datos al montar el componente
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await Promise.all([refreshFigures(), refreshWishlist(), refreshCustoms()])
+      } catch (error) {
+        console.error("Error loading initial data:", error)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  // Función para cargar figuras desde Supabase
   const refreshFigures = async () => {
     try {
       setLoading(true)
-      // Mock data for now
+      // Simulate data fetch or use actual Supabase client
+      // For now, we'll just use an empty array to prevent errors
       setFigures([])
     } catch (error: any) {
       console.error("Error loading figures:", error)
-      setError(error.message)
+      setError(error.message || "Error loading figures")
     } finally {
       setLoading(false)
     }
   }
 
-  // Function to load wishlist from Supabase
+  // Función para cargar wishlist desde Supabase
   const refreshWishlist = async () => {
     try {
       setLoading(true)
-      // Mock data for now
+      // Simulate data fetch
       setWishlist([])
     } catch (error: any) {
       console.error("Error loading wishlist:", error)
-      setError(error.message)
+      setError(error.message || "Error loading wishlist")
     } finally {
       setLoading(false)
     }
   }
 
-  // Function to load customs from Supabase
+  // Función para cargar customs desde Supabase
   const refreshCustoms = async () => {
     try {
       setLoading(true)
-      // Mock data for now
+      // Simulate data fetch
       setCustoms([])
     } catch (error: any) {
       console.error("Error loading customs:", error)
-      setError(error.message)
+      setError(error.message || "Error loading customs")
     } finally {
       setLoading(false)
     }
   }
 
-  // Function to delete a figure
+  // Función para eliminar una figura
   const deleteFigure = async (id: string | number) => {
     try {
-      // Mock deletion
+      // Simulate delete operation
       setFigures(figures.filter((figure) => figure.id !== id))
+
       toast({
         title: "Deleted",
         description: "Figure has been deleted from the database.",
@@ -145,11 +160,12 @@ export function SupabaseCollectionProvider({ children }: { children: ReactNode }
     }
   }
 
-  // Function to delete a wishlist item
+  // Función para eliminar un item de wishlist
   const deleteWishlistItem = async (id: string | number) => {
     try {
-      // Mock deletion
+      // Simulate delete operation
       setWishlist(wishlist.filter((item) => item.id !== id))
+
       toast({
         title: "Deleted",
         description: "Wishlist item has been deleted from the database.",
@@ -164,11 +180,12 @@ export function SupabaseCollectionProvider({ children }: { children: ReactNode }
     }
   }
 
-  // Function to delete a custom item
+  // Función para eliminar un custom item
   const deleteCustomItem = async (id: string | number) => {
     try {
-      // Mock deletion
+      // Simulate delete operation
       setCustoms(customs.filter((item) => item.id !== id))
+
       toast({
         title: "Deleted",
         description: "Custom item has been deleted from the database.",
@@ -204,7 +221,7 @@ export function SupabaseCollectionProvider({ children }: { children: ReactNode }
   )
 }
 
-// Hook to use the context
+// Hook para usar el contexto
 export function useSupabaseCollection() {
   const context = useContext(SupabaseCollectionContext)
   if (context === undefined) {
