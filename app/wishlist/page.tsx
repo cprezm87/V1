@@ -13,6 +13,10 @@ import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { ViewSelector } from "@/components/view-selector"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { convertGoogleDriveUrl } from "@/lib/utils"
 
 interface WishlistItem {
   id: string
@@ -67,6 +71,7 @@ export default function WishlistPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<WishlistItem | null>(null)
   const [activeTab, setActiveTab] = useState("figures")
+  const [viewMode, setViewMode] = useState("list") // list, grid, table, data-grid
 
   // Load items from localStorage on component mount
   useEffect(() => {
@@ -199,6 +204,294 @@ export default function WishlistPage() {
     setSelectedItem(null)
   }
 
+  // Render list view
+  const renderListView = (items: WishlistItem[]) => {
+    return (
+      <div className="space-y-2">
+        {items.length > 0 ? (
+          items.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-center justify-between p-3 border border-border rounded-md cursor-pointer hover:bg-muted"
+              onClick={() => handleItemClick(item)}
+            >
+              <p className="font-medium">{item.name}</p>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-[#111] border-[#222]">
+                  <DropdownMenuItem className="cursor-pointer" onSelect={(e) => e.preventDefault()}>
+                    Copy ID
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer flex items-center" onSelect={() => handleEditItem(item)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
+                    onClick={() => moveToChecklist(item)}
+                  >
+                    <MoveRight className="mr-2 h-4 w-4" />
+                    Move to Checklist
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
+                    onClick={() => handleDeleteItem(item.id)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            No {activeTab} found in your wishlist. Add some {activeTab} to your wishlist!
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Render grid view
+  const renderGridView = (items: WishlistItem[]) => {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {items.length > 0 ? (
+          items.map((item) => (
+            <Card
+              key={item.id}
+              className="cursor-pointer hover:border-neon-green transition-colors"
+              onClick={() => handleItemClick(item)}
+            >
+              <CardContent className="p-3">
+                <div className="relative h-40 w-full mb-2 bg-black/10 rounded-md overflow-hidden">
+                  {item.photo ? (
+                    <img
+                      src={convertGoogleDriveUrl(item.photo) || "/placeholder.svg"}
+                      alt={item.name}
+                      className="object-contain w-full h-full"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">No image</div>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-medium line-clamp-1">{item.name}</h3>
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {item.brand} - {item.franchise}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-neon-green">
+                      ${Number.parseInt(item.price || "0").toLocaleString("es-CO")}
+                    </p>
+                    <div className="flex gap-1">
+                      <Badge variant={item.released ? "success" : "destructive"} className="text-xs">
+                        {item.released ? "Released" : "Unreleased"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-8 text-muted-foreground">
+            No {activeTab} found in your wishlist. Add some {activeTab} to your wishlist!
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Render table view
+  const renderTableView = (items: WishlistItem[]) => {
+    return (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Brand</TableHead>
+              <TableHead>Franchise</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Year</TableHead>
+              <TableHead>Released</TableHead>
+              <TableHead>Buy</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.length > 0 ? (
+              items.map((item) => (
+                <TableRow
+                  key={item.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleItemClick(item)}
+                >
+                  <TableCell className="font-medium">{item.name}</TableCell>
+                  <TableCell>{item.brand}</TableCell>
+                  <TableCell>{item.franchise}</TableCell>
+                  <TableCell>${Number.parseInt(item.price || "0").toLocaleString("es-CO")}</TableCell>
+                  <TableCell>{item.yearReleased}</TableCell>
+                  <TableCell>
+                    {item.released ? (
+                      <Check className="h-4 w-4 text-neon-green" />
+                    ) : (
+                      <X className="h-4 w-4 text-red-500" />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {item.buy ? <Check className="h-4 w-4 text-neon-green" /> : <X className="h-4 w-4 text-red-500" />}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleEditItem(item)
+                      }}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        moveToChecklist(item)
+                      }}
+                    >
+                      <MoveRight className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteItem(item.id)
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  No {activeTab} found in your wishlist. Add some {activeTab} to your wishlist!
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  }
+
+  // Render data grid view
+  const renderDataGridView = (items: WishlistItem[]) => {
+    return (
+      <div className="border rounded-md overflow-hidden">
+        <div className="grid grid-cols-[1fr_1fr_1fr_100px_100px_80px_80px_120px] bg-muted p-2 border-b font-medium text-sm">
+          <div>Name</div>
+          <div>Brand</div>
+          <div>Franchise</div>
+          <div>Price</div>
+          <div>Year</div>
+          <div>Released</div>
+          <div>Buy</div>
+          <div className="text-right">Actions</div>
+        </div>
+        <div className="max-h-[600px] overflow-y-auto">
+          {items.length > 0 ? (
+            items.map((item) => (
+              <div
+                key={item.id}
+                className="grid grid-cols-[1fr_1fr_1fr_100px_100px_80px_80px_120px] p-2 border-b hover:bg-muted/50 cursor-pointer text-sm"
+                onClick={() => handleItemClick(item)}
+              >
+                <div className="truncate">{item.name}</div>
+                <div className="truncate">{item.brand}</div>
+                <div className="truncate">{item.franchise}</div>
+                <div>${Number.parseInt(item.price || "0").toLocaleString("es-CO")}</div>
+                <div>{item.yearReleased}</div>
+                <div>
+                  {item.released ? (
+                    <Check className="h-4 w-4 text-neon-green" />
+                  ) : (
+                    <X className="h-4 w-4 text-red-500" />
+                  )}
+                </div>
+                <div>
+                  {item.buy ? <Check className="h-4 w-4 text-neon-green" /> : <X className="h-4 w-4 text-red-500" />}
+                </div>
+                <div className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleEditItem(item)
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      moveToChecklist(item)
+                    }}
+                  >
+                    <MoveRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteItem(item.id)
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-8 text-center text-muted-foreground">
+              No {activeTab} found in your wishlist. Add some {activeTab} to your wishlist!
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Render the appropriate view based on viewMode
+  const renderView = (items: WishlistItem[]) => {
+    switch (viewMode) {
+      case "grid":
+        return renderGridView(items)
+      case "table":
+        return renderTableView(items)
+      case "data-grid":
+        return renderDataGridView(items)
+      case "list":
+      default:
+        return renderListView(items)
+    }
+  }
+
   return (
     <div className="w-full py-6 px-6">
       <div className="mb-8 flex items-center justify-between">
@@ -214,7 +507,7 @@ export default function WishlistPage() {
         </div>
       </div>
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium">Sort by:</span>
           <Select value={sortBy} onValueChange={setSortBy}>
@@ -228,11 +521,13 @@ export default function WishlistPage() {
               <SelectItem value="yearReleased">Year Released</SelectItem>
             </SelectContent>
           </Select>
+          <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}>
+            <ArrowUpDown className="mr-2 h-4 w-4" />
+            {sortOrder === "asc" ? "Ascending" : "Descending"}
+          </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}>
-          <ArrowUpDown className="mr-2 h-4 w-4" />
-          {sortOrder === "asc" ? "Ascending" : "Descending"}
-        </Button>
+
+        <ViewSelector currentView={viewMode} onViewChange={setViewMode} />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -266,7 +561,7 @@ export default function WishlistPage() {
                         <div className="w-full">
                           <div className="relative h-32 w-full overflow-hidden">
                             <img
-                              src={selectedItem.logo || "/placeholder.svg"}
+                              src={convertGoogleDriveUrl(selectedItem.logo) || "/placeholder.svg"}
                               alt={`${selectedItem.franchise} logo`}
                               className="object-contain w-full h-full"
                             />
@@ -285,7 +580,7 @@ export default function WishlistPage() {
                         <div className="w-full">
                           <div className="relative h-80 w-full overflow-hidden">
                             <img
-                              src={selectedItem.photo || "/placeholder.svg"}
+                              src={convertGoogleDriveUrl(selectedItem.photo) || "/placeholder.svg"}
                               alt={selectedItem.name}
                               className="object-contain w-full h-full"
                             />
@@ -319,7 +614,7 @@ export default function WishlistPage() {
                           <p className="text-sm font-medium text-neon-green">
                             Price:{" "}
                             <span className="font-normal text-white">
-                              ${Number.parseInt(selectedItem.price).toLocaleString("es-CO")}
+                              ${Number.parseInt(selectedItem.price || "0").toLocaleString("es-CO")}
                             </span>
                           </p>
                         </div>
@@ -401,58 +696,8 @@ export default function WishlistPage() {
                     </div>
                   </div>
                 ) : (
-                  // Item list view
-                  <div className="space-y-2">
-                    {getFilteredItems(type).length > 0 ? (
-                      getFilteredItems(type).map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex items-center justify-between p-3 border border-border rounded-md cursor-pointer hover:bg-muted"
-                          onClick={() => handleItemClick(item)}
-                        >
-                          <p className="font-medium">{item.name}</p>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-[#111] border-[#222]">
-                              <DropdownMenuItem className="cursor-pointer" onSelect={(e) => e.preventDefault()}>
-                                Copy ID
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer flex items-center"
-                                onSelect={() => handleEditItem(item)}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
-                                onClick={() => moveToChecklist(item)}
-                              >
-                                <MoveRight className="mr-2 h-4 w-4" />
-                                Move to Checklist
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
-                                onClick={() => handleDeleteItem(item.id)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No {type} found in your wishlist. Add some {type} to your wishlist!
-                      </div>
-                    )}
-                  </div>
+                  // Render the appropriate view based on viewMode
+                  renderView(getFilteredItems(type))
                 )}
               </CardContent>
             </Card>

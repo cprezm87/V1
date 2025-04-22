@@ -12,6 +12,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { ViewSelector } from "@/components/view-selector"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { convertGoogleDriveUrl } from "@/lib/utils"
 
 interface CustomItem {
   id: string
@@ -35,6 +38,7 @@ export default function CustomsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<CustomItem | null>(null)
   const [activeTab, setActiveTab] = useState("figures")
+  const [viewMode, setViewMode] = useState("list") // list, grid, table, data-grid
 
   // Load items from localStorage on component mount
   useEffect(() => {
@@ -113,6 +117,231 @@ export default function CustomsPage() {
     setSelectedItem(null)
   }
 
+  // Render list view
+  const renderListView = (items: CustomItem[]) => {
+    return (
+      <div className="space-y-2">
+        {items.length > 0 ? (
+          items.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-center justify-between p-3 border border-border rounded-md cursor-pointer hover:bg-muted"
+              onClick={() => handleItemClick(item)}
+            >
+              <p className="font-medium">{item.name}</p>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-[#111] border-[#222]">
+                  <DropdownMenuItem className="cursor-pointer" onSelect={(e) => e.preventDefault()}>
+                    Copy ID
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer flex items-center" onSelect={() => handleEditItem(item)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
+                    onClick={() => handleDeleteItem(item.id)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            No custom {activeTab} found. Add some custom {activeTab} to your collection!
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Render grid view
+  const renderGridView = (items: CustomItem[]) => {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {items.length > 0 ? (
+          items.map((item) => (
+            <Card
+              key={item.id}
+              className="cursor-pointer hover:border-neon-green transition-colors"
+              onClick={() => handleItemClick(item)}
+            >
+              <CardContent className="p-3">
+                <div className="relative h-40 w-full mb-2 bg-black/10 rounded-md overflow-hidden">
+                  {item.logo ? (
+                    <img
+                      src={convertGoogleDriveUrl(item.logo) || "/placeholder.svg"}
+                      alt={item.name}
+                      className="object-contain w-full h-full"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">No image</div>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-medium line-clamp-1">{item.name}</h3>
+                  <p className="text-xs text-muted-foreground line-clamp-1">{item.franchise}</p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-neon-green">Head: {item.head}</p>
+                    <p className="text-xs text-neon-green">Body: {item.body}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-8 text-muted-foreground">
+            No custom {activeTab} found. Add some custom {activeTab} to your collection!
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Render table view
+  const renderTableView = (items: CustomItem[]) => {
+    return (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Franchise</TableHead>
+              <TableHead>Head</TableHead>
+              <TableHead>Body</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.length > 0 ? (
+              items.map((item) => (
+                <TableRow
+                  key={item.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleItemClick(item)}
+                >
+                  <TableCell className="font-medium">{item.name}</TableCell>
+                  <TableCell>{item.franchise}</TableCell>
+                  <TableCell>{item.head}</TableCell>
+                  <TableCell>{item.body}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleEditItem(item)
+                      }}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteItem(item.id)
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  No custom {activeTab} found. Add some custom {activeTab} to your collection!
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  }
+
+  // Render data grid view
+  const renderDataGridView = (items: CustomItem[]) => {
+    return (
+      <div className="border rounded-md overflow-hidden">
+        <div className="grid grid-cols-[1fr_1fr_1fr_1fr_100px] bg-muted p-2 border-b font-medium text-sm">
+          <div>Name</div>
+          <div>Franchise</div>
+          <div>Head</div>
+          <div>Body</div>
+          <div className="text-right">Actions</div>
+        </div>
+        <div className="max-h-[600px] overflow-y-auto">
+          {items.length > 0 ? (
+            items.map((item) => (
+              <div
+                key={item.id}
+                className="grid grid-cols-[1fr_1fr_1fr_1fr_100px] p-2 border-b hover:bg-muted/50 cursor-pointer text-sm"
+                onClick={() => handleItemClick(item)}
+              >
+                <div className="truncate">{item.name}</div>
+                <div className="truncate">{item.franchise}</div>
+                <div className="truncate">{item.head}</div>
+                <div className="truncate">{item.body}</div>
+                <div className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleEditItem(item)
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteItem(item.id)
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-8 text-center text-muted-foreground">
+              No custom {activeTab} found. Add some custom {activeTab} to your collection!
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Render the appropriate view based on viewMode
+  const renderView = (items: CustomItem[]) => {
+    switch (viewMode) {
+      case "grid":
+        return renderGridView(items)
+      case "table":
+        return renderTableView(items)
+      case "data-grid":
+        return renderDataGridView(items)
+      case "list":
+      default:
+        return renderListView(items)
+    }
+  }
+
   return (
     <div className="w-full py-6 px-6">
       <div className="mb-8 flex items-center justify-between">
@@ -128,7 +357,7 @@ export default function CustomsPage() {
         </div>
       </div>
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium">Sort by:</span>
           <Select value={sortBy} onValueChange={setSortBy}>
@@ -140,11 +369,13 @@ export default function CustomsPage() {
               <SelectItem value="franchise">Franchise</SelectItem>
             </SelectContent>
           </Select>
+          <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}>
+            <ArrowUpDown className="mr-2 h-4 w-4" />
+            {sortOrder === "asc" ? "Ascending" : "Descending"}
+          </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}>
-          <ArrowUpDown className="mr-2 h-4 w-4" />
-          {sortOrder === "asc" ? "Ascending" : "Descending"}
-        </Button>
+
+        <ViewSelector currentView={viewMode} onViewChange={setViewMode} />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -178,7 +409,7 @@ export default function CustomsPage() {
                         <div className="w-full">
                           <div className="relative h-32 w-full overflow-hidden">
                             <img
-                              src={selectedItem.logo || "/placeholder.svg"}
+                              src={convertGoogleDriveUrl(selectedItem.logo) || "/placeholder.svg"}
                               alt={`${selectedItem.franchise} logo`}
                               className="object-contain w-full h-full"
                             />
@@ -238,51 +469,8 @@ export default function CustomsPage() {
                     </div>
                   </div>
                 ) : (
-                  // Item list view
-                  <div className="space-y-2">
-                    {getFilteredItems(type).length > 0 ? (
-                      getFilteredItems(type).map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex items-center justify-between p-3 border border-border rounded-md cursor-pointer hover:bg-muted"
-                          onClick={() => handleItemClick(item)}
-                        >
-                          <p className="font-medium">{item.name}</p>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-[#111] border-[#222]">
-                              <DropdownMenuItem className="cursor-pointer" onSelect={(e) => e.preventDefault()}>
-                                Copy ID
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer flex items-center"
-                                onSelect={() => handleEditItem(item)}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer text-neon-green focus:text-black focus:bg-neon-green"
-                                onClick={() => handleDeleteItem(item.id)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No custom {type} found. Add some custom {type} to your collection!
-                      </div>
-                    )}
-                  </div>
+                  // Render the appropriate view based on viewMode
+                  renderView(getFilteredItems(type))
                 )}
               </CardContent>
             </Card>
