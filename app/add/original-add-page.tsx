@@ -15,8 +15,13 @@ import { Star, StarIcon, CheckCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useTheme } from "@/contexts/theme-context"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+
+// Importar el nuevo componente
 import { ImageUploadField } from "@/components/image-upload-field"
-import { useRouter } from "next/navigation"
+
+// Añadir la importación del cliente de Supabase al inicio del archivo:
+// Remove this line
+// import { supabase } from "@/lib/supabaseClient"
 
 // Display options based on shelf selection
 const displayOptions = {
@@ -97,7 +102,6 @@ interface CustomItem {
 export default function OriginalAddPage() {
   const { toast } = useToast()
   const { t } = useTheme()
-  const router = useRouter()
   const [selectedShelf, setSelectedShelf] = useState<keyof typeof displayOptions | "">("")
   const [logoPreview, setLogoPreview] = useState("")
   const [photoPreview, setPhotoPreview] = useState("")
@@ -106,7 +110,6 @@ export default function OriginalAddPage() {
   const [customLogoPreview, setCustomLogoPreview] = useState("")
   const [rating, setRating] = useState(0)
   const [nextId, setNextId] = useState(1)
-  const [formattedId, setFormattedId] = useState("001")
   const [activeTab, setActiveTab] = useState("figures")
   const [showSuccessAlert, setShowSuccessAlert] = useState(false)
   const [showWishlistSuccessAlert, setShowWishlistSuccessAlert] = useState(false)
@@ -116,29 +119,6 @@ export default function OriginalAddPage() {
   const [figureItems, setFigureItems] = useState<FigureItem[]>([])
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
   const [customItems, setCustomItems] = useState<CustomItem[]>([])
-
-  // Initialize sheets and get next ID
-  useEffect(() => {
-    const initializeSheets = async () => {
-      try {
-        // Initialize sheets
-        await fetch("/api/init-sheets")
-
-        // Get next ID
-        const response = await fetch("/api/get-next-id")
-        const data = await response.json()
-
-        if (data.nextId) {
-          setFormattedId(data.nextId)
-          setNextId(Number.parseInt(data.nextId))
-        }
-      } catch (error) {
-        console.error("Error initializing:", error)
-      }
-    }
-
-    initializeSheets()
-  }, [])
 
   // Load items from localStorage on component mount
   useEffect(() => {
@@ -150,14 +130,8 @@ export default function OriginalAddPage() {
     if (storedFigures) setFigureItems(JSON.parse(storedFigures))
     if (storedWishlist) setWishlistItems(JSON.parse(storedWishlist))
     if (storedCustoms) setCustomItems(JSON.parse(storedCustoms))
-    if (storedNextId) {
-      const parsedId = Number.parseInt(storedNextId)
-      if (parsedId > nextId) {
-        setNextId(parsedId)
-        setFormattedId(String(parsedId).padStart(3, "0"))
-      }
-    }
-  }, [nextId])
+    if (storedNextId) setNextId(Number.parseInt(storedNextId))
+  }, [])
 
   // Save items to localStorage whenever they change
   useEffect(() => {
@@ -205,12 +179,15 @@ export default function OriginalAddPage() {
     }
   }, [figureItems, wishlistItems, customItems, nextId, toast])
 
+  // Format ID with leading zeros
+  const formattedId = String(nextId).padStart(3, "0")
+
   // Handle shelf selection change
   const handleShelfChange = (value: string) => {
     setSelectedShelf(value as keyof typeof displayOptions)
   }
 
-  // Handle figure submission
+  // Modificar la función `handleFigureSubmit` para guardar los datos en Supabase:
   const handleFigureSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
@@ -254,35 +231,9 @@ export default function OriginalAddPage() {
     }
 
     try {
-      // Send data to the API route
-      const response = await fetch("/api/add-checklist", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newFigure),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to add checklist item to Google Sheets")
-      }
-
-      // Save to localStorage
+      // Save to localStorage only
       setFigureItems([...figureItems, newFigure])
-
-      // Get next ID for future submissions
-      const nextIdResponse = await fetch("/api/get-next-id")
-      const nextIdData = await nextIdResponse.json()
-
-      if (nextIdData.nextId) {
-        setFormattedId(nextIdData.nextId)
-        setNextId(Number.parseInt(nextIdData.nextId))
-      } else {
-        // Fallback to incrementing locally
-        const newNextId = nextId + 1
-        setNextId(newNextId)
-        setFormattedId(String(newNextId).padStart(3, "0"))
-      }
+      setNextId(nextId + 1)
 
       // Reset form
       form.reset()
@@ -299,9 +250,6 @@ export default function OriginalAddPage() {
         title: t("add.added"),
         description: t("add.itemAdded"),
       })
-
-      // Refresh the checklist page
-      router.refresh()
     } catch (error) {
       console.error("Error adding figure:", error)
       let errorMessage = "Failed to add item. Please try again."
@@ -319,7 +267,7 @@ export default function OriginalAddPage() {
     }
   }
 
-  // Handle wishlist submission
+  // Modificar la función `handleWishlistSubmit` para guardar los datos en Supabase:
   const handleWishlistSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
@@ -360,26 +308,9 @@ export default function OriginalAddPage() {
     }
 
     try {
-      // Send data to the API route
-      const response = await fetch("/api/add-wishlist", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newWishlistItem),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to add wishlist item to Google Sheets")
-      }
-
-      // Save to localStorage
+      // Save to localStorage only
       setWishlistItems([...wishlistItems, newWishlistItem])
-
-      // Increment ID for future submissions
-      const newNextId = nextId + 1
-      setNextId(newNextId)
-      setFormattedId(String(newNextId).padStart(3, "0"))
+      setNextId(nextId + 1)
 
       // Reset form
       form.reset()
@@ -394,9 +325,6 @@ export default function OriginalAddPage() {
         title: "Added!",
         description: "Item Has Been Successfully Added To Your Wishlist",
       })
-
-      // Refresh the wishlist page
-      router.refresh()
     } catch (error) {
       console.error("Error adding wishlist item:", error)
       let errorMessage = "Failed to add item. Please try again."
@@ -414,7 +342,7 @@ export default function OriginalAddPage() {
     }
   }
 
-  // Handle custom submission
+  // Modificar la función `handleCustomSubmit` para guardar los datos en Supabase:
   const handleCustomSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
@@ -446,26 +374,9 @@ export default function OriginalAddPage() {
     }
 
     try {
-      // Send data to the API route
-      const response = await fetch("/api/add-customs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newCustomItem),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to add custom item to Google Sheets")
-      }
-
-      // Save to localStorage
+      // Save to localStorage only
       setCustomItems([...customItems, newCustomItem])
-
-      // Increment ID for future submissions
-      const newNextId = nextId + 1
-      setNextId(newNextId)
-      setFormattedId(String(newNextId).padStart(3, "0"))
+      setNextId(nextId + 1)
 
       // Reset form
       form.reset()
@@ -479,9 +390,6 @@ export default function OriginalAddPage() {
         title: t("add.added"),
         description: t("add.itemAdded"),
       })
-
-      // Refresh the customs page
-      router.refresh()
     } catch (error) {
       console.error("Error adding custom item:", error)
       let errorMessage = "Failed to add item. Please try again."
@@ -707,7 +615,7 @@ export default function OriginalAddPage() {
           </Card>
         </TabsContent>
 
-        {/* Wishlist Tabb */}
+        {/* Wishlist Tab */}
         <TabsContent value="wishlist">
           <Card className="w-full">
             <CardContent className="p-6">

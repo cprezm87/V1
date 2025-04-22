@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -19,7 +17,6 @@ import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
 import { MovieNewsFeed } from "@/components/movie-news-feed"
 import { ImageUploadField } from "@/components/image-upload-field"
-import { useRouter } from "next/navigation"
 
 interface MovieAnniversary {
   id: string
@@ -32,7 +29,6 @@ interface MovieAnniversary {
 
 export default function RewindPage() {
   const { toast } = useToast()
-  const router = useRouter()
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [movieTitle, setMovieTitle] = useState("")
   const [releaseDate, setReleaseDate] = useState<Date | undefined>(undefined)
@@ -48,67 +44,41 @@ export default function RewindPage() {
     (movie) => movie.releaseDate.getDate() === date?.getDate() && movie.releaseDate.getMonth() === date?.getMonth(),
   )
 
-  const handleAddAnniversary = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const formData = new FormData(form)
+  // Asegurarse de que la función handleAddAnniversary use la URL de la imagen
+  const handleAddAnniversary = () => {
+    if (!movieTitle || !releaseDate || !poster) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      })
+      return
+    }
 
     const newAnniversary: MovieAnniversary = {
       id: Date.now().toString(),
       title: movieTitle,
-      releaseDate: releaseDate || new Date(),
-      poster: poster,
-      trailer: trailer,
-      comments: comments,
+      releaseDate,
+      poster,
+      trailer,
+      comments,
     }
 
-    try {
-      // Send data to the API route
-      const response = await fetch("/api/add-anniversary", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newAnniversary),
-      })
+    setAnniversaries([...anniversaries, newAnniversary])
 
-      if (!response.ok) {
-        throw new Error("Failed to add anniversary item to Google Sheets")
-      }
+    // Reset form
+    setMovieTitle("")
+    setReleaseDate(undefined)
+    setPoster("")
+    setPosterPreview("")
+    setTrailer("")
+    setComments("")
+    setIsDialogOpen(false)
 
-      setAnniversaries([...anniversaries, newAnniversary])
-
-      // Reset form
-      setMovieTitle("")
-      setReleaseDate(undefined)
-      setPoster("")
-      setPosterPreview("")
-      setTrailer("")
-      setComments("")
-      setIsDialogOpen(false)
-
-      toast({
-        title: "Added!",
-        description: "Movie anniversary has been added.",
-      })
-
-      // Refresh the rewind page
-      router.refresh()
-    } catch (error) {
-      console.error("Error adding anniversary item:", error)
-      let errorMessage = "Failed to add item. Please try again."
-
-      // Provide more specific error messages for debugging
-      if (error instanceof Error) {
-        errorMessage = `Error: ${error.message}`
-      }
-
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      })
-    }
+    toast({
+      title: "Added!",
+      description: "Movie anniversary has been added.",
+    })
   }
 
   const getYearsSince = (date: Date) => {

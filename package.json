@@ -60,8 +60,7 @@
     "zod": "^3.24.1",
     "firebase": "latest",
     "@vercel/blob": "latest",
-    "@supabase/supabase-js": "latest",
-    "googleapis": "latest"
+    "@supabase/supabase-js": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
