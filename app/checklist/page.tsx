@@ -41,7 +41,7 @@ interface FigureItem {
 export default function ChecklistPage() {
   const { toast } = useToast()
   const [items, setItems] = useState<FigureItem[]>([])
-  const [sortBy, setSortBy] = useState("name")
+  const [sortBy, setSortBy] = useState("id")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedItem, setSelectedItem] = useState<FigureItem | null>(null)
