@@ -22,6 +22,7 @@ import { type VariantProps, cva } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { createContext, useContext, useState, type ReactNode } from "react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -32,75 +33,72 @@ const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
 interface SidebarContextType {
   isOpen: boolean
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
+  toggle: () => void
+  open: () => void
+  close: () => void
 }
 
-const SidebarContext = React.createContext<SidebarContextType | undefined>(undefined)
+const SidebarContext = createContext<SidebarContextType | undefined>(undefined)
 
-export function SidebarProvider({ children }: { children: React.ReactNode }) {
-  const [isOpen, setIsOpen] = React.useState(true)
+export function SidebarProvider({ children }: { children: ReactNode }) {
+  const [isOpen, setIsOpen] = useState(true)
 
-  return <SidebarContext.Provider value={{ isOpen, setIsOpen }}>{children}</SidebarContext.Provider>
+  const toggle = () => setIsOpen(!isOpen)
+  const open = () => setIsOpen(true)
+  const close = () => setIsOpen(false)
+
+  return <SidebarContext.Provider value={{ isOpen, toggle, open, close }}>{children}</SidebarContext.Provider>
 }
 
 export function useSidebar() {
-  const context = React.useContext(SidebarContext)
+  const context = useContext(SidebarContext)
   if (context === undefined) {
     throw new Error("useSidebar must be used within a SidebarProvider")
   }
   return context
 }
 
-interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-export function Sidebar({ className, ...props }: SidebarProps) {
+export function Sidebar({ children, className = "" }: { children: ReactNode; className?: string }) {
   const { isOpen } = useSidebar()
-
   return (
-    <div
-      className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 ease-in-out bg-sidebar dark:bg-sidebar",
-        isOpen ? "translate-x-0" : "-translate-x-full",
-        className,
-      )}
-      {...props}
-    />
+    <aside className={`${className} ${isOpen ? "w-64" : "w-16"} transition-width duration-300 ease-in-out`}>
+      {children}
+    </aside>
   )
 }
 
-interface SidebarHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-export function SidebarHeader({ className, ...props }: SidebarHeaderProps) {
-  return <div className={cn("p-4 border-b border-sidebar-border", className)} {...props} />
+export function SidebarHeader({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`${className}`}>{children}</div>
 }
 
-interface SidebarContentProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-export function SidebarContent({ className, ...props }: SidebarContentProps) {
-  return <div className={cn("flex-1 overflow-y-auto p-4", className)} {...props} />
+export function SidebarContent({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`${className}`}>{children}</div>
 }
 
-interface SidebarFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-export function SidebarFooter({ className, ...props }: SidebarFooterProps) {
-  return <div className={cn("p-4 border-t border-sidebar-border", className)} {...props} />
+export function SidebarFooter({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`${className}`}>{children}</div>
 }
 
-interface SidebarMenuProps extends React.HTMLAttributes<HTMLUListElement> {}
-
-export function SidebarMenu({ className, ...props }: SidebarMenuProps) {
-  return <ul className={cn("space-y-2", className)} {...props} />
+export function SidebarMenu({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <nav className={`${className}`}>{children}</nav>
 }
 
-interface SidebarMenuItemProps extends React.HTMLAttributes<HTMLLIElement> {}
+export function SidebarMenuItem({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`${className}`}>{children}</div>
+}
 
-export function SidebarMenuItem({ className, ...props }: SidebarMenuItemProps) {
-  return <li className={cn("", className)} {...props} />
+export function SidebarRail({ className = "" }: { className?: string }) {
+  const { toggle } = useSidebar()
+  return (
+    <div className={`${className} cursor-pointer`} onClick={toggle}>
+      <div className="h-full w-1 bg-sidebar-border"></div>
+    </div>
+  )
 }
 
 interface SidebarRailProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export function SidebarRail({ className, ...props }: SidebarRailProps) {
+export function SidebarRail_old({ className, ...props }: SidebarRailProps) {
   const { isOpen, setIsOpen } = useSidebar()
 
   return (
