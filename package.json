@@ -60,7 +60,6 @@
     "zod": "^3.24.1",
     "firebase": "latest",
     "@vercel/blob": "latest",
-    "@neondatabase/serverless": "latest",
     "@supabase/supabase-js": "latest"
   },
   "devDependencies": {

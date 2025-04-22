@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { supabase } from "@/lib/supabaseClient"
 import { useToast } from "@/components/ui/use-toast"
 
 // Definir interfaces para los tipos de datos
@@ -86,27 +87,22 @@ export function SupabaseCollectionProvider({ children }: { children: ReactNode }
 
   // Cargar datos al montar el componente
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        await Promise.all([refreshFigures(), refreshWishlist(), refreshCustoms()])
-      } catch (error) {
-        console.error("Error loading initial data:", error)
-      }
-    }
-
-    loadData()
+    refreshFigures()
+    refreshWishlist()
+    refreshCustoms()
   }, [])
 
   // Función para cargar figuras desde Supabase
   const refreshFigures = async () => {
     try {
       setLoading(true)
-      // Simulate data fetch or use actual Supabase client
-      // For now, we'll just use an empty array to prevent errors
-      setFigures([])
+      const { data, error } = await supabase.from("figures").select("*").order("id", { ascending: false })
+
+      if (error) throw error
+      setFigures(data || [])
     } catch (error: any) {
       console.error("Error loading figures:", error)
-      setError(error.message || "Error loading figures")
+      setError(error.message)
     } finally {
       setLoading(false)
     }
@@ -116,11 +112,13 @@ export function SupabaseCollectionProvider({ children }: { children: ReactNode }
   const refreshWishlist = async () => {
     try {
       setLoading(true)
-      // Simulate data fetch
-      setWishlist([])
+      const { data, error } = await supabase.from("wishlist").select("*").order("id", { ascending: false })
+
+      if (error) throw error
+      setWishlist(data || [])
     } catch (error: any) {
       console.error("Error loading wishlist:", error)
-      setError(error.message || "Error loading wishlist")
+      setError(error.message)
     } finally {
       setLoading(false)
     }
@@ -130,11 +128,13 @@ export function SupabaseCollectionProvider({ children }: { children: ReactNode }
   const refreshCustoms = async () => {
     try {
       setLoading(true)
-      // Simulate data fetch
-      setCustoms([])
+      const { data, error } = await supabase.from("customs").select("*").order("id", { ascending: false })
+
+      if (error) throw error
+      setCustoms(data || [])
     } catch (error: any) {
       console.error("Error loading customs:", error)
-      setError(error.message || "Error loading customs")
+      setError(error.message)
     } finally {
       setLoading(false)
     }
@@ -143,7 +143,11 @@ export function SupabaseCollectionProvider({ children }: { children: ReactNode }
   // Función para eliminar una figura
   const deleteFigure = async (id: string | number) => {
     try {
-      // Simulate delete operation
+      const { error } = await supabase.from("figures").delete().eq("id", id)
+
+      if (error) throw error
+
+      // Actualizar el estado local
       setFigures(figures.filter((figure) => figure.id !== id))
 
       toast({
@@ -163,7 +167,11 @@ export function SupabaseCollectionProvider({ children }: { children: ReactNode }
   // Función para eliminar un item de wishlist
   const deleteWishlistItem = async (id: string | number) => {
     try {
-      // Simulate delete operation
+      const { error } = await supabase.from("wishlist").delete().eq("id", id)
+
+      if (error) throw error
+
+      // Actualizar el estado local
       setWishlist(wishlist.filter((item) => item.id !== id))
 
       toast({
@@ -183,7 +191,11 @@ export function SupabaseCollectionProvider({ children }: { children: ReactNode }
   // Función para eliminar un custom item
   const deleteCustomItem = async (id: string | number) => {
     try {
-      // Simulate delete operation
+      const { error } = await supabase.from("customs").delete().eq("id", id)
+
+      if (error) throw error
+
+      // Actualizar el estado local
       setCustoms(customs.filter((item) => item.id !== id))
 
       toast({

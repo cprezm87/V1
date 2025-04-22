@@ -1,5 +1,4 @@
 "use client"
-
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -28,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
 
 // Menu items definition
 const menuItems = [
@@ -87,6 +87,7 @@ const menuItems = [
 export function AppSidebar() {
   const { logout, user } = useAuth()
   const { toast } = useToast()
+  const router = useRouter()
 
   const handleLogout = async () => {
     try {
