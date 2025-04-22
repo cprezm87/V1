@@ -1,7 +1,8 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Grid, Table, LayoutGrid, List } from "lucide-react"
+import { Table, LayoutGrid, List } from "lucide-react"
+import { useEffect } from "react"
 
 interface ViewSelectorProps {
   currentView: string
@@ -9,16 +10,23 @@ interface ViewSelectorProps {
 }
 
 export function ViewSelector({ currentView, onViewChange }: ViewSelectorProps) {
+  // Set default view to "table" when component mounts
+  useEffect(() => {
+    if (currentView !== "table") {
+      onViewChange("table")
+    }
+  }, [])
+
   return (
     <div className="flex items-center space-x-2 bg-background/50 p-1 rounded-md border border-border">
       <Button
-        variant={currentView === "list" ? "default" : "ghost"}
+        variant={currentView === "table" ? "default" : "ghost"}
         size="sm"
-        onClick={() => onViewChange("list")}
-        className={currentView === "list" ? "bg-neon-green text-black hover:bg-neon-green/90" : ""}
+        onClick={() => onViewChange("table")}
+        className={currentView === "table" ? "bg-neon-green text-black hover:bg-neon-green/90" : ""}
       >
-        <List className="h-4 w-4 mr-1" />
-        List
+        <Table className="h-4 w-4 mr-1" />
+        Table
       </Button>
       <Button
         variant={currentView === "grid" ? "default" : "ghost"}
@@ -30,22 +38,13 @@ export function ViewSelector({ currentView, onViewChange }: ViewSelectorProps) {
         Grid
       </Button>
       <Button
-        variant={currentView === "table" ? "default" : "ghost"}
+        variant={currentView === "list" ? "default" : "ghost"}
         size="sm"
-        onClick={() => onViewChange("table")}
-        className={currentView === "table" ? "bg-neon-green text-black hover:bg-neon-green/90" : ""}
+        onClick={() => onViewChange("list")}
+        className={currentView === "list" ? "bg-neon-green text-black hover:bg-neon-green/90" : ""}
       >
-        <Table className="h-4 w-4 mr-1" />
-        Table
-      </Button>
-      <Button
-        variant={currentView === "data-grid" ? "default" : "ghost"}
-        size="sm"
-        onClick={() => onViewChange("data-grid")}
-        className={currentView === "data-grid" ? "bg-neon-green text-black hover:bg-neon-green/90" : ""}
-      >
-        <Grid className="h-4 w-4 mr-1" />
-        Data Grid
+        <List className="h-4 w-4 mr-1" />
+        List
       </Button>
     </div>
   )

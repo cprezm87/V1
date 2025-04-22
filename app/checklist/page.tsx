@@ -261,11 +261,8 @@ export default function ChecklistPage() {
             <TableRow>
               <TableHead className="w-[80px]">ID</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Brand</TableHead>
               <TableHead>Franchise</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Year</TableHead>
-              <TableHead>Rating</TableHead>
+              <TableHead>Brand</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -279,11 +276,8 @@ export default function ChecklistPage() {
                 >
                   <TableCell className="font-medium">{item.id}</TableCell>
                   <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.brand}</TableCell>
                   <TableCell>{item.franchise}</TableCell>
-                  <TableCell>${Number.parseInt(item.price || "0").toLocaleString("es-CO")}</TableCell>
-                  <TableCell>{item.yearReleased}</TableCell>
-                  <TableCell>{renderStars(item.ranking)}</TableCell>
+                  <TableCell>{item.brand}</TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"
@@ -310,7 +304,7 @@ export default function ChecklistPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                   No items found. Add some items to your collection!
                 </TableCell>
               </TableRow>

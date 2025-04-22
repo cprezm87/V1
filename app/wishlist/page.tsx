@@ -317,10 +317,8 @@ export default function WishlistPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Brand</TableHead>
               <TableHead>Franchise</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Year</TableHead>
+              <TableHead>Brand</TableHead>
               <TableHead>Released</TableHead>
               <TableHead>Buy</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -335,10 +333,8 @@ export default function WishlistPage() {
                   onClick={() => handleItemClick(item)}
                 >
                   <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell>{item.brand}</TableCell>
                   <TableCell>{item.franchise}</TableCell>
-                  <TableCell>${Number.parseInt(item.price || "0").toLocaleString("es-CO")}</TableCell>
-                  <TableCell>{item.yearReleased}</TableCell>
+                  <TableCell>{item.brand}</TableCell>
                   <TableCell>
                     {item.released ? (
                       <Check className="h-4 w-4 text-neon-green" />
@@ -385,7 +381,7 @@ export default function WishlistPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   No {activeTab} found in your wishlist. Add some {activeTab} to your wishlist!
                 </TableCell>
               </TableRow>
@@ -400,12 +396,10 @@ export default function WishlistPage() {
   const renderDataGridView = (items: WishlistItem[]) => {
     return (
       <div className="border rounded-md overflow-hidden">
-        <div className="grid grid-cols-[1fr_1fr_1fr_100px_100px_80px_80px_120px] bg-muted p-2 border-b font-medium text-sm">
+        <div className="grid grid-cols-[1fr_1fr_1fr_80px_80px_120px] bg-muted p-2 border-b font-medium text-sm">
           <div>Name</div>
-          <div>Brand</div>
           <div>Franchise</div>
-          <div>Price</div>
-          <div>Year</div>
+          <div>Brand</div>
           <div>Released</div>
           <div>Buy</div>
           <div className="text-right">Actions</div>
@@ -415,14 +409,12 @@ export default function WishlistPage() {
             items.map((item) => (
               <div
                 key={item.id}
-                className="grid grid-cols-[1fr_1fr_1fr_100px_100px_80px_80px_120px] p-2 border-b hover:bg-muted/50 cursor-pointer text-sm"
+                className="grid grid-cols-[1fr_1fr_1fr_80px_80px_120px] p-2 border-b hover:bg-muted/50 cursor-pointer text-sm"
                 onClick={() => handleItemClick(item)}
               >
                 <div className="truncate">{item.name}</div>
-                <div className="truncate">{item.brand}</div>
                 <div className="truncate">{item.franchise}</div>
-                <div>${Number.parseInt(item.price || "0").toLocaleString("es-CO")}</div>
-                <div>{item.yearReleased}</div>
+                <div className="truncate">{item.brand}</div>
                 <div>
                   {item.released ? (
                     <Check className="h-4 w-4 text-neon-green" />

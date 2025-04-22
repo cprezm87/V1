@@ -216,8 +216,6 @@ export default function CustomsPage() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Franchise</TableHead>
-              <TableHead>Head</TableHead>
-              <TableHead>Body</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -231,8 +229,6 @@ export default function CustomsPage() {
                 >
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell>{item.franchise}</TableCell>
-                  <TableCell>{item.head}</TableCell>
-                  <TableCell>{item.body}</TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"
@@ -259,7 +255,7 @@ export default function CustomsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                   No custom {activeTab} found. Add some custom {activeTab} to your collection!
                 </TableCell>
               </TableRow>
@@ -274,11 +270,9 @@ export default function CustomsPage() {
   const renderDataGridView = (items: CustomItem[]) => {
     return (
       <div className="border rounded-md overflow-hidden">
-        <div className="grid grid-cols-[1fr_1fr_1fr_1fr_100px] bg-muted p-2 border-b font-medium text-sm">
+        <div className="grid grid-cols-[1fr_1fr_100px] bg-muted p-2 border-b font-medium text-sm">
           <div>Name</div>
           <div>Franchise</div>
-          <div>Head</div>
-          <div>Body</div>
           <div className="text-right">Actions</div>
         </div>
         <div className="max-h-[600px] overflow-y-auto">
@@ -286,13 +280,11 @@ export default function CustomsPage() {
             items.map((item) => (
               <div
                 key={item.id}
-                className="grid grid-cols-[1fr_1fr_1fr_1fr_100px] p-2 border-b hover:bg-muted/50 cursor-pointer text-sm"
+                className="grid grid-cols-[1fr_1fr_100px] p-2 border-b hover:bg-muted/50 cursor-pointer text-sm"
                 onClick={() => handleItemClick(item)}
               >
                 <div className="truncate">{item.name}</div>
                 <div className="truncate">{item.franchise}</div>
-                <div className="truncate">{item.head}</div>
-                <div className="truncate">{item.body}</div>
                 <div className="text-right">
                   <Button
                     variant="ghost"
