@@ -1,7 +1,8 @@
 "use client"
 
-import type * as React from "react"
+import React from "react"
 import { createContext, useContext, useState } from "react"
+import { cn } from "@/lib/utils"
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -39,45 +40,45 @@ export function useSidebar() {
 }
 
 // Basic sidebar components
-export function Sidebar({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  const { isOpen } = useSidebar()
-  return (
-    <aside className={`${className} ${isOpen ? "w-64" : "w-16"} transition-width duration-300 ease-in-out`}>
-      {children}
-    </aside>
-  )
-}
+const Sidebar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex h-screen w-64 flex-col bg-sidebar dark:bg-sidebar", className)} {...props} />
+  ),
+)
+Sidebar.displayName = "Sidebar"
 
-export function SidebarHeader({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`${className}`}>{children}</div>
-}
+const SidebarHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <div ref={ref} className={cn("flex-shrink-0", className)} {...props} />,
+)
+SidebarHeader.displayName = "SidebarHeader"
 
-export function SidebarContent({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`${className}`}>{children}</div>
-}
+const SidebarContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <div ref={ref} className={cn("flex-1 overflow-auto", className)} {...props} />,
+)
+SidebarContent.displayName = "SidebarContent"
 
-export function SidebarFooter({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`${className}`}>{children}</div>
-}
+const SidebarFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <div ref={ref} className={cn("flex-shrink-0 mt-auto", className)} {...props} />,
+)
+SidebarFooter.displayName = "SidebarFooter"
 
-export function SidebarMenu({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <nav className={`${className}`}>{children}</nav>
-}
+const SidebarMenu = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <div ref={ref} className={cn("py-2", className)} {...props} />,
+)
+SidebarMenu.displayName = "SidebarMenu"
 
-export function SidebarMenuItem({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`${className}`}>{children}</div>
-}
+const SidebarMenuItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <div ref={ref} className={cn("px-3 py-1", className)} {...props} />,
+)
+SidebarMenuItem.displayName = "SidebarMenuItem"
 
-export function SidebarRail({ className = "" }: { className?: string }) {
-  const { toggle } = useSidebar()
-  return (
-    <div className={`${className} cursor-pointer`} onClick={toggle}>
-      <div className="h-full w-1 bg-sidebar-border"></div>
-    </div>
-  )
-}
+const SidebarRail = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <div ref={ref} className={cn("hidden", className)} {...props} />,
+)
+SidebarRail.displayName = "SidebarRail"
 
-// Export all the necessary components
+export { Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarRail }
+
 export function SidebarGroup({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`${className}`}>{children}</div>
 }
