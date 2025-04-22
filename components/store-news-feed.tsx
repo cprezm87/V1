@@ -32,10 +32,44 @@ interface StoreData {
 
 export function StoreNewsFeed() {
   const { t } = useTheme()
-  const [activeTab, setActiveTab] = useState("alltimetoys")
+  const [activeTab, setActiveTab] = useState("entertainmentearth")
   const [loading, setLoading] = useState(true)
   const [selectedProduct, setSelectedProduct] = useState<StorePreviewData | null>(null)
   const [stores, setStores] = useState<Record<string, StoreData>>({
+    entertainmentearth: {
+      name: "Entertainment Earth",
+      url: "https://www.entertainmentearth.com/",
+      description: "One of the largest retailers of action figures, collectibles, and pop culture merchandise",
+      location: "California",
+      shipping: ["United States", "International"],
+      previews: [
+        {
+          title: "Horror Collectibles",
+          description: "Extensive collection of horror movie collectibles from all your favorite franchises.",
+          imageUrl: "/placeholder.svg?height=200&width=300",
+          url: "https://www.entertainmentearth.com/s/horror/c?landingpageid=5027",
+          price: "$19.99+",
+          inStock: true,
+        },
+        {
+          title: "Pre-Orders",
+          description: "Reserve upcoming figures and collectibles before they sell out.",
+          imageUrl: "/placeholder.svg?height=200&width=300",
+          url: "https://www.entertainmentearth.com/new-arrivals",
+          price: "Varies",
+          inStock: true,
+          discount: "Mint Condition Guarantee",
+        },
+        {
+          title: "Exclusives",
+          description: "Entertainment Earth exclusive items you won't find anywhere else.",
+          imageUrl: "/placeholder.svg?height=200&width=300",
+          url: "https://www.entertainmentearth.com/s/entertainment-earth-exclusives/c?landingpageid=3779",
+          price: "$24.99+",
+          inStock: true,
+        },
+      ],
+    },
     alltimetoys: {
       name: "All Time Toys",
       url: "https://www.alltimetoys.com/",

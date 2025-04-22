@@ -1469,65 +1469,6 @@ export default function SettingsPage() {
                     </Select>
                   </div>
 
-                  <div className="pt-4 border-t mt-4">
-                    <h3 className="text-lg font-medium mb-2">Supabase Integration</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Sync your data with Supabase database</p>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="sync-supabase-figures"
-                          checked={syncFigures}
-                          onCheckedChange={setSyncFigures}
-                          className="data-[state=checked]:bg-neon-green"
-                        />
-                        <Label htmlFor="sync-supabase-figures">Sync Figures to Supabase</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="sync-supabase-wishlist"
-                          checked={syncWishlist}
-                          onCheckedChange={setSyncWishlist}
-                          className="data-[state=checked]:bg-neon-green"
-                        />
-                        <Label htmlFor="sync-supabase-wishlist">Sync Wishlist to Supabase</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="sync-supabase-customs"
-                          checked={syncCustoms}
-                          onCheckedChange={setSyncCustoms}
-                          className="data-[state=checked]:bg-neon-green"
-                        />
-                        <Label htmlFor="sync-supabase-customs">Sync Customs to Supabase</Label>
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => {
-                          toast({
-                            title: "Supabase Sync",
-                            description: "Syncing data with Supabase...",
-                          })
-
-                          // Simulate sync process
-                          setTimeout(() => {
-                            toast({
-                              title: "Sync Complete",
-                              description: "Your data has been synced with Supabase successfully.",
-                            })
-                          }, 2000)
-                        }}
-                      >
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Sync with Supabase
-                      </Button>
-                    </div>
-                  </div>
-
                   <Button
                     className="w-full bg-neon-green text-black hover:bg-neon-green/90"
                     onClick={handleGoogleSheetsSync}

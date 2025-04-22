@@ -10,18 +10,17 @@ import { Toaster } from "@/components/ui/toaster"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { CollectionProvider } from "@/contexts/collection-context"
 import { AuthForm } from "@/components/auth-form"
-import { SupabaseCollectionProvider } from "@/components/supabase-collection-context"
+// Remove this line
+// import { SupabaseCollectionProvider } from "@/components/supabase-collection-context"
 
 export function RootLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <ThemeProvider>
         <CollectionProvider>
-          <SupabaseCollectionProvider>
-            <SidebarProvider>
-              <ClientLayoutContent>{children}</ClientLayoutContent>
-            </SidebarProvider>
-          </SupabaseCollectionProvider>
+          <SidebarProvider>
+            <ClientLayoutContent>{children}</ClientLayoutContent>
+          </SidebarProvider>
         </CollectionProvider>
       </ThemeProvider>
     </AuthProvider>

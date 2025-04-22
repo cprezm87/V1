@@ -26,7 +26,7 @@ interface BrandData {
 
 export function BrandNewsFeed() {
   const { t } = useTheme()
-  const [activeTab, setActiveTab] = useState("neca")
+  const [activeTab, setActiveTab] = useState("mezco")
   const [loading, setLoading] = useState(true)
   const [selectedArticle, setSelectedArticle] = useState<BrandPreviewData | null>(null)
   const [brands, setBrands] = useState<Record<string, BrandData>>({
@@ -52,6 +52,34 @@ export function BrandNewsFeed() {
           description: "Highly detailed Art the Clown figure from the Terrifier franchise.",
           imageUrl: "/placeholder.svg?height=200&width=300",
           url: "https://necaonline.com/collections/horror/",
+        },
+      ],
+    },
+    mezco: {
+      name: "Mezco Toyz",
+      url: "https://www.mezcotoyz.com/",
+      description: "Premium collectible company known for their One:12 Collective line and horror figures",
+      previews: [
+        {
+          title: "One:12 Collective Horror Figures",
+          description: "Premium articulated horror figures with detailed accessories and fabric clothing.",
+          imageUrl:
+            "https://sjc.microlink.io/MmVSY-8UC2F4qKkv0T8Nw8bYJOuwtvWbUwZcrAJJTTp10KApkU1YnCIE5wD_PLTDsyHOFRou4DWaXw2ZfajuTA.jpeg",
+          url: "https://www.mezcotoyz.com/one-12-collective",
+        },
+        {
+          title: "Living Dead Dolls",
+          description: "The iconic horror doll line featuring creepy designs and collectible packaging.",
+          imageUrl:
+            "https://sjc.microlink.io/MmVSY-8UC2F4qKkv0T8Nw8bYJOuwtvWbUwZcrAJJTTp10KApkU1YnCIE5wD_PLTDsyHOFRou4DWaXw2ZfajuTA.jpeg",
+          url: "https://www.mezcotoyz.com/brands/living-dead-dolls",
+        },
+        {
+          title: "5 Points Figures",
+          description: "Retro-styled action figures with vintage appeal and modern collectibility.",
+          imageUrl:
+            "https://sjc.microlink.io/MmVSY-8UC2F4qKkv0T8Nw8bYJOuwtvWbUwZcrAJJTTp10KApkU1YnCIE5wD_PLTDsyHOFRou4DWaXw2ZfajuTA.jpeg",
+          url: "https://www.mezcotoyz.com/5-points",
         },
       ],
     },

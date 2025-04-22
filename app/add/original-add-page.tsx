@@ -20,7 +20,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ImageUploadField } from "@/components/image-upload-field"
 
 // Añadir la importación del cliente de Supabase al inicio del archivo:
-import { supabase } from "@/lib/supabaseClient"
+// Remove this line
+// import { supabase } from "@/lib/supabaseClient"
 
 // Display options based on shelf selection
 const displayOptions = {
@@ -230,35 +231,9 @@ export default function OriginalAddPage() {
     }
 
     try {
-      // Guardar en localStorage
+      // Save to localStorage only
       setFigureItems([...figureItems, newFigure])
       setNextId(nextId + 1)
-
-      // Guardar en Supabase
-      const { data, error } = await supabase.from("figures").insert([
-        {
-          name: newFigure.name,
-          type: newFigure.type,
-          franchise: newFigure.franchise,
-          brand: newFigure.brand,
-          serie: newFigure.serie,
-          yearReleased: newFigure.yearReleased,
-          condition: newFigure.condition,
-          price: newFigure.price,
-          yearPurchase: newFigure.yearPurchase,
-          upc: newFigure.upc,
-          logo: newFigure.logo,
-          photo: newFigure.photo,
-          tagline: newFigure.tagline,
-          review: newFigure.review,
-          shelf: newFigure.shelf,
-          display: newFigure.display,
-          ranking: newFigure.ranking,
-          comments: newFigure.comments,
-        },
-      ])
-
-      if (error) throw error
 
       // Reset form
       form.reset()
@@ -273,13 +248,20 @@ export default function OriginalAddPage() {
 
       toast({
         title: t("add.added"),
-        description: t("add.itemAdded") + " (Saved to Supabase)",
+        description: t("add.itemAdded"),
       })
     } catch (error) {
       console.error("Error adding figure:", error)
+      let errorMessage = "Failed to add item. Please try again."
+
+      // Provide more specific error messages for debugging
+      if (error instanceof Error) {
+        errorMessage = `Error: ${error.message}`
+      }
+
       toast({
         title: "Error",
-        description: "Failed to add item to database. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
     }
@@ -326,32 +308,9 @@ export default function OriginalAddPage() {
     }
 
     try {
-      // Guardar en localStorage
+      // Save to localStorage only
       setWishlistItems([...wishlistItems, newWishlistItem])
       setNextId(nextId + 1)
-
-      // Guardar en Supabase
-      const { data, error } = await supabase.from("wishlist").insert([
-        {
-          name: newWishlistItem.name,
-          type: newWishlistItem.type,
-          franchise: newWishlistItem.franchise,
-          brand: newWishlistItem.brand,
-          serie: newWishlistItem.serie,
-          yearReleased: newWishlistItem.yearReleased,
-          price: newWishlistItem.price,
-          logo: newWishlistItem.logo,
-          photo: newWishlistItem.photo,
-          tagline: newWishlistItem.tagline,
-          review: newWishlistItem.review,
-          released: newWishlistItem.released,
-          buy: newWishlistItem.buy,
-          comments: newWishlistItem.comments,
-          trackingNumber: newWishlistItem.trackingNumber,
-        },
-      ])
-
-      if (error) throw error
 
       // Reset form
       form.reset()
@@ -364,13 +323,20 @@ export default function OriginalAddPage() {
 
       toast({
         title: "Added!",
-        description: "Item Has Been Successfully Added To Your Wishlist" + " (Saved to Supabase)",
+        description: "Item Has Been Successfully Added To Your Wishlist",
       })
     } catch (error) {
       console.error("Error adding wishlist item:", error)
+      let errorMessage = "Failed to add item. Please try again."
+
+      // Provide more specific error messages for debugging
+      if (error instanceof Error) {
+        errorMessage = `Error: ${error.message}`
+      }
+
       toast({
         title: "Error",
-        description: "Failed to add item to database. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
     }
@@ -408,25 +374,9 @@ export default function OriginalAddPage() {
     }
 
     try {
-      // Guardar en localStorage
+      // Save to localStorage only
       setCustomItems([...customItems, newCustomItem])
       setNextId(nextId + 1)
-
-      // Guardar en Supabase
-      const { data, error } = await supabase.from("customs").insert([
-        {
-          name: newCustomItem.name,
-          type: newCustomItem.type,
-          franchise: newCustomItem.franchise,
-          head: newCustomItem.head,
-          body: newCustomItem.body,
-          logo: newCustomItem.logo,
-          tagline: newCustomItem.tagline,
-          comments: newCustomItem.comments,
-        },
-      ])
-
-      if (error) throw error
 
       // Reset form
       form.reset()
@@ -438,13 +388,20 @@ export default function OriginalAddPage() {
 
       toast({
         title: t("add.added"),
-        description: t("add.itemAdded") + " (Saved to Supabase)",
+        description: t("add.itemAdded"),
       })
     } catch (error) {
       console.error("Error adding custom item:", error)
+      let errorMessage = "Failed to add item. Please try again."
+
+      // Provide more specific error messages for debugging
+      if (error instanceof Error) {
+        errorMessage = `Error: ${error.message}`
+      }
+
       toast({
         title: "Error",
-        description: "Failed to add item to database. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
     }

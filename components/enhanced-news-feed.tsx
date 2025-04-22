@@ -29,6 +29,7 @@ export function EnhancedNewsFeed({ initialSource = "fwoosh" }: EnhancedNewsFeedP
     { id: "toynewsi", name: "Toy News International" },
     { id: "afi", name: "Action Figure Insider" },
     { id: "figurerealm", name: "Figure Realm" },
+    { id: "cooltoyr", name: "Cool Toy Review" },
   ]
 
   const fetchNews = async (source: string) => {

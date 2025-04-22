@@ -30,10 +30,72 @@ interface NewsSourceData {
 
 export function MovieNewsFeed() {
   const { t } = useTheme()
-  const [activeTab, setActiveTab] = useState("bloody")
+  const [activeTab, setActiveTab] = useState("dreadcentral")
   const [loading, setLoading] = useState(true)
   const [selectedArticle, setSelectedArticle] = useState<MovieNewsData | null>(null)
   const [newsSources, setNewsSources] = useState<Record<string, NewsSourceData>>({
+    dreadcentral: {
+      name: "Dread Central",
+      url: "https://www.dreadcentral.com/",
+      description:
+        "Premier destination for horror news, reviews, and interviews covering all aspects of horror entertainment",
+      articles: [
+        {
+          title: "Terrifier 3 Gets New Trailer and Release Date",
+          description:
+            "Art the Clown returns for more holiday-themed carnage in the latest installment of the Terrifier franchise.",
+          imageUrl: "/placeholder.svg?height=200&width=300",
+          url: "https://www.dreadcentral.com/news/terrifier-3-trailer/",
+          date: "April 20, 2023",
+          category: "Movies",
+          hasVideo: true,
+        },
+        {
+          title: "The 50 Best Horror Movies of All Time",
+          description:
+            "Our definitive ranking of the greatest horror films ever made, from classics to modern masterpieces.",
+          imageUrl: "/placeholder.svg?height=200&width=300",
+          url: "https://www.dreadcentral.com/editorials/best-horror-movies-all-time/",
+          date: "April 15, 2023",
+          category: "Lists",
+        },
+        {
+          title: "Exclusive Interview with Mike Flanagan",
+          description:
+            "We sit down with the director of The Haunting of Hill House and Midnight Mass to discuss his upcoming projects.",
+          imageUrl: "/placeholder.svg?height=200&width=300",
+          url: "https://www.dreadcentral.com/interviews/mike-flanagan-interview/",
+          date: "April 10, 2023",
+          category: "Interviews",
+          hasVideo: false,
+        },
+      ],
+    },
+    ihorror: {
+      name: "iHorror",
+      url: "https://es.ihorror.com/",
+      description: "Spanish language horror news site covering the latest in horror films, TV, and culture",
+      articles: [
+        {
+          title: "Las 10 Mejores Películas de Terror de 2023",
+          description:
+            "Nuestro ranking de las mejores películas de terror estrenadas este año que no te puedes perder.",
+          imageUrl: "/placeholder.svg?height=200&width=300",
+          url: "https://es.ihorror.com/mejores-peliculas-terror-2023/",
+          date: "April 18, 2023",
+          category: "Listas",
+        },
+        {
+          title: "Entrevista Exclusiva con Jenna Ortega",
+          description: "Hablamos con la estrella de Wednesday y Scream sobre su carrera en el género de terror.",
+          imageUrl: "/placeholder.svg?height=200&width=300",
+          url: "https://es.ihorror.com/entrevista-jenna-ortega/",
+          date: "April 12, 2023",
+          category: "Entrevistas",
+          hasVideo: true,
+        },
+      ],
+    },
     bloody: {
       name: "Bloody Disgusting",
       url: "https://bloody-disgusting.com/",
@@ -199,7 +261,11 @@ export function MovieNewsFeed() {
           >
             <TabsList className="w-full justify-start overflow-x-auto bg-card border-b rounded-none">
               {Object.entries(newsSources).map(([key, source]) => (
-                <TabsTrigger key={key} value={key} className="rounded-none data-[state=active]:bg-background">
+                <TabsTrigger
+                  key={key}
+                  value={key}
+                  className="rounded-none data-[state=active]:bg-background whitespace-nowrap"
+                >
                   {source.name}
                 </TabsTrigger>
               ))}

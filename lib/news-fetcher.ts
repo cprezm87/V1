@@ -13,6 +13,7 @@ export interface NewsItem {
 const newsCache: Record<string, { items: NewsItem[]; timestamp: number }> = {}
 const CACHE_DURATION = 30 * 60 * 1000 // 30 minutes
 
+// Add CoolToyReview to the sources
 export async function fetchNewsFromSource(source: string): Promise<NewsItem[]> {
   // Check cache first
   const now = Date.now()
@@ -32,6 +33,8 @@ export async function fetchNewsFromSource(source: string): Promise<NewsItem[]> {
         return await fetchActionFigureInsiderNews()
       case "figurerealm":
         return await fetchFigureRealmNews()
+      case "cooltoyr":
+        return await fetchCoolToyReviewNews()
       default:
         return []
     }
@@ -206,9 +209,43 @@ async function fetchFigureRealmNews(): Promise<NewsItem[]> {
   return items
 }
 
-// Function to fetch news from all sources
+// Add this new function after fetchFigureRealmNews
+async function fetchCoolToyReviewNews(): Promise<NewsItem[]> {
+  // Implementation for Cool Toy Review
+  const items: NewsItem[] = [
+    {
+      id: "cooltoyr-1",
+      title: "Hot Toys: Scarecrow 2.0",
+      description:
+        "Hot Toys' newest movie masterpiece collectible figure pays homage to one of Batman's most notorious villains.",
+      imageUrl:
+        "https://sjc.microlink.io/9Vvp2XE2IzZBAmPbd7J_NjRKa8rxi-njj3MEuWY1aV3vKep-L0wBYNPi4bL-rcWfLXjxczBfx7FXm0qEPODyHA.jpeg",
+      sourceUrl: "https://www.cooltoyreview.com/hot-toys-scarecrow-2-0/",
+      source: "Cool Toy Review",
+      date: "1 day ago",
+      category: "Hot Toys",
+    },
+    {
+      id: "cooltoyr-2",
+      title: "Mezco Toyz: Superman vs the Mechanical Monsters Review",
+      description:
+        "Something different for us today as we check out a Mezco product with a great retro look. Check out this classic Superman episode deluxe set.",
+      imageUrl:
+        "https://sjc.microlink.io/9Vvp2XE2IzZBAmPbd7J_NjRKa8rxi-njj3MEuWY1aV3vKep-L0wBYNPi4bL-rcWfLXjxczBfx7FXm0qEPODyHA.jpeg",
+      sourceUrl: "https://www.cooltoyreview.com/mezco-toyz-superman-vs-the-mechanical-monsters-review/",
+      source: "Cool Toy Review",
+      date: "3 days ago",
+      category: "Mezco",
+    },
+  ]
+
+  newsCache["cooltoyr"] = { items, timestamp: Date.now() }
+  return items
+}
+
+// Update the sources array in fetchAllNews function
 export async function fetchAllNews(): Promise<NewsItem[]> {
-  const sources = ["fwoosh", "toyark", "toynewsi", "afi", "figurerealm"]
+  const sources = ["fwoosh", "toyark", "toynewsi", "afi", "figurerealm", "cooltoyr"]
   const allNewsPromises = sources.map((source) => fetchNewsFromSource(source))
   const allNewsArrays = await Promise.all(allNewsPromises)
 
