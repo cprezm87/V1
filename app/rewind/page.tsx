@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { CalendarIcon, Play, Plus } from "lucide-react"
@@ -40,37 +40,13 @@ export default function RewindPage() {
   const [anniversaries, setAnniversaries] = useState<MovieAnniversary[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  // Cargar datos del localStorage al montar el componente
-  useEffect(() => {
-    const storedAnniversaries = localStorage.getItem("movieAnniversaries")
-    if (storedAnniversaries) {
-      try {
-        // Convertir las fechas de string a Date
-        const parsedAnniversaries = JSON.parse(storedAnniversaries, (key, value) => {
-          if (key === "releaseDate") return new Date(value)
-          return value
-        })
-        setAnniversaries(parsedAnniversaries)
-      } catch (error) {
-        console.error("Error parsing stored anniversaries:", error)
-      }
-    }
-  }, [])
-
-  // Guardar en localStorage cuando cambian los aniversarios
-  useEffect(() => {
-    if (anniversaries.length > 0) {
-      localStorage.setItem("movieAnniversaries", JSON.stringify(anniversaries))
-    }
-  }, [anniversaries])
-
   // Calcular efemérides para la fecha seleccionada
   const todayAnniversaries = anniversaries.filter(
     (movie) => movie.releaseDate.getDate() === date?.getDate() && movie.releaseDate.getMonth() === date?.getMonth(),
   )
 
   // Asegurarse de que la función handleAddAnniversary use la URL de la imagen
-  const handleAddAnniversary = async () => {
+  const handleAddAnniversary = () => {
     if (!movieTitle || !releaseDate || !poster) {
       toast({
         title: "Error",
@@ -89,44 +65,21 @@ export default function RewindPage() {
       comments,
     }
 
-    // Enviar datos a Zapier
-    try {
-      await fetch("https://hooks.zapier.com/hooks/catch/22623944/2xlyjjw/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          MovieTitle: movieTitle,
-          ReleaseDate: releaseDate.toISOString().split("T")[0], // Formato YYYY-MM-DD
-          Poster: poster,
-          Trailer: trailer,
-          Comments: comments,
-        }),
-      })
+    setAnniversaries([...anniversaries, newAnniversary])
 
-      // Actualizar estado local
-      setAnniversaries([...anniversaries, newAnniversary])
+    // Reset form
+    setMovieTitle("")
+    setReleaseDate(undefined)
+    setPoster("")
+    setPosterPreview("")
+    setTrailer("")
+    setComments("")
+    setIsDialogOpen(false)
 
-      // Reset form
-      setMovieTitle("")
-      setReleaseDate(undefined)
-      setPoster("")
-      setPosterPreview("")
-      setTrailer("")
-      setComments("")
-      setIsDialogOpen(false)
-
-      toast({
-        title: "Added!",
-        description: "Movie anniversary has been added.",
-      })
-    } catch (error) {
-      console.error("Error sending data to Zapier:", error)
-      toast({
-        title: "Error",
-        description: "Failed to send data to Zapier. The anniversary was saved locally.",
-        variant: "destructive",
-      })
-    }
+    toast({
+      title: "Added!",
+      description: "Movie anniversary has been added.",
+    })
   }
 
   const getYearsSince = (date: Date) => {

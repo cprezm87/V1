@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Globe, Upload, AlertTriangle, RefreshCw, FileUp, FileDown, ExternalLink } from "lucide-react"
+import { Globe, Upload, AlertTriangle, RefreshCw, FileUp, FileDown } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/components/ui/use-toast"
 import { useTheme } from "@/contexts/theme-context"
@@ -769,9 +769,6 @@ export default function SettingsPage() {
           <TabsTrigger value="updates" className="px-4">
             Updates
           </TabsTrigger>
-          <TabsTrigger value="zapier" className="px-4">
-            Zapier
-          </TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}
@@ -1523,51 +1520,6 @@ export default function SettingsPage() {
                       onClick={handleBugReport}
                     >
                       Submit Bug Report
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        {/* Agrega este contenido después del último TabsContent (updates) */}
-        <TabsContent value="zapier" className="mt-6 overflow-hidden">
-          <Card>
-            <CardContent className="p-6 space-y-6">
-              <div>
-                <h2 className="text-2xl font-semibold mb-1">Integración con Zapier</h2>
-                <p className="text-muted-foreground mb-6">Conecta tu colección con otros servicios</p>
-
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-medium mb-2">Configuración de Zapier</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Configura la integración con Zapier para sincronizar tu colección con otros servicios
-                    </p>
-
-                    <Button
-                      className="w-full bg-neon-green text-black hover:bg-neon-green/90"
-                      onClick={() => (window.location.href = "/settings/zapier")}
-                    >
-                      Ir a configuración de Zapier
-                    </Button>
-                  </div>
-
-                  <div className="pt-4 border-t">
-                    <h3 className="text-lg font-medium mb-2">¿Qué es Zapier?</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Zapier es una plataforma que te permite conectar diferentes aplicaciones y automatizar flujos de
-                      trabajo. Con esta integración, puedes enviar tus datos de colección a servicios como Google
-                      Sheets, Airtable, Notion y más.
-                    </p>
-
-                    <Button
-                      variant="outline"
-                      className="flex items-center"
-                      onClick={() => window.open("https://zapier.com", "_blank")}
-                    >
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Visitar Zapier
                     </Button>
                   </div>
                 </div>
