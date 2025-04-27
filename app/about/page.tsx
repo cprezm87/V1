@@ -12,13 +12,13 @@ export default function AboutPage() {
         <h1 className="text-3xl font-bold">App Essentials</h1>
       </div>
 
-      <Tabs defaultValue="faq" className="w-full">
+      <Tabs defaultValue="about" className="w-full">
         <TabsList className="w-full mb-6">
-          <TabsTrigger value="faq" className="flex-1">
-            FAQ
-          </TabsTrigger>
           <TabsTrigger value="about" className="flex-1">
             About The Vault
+          </TabsTrigger>
+          <TabsTrigger value="faq" className="flex-1">
+            FAQ
           </TabsTrigger>
           <TabsTrigger value="behind" className="flex-1">
             Behind The App
@@ -38,6 +38,7 @@ export default function AboutPage() {
                 <p>Developer: Opaco Pérez</p>
                 <p>Platform: App Web</p>
                 <p>Technology: Python + NiceGUI + Vercel</p>
+                <p className="text-neon-green font-bold mt-4">+500 collectors use OpacoVault</p>
               </div>
 
               <div className="mb-8 space-y-4">
@@ -81,19 +82,20 @@ export default function AboutPage() {
             <div className="max-w-2xl text-center">
               <div className="mb-8 space-y-4">
                 <p>
-                  Hi, I'm Opaco Pérez — a passionate horror figure collector, lifelong horror film enthusiast, proud dad
-                  and rugbier.
+                  Hi, I'm Opaco Pérez — a passionate horror figure collector, lifelong horror film enthusiast, proud
+                  dad, and rugbier.
                 </p>
                 <p>
-                  I've been immersed in the world of horror since I can remember. Beyond collecting, I've given talks at
-                  Comic-Con about the history of horror cinema, combining my love for storytelling with a deep
-                  appreciation for the genre's evolution. I also share horror movie reviews on social media, where I
-                  connect with fellow fans from around the world.
+                  Horror has been a part of my life for as long as I can remember. Beyond collecting, I've had the
+                  chance to speak at Comic-Con Colombia about the history of horror cinema, blending my love for
+                  storytelling with my appreciation for the genre's evolution. I also share horror movie reviews on
+                  social media, where I connect with fellow fans from around the world.
                 </p>
                 <p>
-                  This app was born from a personal need — I wanted a way to keep my growing horror collection
-                  organized, always updated, and accessible anywhere I go. Whether I'm adding a new figure, planning my
-                  wishlist, or just admiring my collection on the move, this virtual vault keeps it all in one place.
+                  This app was born out of a personal need — I wanted a way to keep track of my growing horror
+                  collection, stay organized, and have access to it anytime, anywhere. Whether I'm adding a new figure,
+                  planning my wishlist, or just admiring my collection on the go, this virtual vault keeps everything in
+                  one place.
                 </p>
                 <p>Thanks for supporting this project and being part of the horror community!</p>
               </div>

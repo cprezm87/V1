@@ -12,7 +12,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Globe, Upload, AlertTriangle, RefreshCw, FileUp, FileDown } from "lucide-react"
+import {
+  Globe,
+  Upload,
+  AlertTriangle,
+  RefreshCw,
+  FileUp,
+  FileDown,
+  Moon,
+  Sun,
+  Trash2,
+  LogOut,
+  Lock,
+  History,
+  Laptop,
+  Smartphone,
+} from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/components/ui/use-toast"
 import { useTheme } from "@/contexts/theme-context"
@@ -104,6 +119,26 @@ export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+
+  const [autoBackupEnabled, setAutoBackupEnabled] = useState(false)
+  const [autoBackupFrequency, setAutoBackupFrequency] = useState("7days")
+  const [readOnlyMode, setReadOnlyMode] = useState(false)
+  const [connectedDevices, setConnectedDevices] = useState([
+    { id: "device1", name: "Chrome on Windows", lastActive: "Today", type: "desktop" },
+    { id: "device2", name: "Safari on iPhone", lastActive: "Yesterday", type: "mobile" },
+  ])
+  const [activityHistory, setActivityHistory] = useState([
+    { id: "act1", action: "Added figure", item: "Freddy Krueger", date: "2023-10-15" },
+    { id: "act2", action: "Edited figure", item: "Jason Voorhees", date: "2023-10-14" },
+    { id: "act3", action: "Deleted figure", item: "Michael Myers", date: "2023-10-12" },
+  ])
+  const [newsNotifications, setNewsNotifications] = useState(true)
+  const [updateNotifications, setUpdateNotifications] = useState(true)
+  const [errorNotifications, setErrorNotifications] = useState(true)
+  const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] = useState(false)
+  const [confirmDeleteText, setConfirmDeleteText] = useState("")
+  const [dropboxConnected, setDropboxConnected] = useState(false)
+  const [driveConnected, setDriveConnected] = useState(false)
 
   // Función para aplicar los colores del tema a las variables CSS
   const applyThemeColors = (colors: { primary: string; secondary: string; accent: string; background: string }) => {
@@ -769,6 +804,9 @@ export default function SettingsPage() {
           <TabsTrigger value="updates" className="px-4">
             Updates
           </TabsTrigger>
+          <TabsTrigger value="readonly" className="px-4">
+            Read-only
+          </TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}
@@ -899,11 +937,15 @@ export default function SettingsPage() {
                   <h3 className="text-lg font-medium">Dark Mode</h3>
                   <p className="text-sm text-muted-foreground">Toggle dark mode on or off</p>
                 </div>
-                <Switch
-                  checked={theme === "dark"}
-                  onCheckedChange={toggleTheme}
-                  className="data-[state=checked]:bg-neon-green"
-                />
+                <div className="flex items-center space-x-2">
+                  <Sun className="h-4 w-4 text-muted-foreground" />
+                  <Switch
+                    checked={theme === "dark"}
+                    onCheckedChange={toggleTheme}
+                    className="data-[state=checked]:bg-neon-green"
+                  />
+                  <Moon className="h-4 w-4 text-muted-foreground" />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -1074,6 +1116,51 @@ export default function SettingsPage() {
                   onCheckedChange={setCalendarNotifications}
                   className="data-[state=checked]:bg-neon-green"
                 />
+              </div>
+
+              {/* New notification types */}
+              <div className="pt-4 border-t">
+                <h3 className="text-lg font-medium mb-4">Notification Types</h3>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">News & Updates</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Receive notifications about new figures and releases
+                      </p>
+                    </div>
+                    <Switch
+                      checked={newsNotifications}
+                      onCheckedChange={setNewsNotifications}
+                      className="data-[state=checked]:bg-neon-green"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">App Updates</h4>
+                      <p className="text-sm text-muted-foreground">Receive notifications about app updates</p>
+                    </div>
+                    <Switch
+                      checked={updateNotifications}
+                      onCheckedChange={setUpdateNotifications}
+                      className="data-[state=checked]:bg-neon-green"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Error Alerts</h4>
+                      <p className="text-sm text-muted-foreground">Receive notifications about errors and issues</p>
+                    </div>
+                    <Switch
+                      checked={errorNotifications}
+                      onCheckedChange={setErrorNotifications}
+                      className="data-[state=checked]:bg-neon-green"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -1279,48 +1366,149 @@ export default function SettingsPage() {
                     />
                   </div>
                 </div>
-              </div>
 
-              <Button className="w-full bg-neon-green text-black hover:bg-neon-green/90" onClick={handlePasswordChange}>
-                Change Password
-              </Button>
+                <Button
+                  className="w-full mt-4 bg-neon-green text-black hover:bg-neon-green/90"
+                  onClick={handlePasswordChange}
+                >
+                  Change Password
+                </Button>
 
-              <div className="pt-4 border-t">
-                <h3 className="text-lg font-medium mb-2">Reset Application</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  This will reset all settings and data to default values. This action cannot be undone.
-                </p>
+                {/* Device Management Section */}
+                <div className="pt-6 border-t mt-6">
+                  <h3 className="text-lg font-medium mb-2">Device Management</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Manage devices where you're currently logged in</p>
 
-                <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="destructive" className="w-full">
-                      Reset Application
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Reset Application</DialogTitle>
-                      <DialogDescription>
-                        Are you sure you want to reset the application? This will delete all your data and settings.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4">
-                      <Alert variant="destructive">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertTitle>Warning</AlertTitle>
-                        <AlertDescription>This action cannot be undone.</AlertDescription>
-                      </Alert>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsResetDialogOpen(false)}>
-                        Cancel
+                  <div className="space-y-3">
+                    {connectedDevices.map((device) => (
+                      <div key={device.id} className="flex items-center justify-between p-3 border rounded-md">
+                        <div className="flex items-center">
+                          {device.type === "desktop" ? (
+                            <Laptop className="h-5 w-5 mr-3 text-muted-foreground" />
+                          ) : (
+                            <Smartphone className="h-5 w-5 mr-3 text-muted-foreground" />
+                          )}
+                          <div>
+                            <p className="font-medium">{device.name}</p>
+                            <p className="text-xs text-muted-foreground">Last active: {device.lastActive}</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setConnectedDevices(connectedDevices.filter((d) => d.id !== device.id))
+                            toast({
+                              title: "Device Logged Out",
+                              description: `You've been logged out from ${device.name}.`,
+                            })
+                          }}
+                        >
+                          <LogOut className="h-4 w-4 mr-1" /> Log Out
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t mt-6">
+                  <h3 className="text-lg font-medium mb-2">Reset Application</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    This will reset all settings and data to default values. This action cannot be undone.
+                  </p>
+
+                  <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="destructive" className="w-full">
+                        Reset Application
                       </Button>
-                      <Button variant="destructive" onClick={handleAppReset}>
-                        Reset
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Reset Application</DialogTitle>
+                        <DialogDescription>
+                          Are you sure you want to reset the application? This will delete all your data and settings.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="py-4">
+                        <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertTitle>Warning</AlertTitle>
+                          <AlertDescription>This action cannot be undone.</AlertDescription>
+                        </Alert>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsResetDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button variant="destructive" onClick={handleAppReset}>
+                          Reset
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+
+                {/* Delete Account Section */}
+                <div className="pt-6 border-t mt-6">
+                  <h3 className="text-lg font-medium mb-2">Delete Account</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Permanently delete your account and all associated data. This action cannot be undone.
+                  </p>
+
+                  <Dialog open={deleteAccountDialogOpen} onOpenChange={setDeleteAccountDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="destructive" className="w-full">
+                        <Trash2 className="h-4 w-4 mr-2" /> Delete Account
                       </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Delete Account</DialogTitle>
+                        <DialogDescription>
+                          Are you sure you want to delete your account? This will permanently remove all your data and
+                          cannot be undone.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="py-4">
+                        <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertTitle>Warning</AlertTitle>
+                          <AlertDescription>This action is permanent and cannot be undone.</AlertDescription>
+                        </Alert>
+
+                        <div className="mt-4 space-y-2">
+                          <Label htmlFor="confirm-delete">Type "DELETE" to confirm</Label>
+                          <Input
+                            id="confirm-delete"
+                            value={confirmDeleteText}
+                            onChange={(e) => setConfirmDeleteText(e.target.value)}
+                            placeholder="DELETE"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setDeleteAccountDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          disabled={confirmDeleteText !== "DELETE"}
+                          onClick={() => {
+                            setDeleteAccountDialogOpen(false)
+                            toast({
+                              title: "Account Deleted",
+                              description: "Your account has been permanently deleted.",
+                            })
+                            // In a real app, you would redirect to a logout or home page
+                          }}
+                        >
+                          Delete Account
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -1377,6 +1565,96 @@ export default function SettingsPage() {
                       onChange={handleImportData}
                     />
                   </div>
+
+                  {/* Automatic Backup Section */}
+                  <div className="pt-4 border-t">
+                    <h3 className="text-lg font-medium mb-2">Automatic Backup</h3>
+                    <p className="text-sm text-muted-foreground mb-4">Configure automatic backups of your collection</p>
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="font-medium">Enable Automatic Backup</h4>
+                        <p className="text-sm text-muted-foreground">Regularly backup your data automatically</p>
+                      </div>
+                      <Switch
+                        checked={autoBackupEnabled}
+                        onCheckedChange={setAutoBackupEnabled}
+                        className="data-[state=checked]:bg-neon-green"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="backup-frequency">Backup Frequency</Label>
+                      <Select
+                        value={autoBackupFrequency}
+                        onValueChange={setAutoBackupFrequency}
+                        disabled={!autoBackupEnabled}
+                      >
+                        <SelectTrigger id="backup-frequency">
+                          <SelectValue placeholder="Select backup frequency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1day">Daily</SelectItem>
+                          <SelectItem value="7days">Weekly</SelectItem>
+                          <SelectItem value="30days">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button
+                      className="w-full mt-4 bg-neon-green text-black hover:bg-neon-green/90"
+                      disabled={!autoBackupEnabled}
+                      onClick={() => {
+                        toast({
+                          title: "Automatic Backup Configured",
+                          description: `Your data will be backed up ${
+                            autoBackupFrequency === "1day"
+                              ? "daily"
+                              : autoBackupFrequency === "7days"
+                                ? "weekly"
+                                : "monthly"
+                          }.`,
+                        })
+                      }}
+                    >
+                      Save Backup Settings
+                    </Button>
+                  </div>
+
+                  {/* Activity History Section */}
+                  <div className="pt-4 border-t">
+                    <h3 className="text-lg font-medium mb-2">Activity History</h3>
+                    <p className="text-sm text-muted-foreground mb-4">View your recent collection activities</p>
+
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {activityHistory.map((activity) => (
+                        <div key={activity.id} className="flex items-center justify-between p-2 border rounded-md">
+                          <div className="flex items-center">
+                            <History className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">
+                                {activity.action}: {activity.item}
+                              </p>
+                              <p className="text-xs text-muted-foreground">{activity.date}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      className="w-full mt-4"
+                      onClick={() => {
+                        toast({
+                          title: "Activity History",
+                          description: "Full activity history downloaded.",
+                        })
+                      }}
+                    >
+                      Export Full History
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -1392,6 +1670,7 @@ export default function SettingsPage() {
                 <p className="text-muted-foreground mb-6">Sync your data with external services</p>
 
                 <div className="space-y-4">
+                  {/* Google Section */}
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-medium">Connect to Google</h3>
@@ -1407,6 +1686,7 @@ export default function SettingsPage() {
                     </Button>
                   </div>
 
+                  {/* Google Sheets Section */}
                   <div className="space-y-2">
                     <Label htmlFor="spreadsheet-id">Google Sheets ID or URL</Label>
                     <Input
@@ -1418,6 +1698,50 @@ export default function SettingsPage() {
                     />
                   </div>
 
+                  {/* Google Drive Section */}
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div>
+                      <h3 className="text-lg font-medium">Connect to Google Drive</h3>
+                      <p className="text-sm text-muted-foreground">Backup your collection to Google Drive</p>
+                    </div>
+                    <Button
+                      variant={driveConnected ? "outline" : "default"}
+                      className={driveConnected ? "" : "bg-neon-green text-black hover:bg-neon-green/90"}
+                      onClick={() => {
+                        setDriveConnected(true)
+                        toast({
+                          title: "Connected to Google Drive",
+                          description: "Your account has been connected to Google Drive successfully.",
+                        })
+                      }}
+                      disabled={driveConnected}
+                    >
+                      {driveConnected ? "Connected" : "Connect"}
+                    </Button>
+                  </div>
+
+                  {/* Dropbox Section */}
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div>
+                      <h3 className="text-lg font-medium">Connect to Dropbox</h3>
+                      <p className="text-sm text-muted-foreground">Backup your collection to Dropbox</p>
+                    </div>
+                    <Button
+                      variant={dropboxConnected ? "outline" : "default"}
+                      className={dropboxConnected ? "" : "bg-neon-green text-black hover:bg-neon-green/90"}
+                      onClick={() => {
+                        setDropboxConnected(true)
+                        toast({
+                          title: "Connected to Dropbox",
+                          description: "Your account has been connected to Dropbox successfully.",
+                        })
+                      }}
+                      disabled={dropboxConnected}
+                    >
+                      {dropboxConnected ? "Connected" : "Connect"}
+                    </Button>
+                  </div>
+
                   <div className="space-y-2">
                     <Label>Sync Options</Label>
                     <div className="flex flex-col space-y-2">
@@ -1426,7 +1750,7 @@ export default function SettingsPage() {
                           id="sync-figures"
                           checked={syncFigures}
                           onCheckedChange={setSyncFigures}
-                          disabled={!isGoogleConnected}
+                          disabled={!isGoogleConnected && !driveConnected && !dropboxConnected}
                           className="data-[state=checked]:bg-neon-green"
                         />
                         <Label htmlFor="sync-figures">Sync Figures</Label>
@@ -1436,7 +1760,7 @@ export default function SettingsPage() {
                           id="sync-wishlist"
                           checked={syncWishlist}
                           onCheckedChange={setSyncWishlist}
-                          disabled={!isGoogleConnected}
+                          disabled={!isGoogleConnected && !driveConnected && !dropboxConnected}
                           className="data-[state=checked]:bg-neon-green"
                         />
                         <Label htmlFor="sync-wishlist">Sync Wishlist</Label>
@@ -1446,7 +1770,7 @@ export default function SettingsPage() {
                           id="sync-customs"
                           checked={syncCustoms}
                           onCheckedChange={setSyncCustoms}
-                          disabled={!isGoogleConnected}
+                          disabled={!isGoogleConnected && !driveConnected && !dropboxConnected}
                           className="data-[state=checked]:bg-neon-green"
                         />
                         <Label htmlFor="sync-customs">Sync Customs</Label>
@@ -1456,7 +1780,11 @@ export default function SettingsPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="sync-frequency">Sync Frequency</Label>
-                    <Select value={syncFrequency} onValueChange={setSyncFrequency} disabled={!isGoogleConnected}>
+                    <Select
+                      value={syncFrequency}
+                      onValueChange={setSyncFrequency}
+                      disabled={!isGoogleConnected && !driveConnected && !dropboxConnected}
+                    >
                       <SelectTrigger id="sync-frequency">
                         <SelectValue placeholder="Select sync frequency" />
                       </SelectTrigger>
@@ -1472,7 +1800,7 @@ export default function SettingsPage() {
                   <Button
                     className="w-full bg-neon-green text-black hover:bg-neon-green/90"
                     onClick={handleGoogleSheetsSync}
-                    disabled={!isGoogleConnected}
+                    disabled={!isGoogleConnected && !driveConnected && !dropboxConnected}
                   >
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Sync Now
@@ -1521,6 +1849,76 @@ export default function SettingsPage() {
                     >
                       Submit Bug Report
                     </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Read-only Mode tab */}
+        <TabsContent value="readonly" className="mt-6 overflow-hidden">
+          <Card>
+            <CardContent className="p-6 space-y-6">
+              <div>
+                <h2 className="text-2xl font-semibold mb-1">Read-only Mode</h2>
+                <p className="text-muted-foreground mb-6">Prevent accidental changes to your collection</p>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-medium">Enable Read-only Mode</h3>
+                    <p className="text-sm text-muted-foreground">
+                      When enabled, you can view but not edit your collection
+                    </p>
+                  </div>
+                  <Switch
+                    checked={readOnlyMode}
+                    onCheckedChange={(checked) => {
+                      setReadOnlyMode(checked)
+                      toast({
+                        title: checked ? "Read-only Mode Enabled" : "Read-only Mode Disabled",
+                        description: checked
+                          ? "You can now safely browse your collection without making changes."
+                          : "You can now edit your collection.",
+                      })
+                    }}
+                    className="data-[state=checked]:bg-neon-green"
+                  />
+                </div>
+
+                <div className="mt-6 p-4 border rounded-md bg-muted/50">
+                  <div className="flex items-start">
+                    <Lock className="h-5 w-5 mr-3 text-muted-foreground mt-0.5" />
+                    <div>
+                      <h4 className="font-medium">What does Read-only Mode do?</h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Read-only mode prevents any changes to your collection, including adding, editing, or deleting
+                        items. This is useful when you want to show your collection to others without risking accidental
+                        changes.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <h3 className="text-lg font-medium mb-2">Quick Access</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    You can quickly toggle Read-only Mode using the lock icon in the top navigation bar
+                  </p>
+
+                  <div className="flex items-center p-3 border rounded-md bg-background">
+                    <div className="flex-1">
+                      <p className="text-sm">Toggle Read-only Mode</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <kbd className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border rounded">
+                        Ctrl
+                      </kbd>
+                      <span className="text-xs text-muted-foreground">+</span>
+                      <kbd className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border rounded">
+                        L
+                      </kbd>
+                    </div>
                   </div>
                 </div>
               </div>
