@@ -163,6 +163,8 @@ export function FigureTubeFeed() {
     },
   })
 
+  const [rssFeeds, setRssFeeds] = useState<any[]>([])
+
   useEffect(() => {
     // Simulate loading
     const timer = setTimeout(() => {
