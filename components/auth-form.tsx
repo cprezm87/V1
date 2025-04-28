@@ -332,14 +332,18 @@ export function AuthForm() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <Button variant="outline" className="w-full">
               <Image src="/google.png" alt="Google" width={16} height={16} className="mr-2" />
               Google
             </Button>
             <Button variant="outline" className="w-full">
-              <Image src="/github.png" alt="GitHub" width={16} height={16} className="mr-2" />
-              GitHub
+              <Image src="/discord.png" alt="Discord" width={16} height={16} className="mr-2" />
+              Discord
+            </Button>
+            <Button variant="outline" className="w-full">
+              <Image src="/facebook.png" alt="Facebook" width={16} height={16} className="mr-2" />
+              Facebook
             </Button>
           </div>
         </CardFooter>
