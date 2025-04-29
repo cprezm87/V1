@@ -102,15 +102,9 @@ export default function DisplayPage() {
       "The Rejected Ones",
       "The Butcher's Domain",
     ],
-    Quattro: ["Terror in Toyland", "The Undead Legion", "The Shapeshifters", "The Wretched Ones", "Beastly Havoc"],
-    Beş: [
-      "Opaco's Nightmares",
-      "Eccentric Horror Hall",
-      "Twisted Wonders",
-      "Oddities & Iconic",
-      "Terror, Terrors & Tricksters",
-    ],
-    Six: ["Fear in Motion", "Heroes of the Dark Side", "Beyond Earth", "Mythical Beasts", "Hellish Fates"],
+    Quattro: ["Terror in Toyland", "The Undead Legion", "The Shapeshifters", "The Wretched Ones", "Beastly Bites"],
+    Beş: ["Neon Fear", "Eccentric Horror Hall", "Twisted Wonders", "Oddities & Iconic", "Terror, Terrors & Tricksters"],
+    Six: ["Splat Pack", "Heroes of the Dark Side", "Beyond Earth", "Mythical Beasts", "Hellish Fates"],
   }
 
   // Render stars for ranking

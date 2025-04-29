@@ -436,13 +436,13 @@ export default function ChecklistPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full mb-6">
           <TabsTrigger value="figures" className="flex-1">
-            Figures
+            Collection
           </TabsTrigger>
           <TabsTrigger value="accessories" className="flex-1">
             Accessories
           </TabsTrigger>
           <TabsTrigger value="props" className="flex-1">
-            Props
+            Replicas
           </TabsTrigger>
         </TabsList>
 
